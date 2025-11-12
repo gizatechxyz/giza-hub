@@ -25,13 +25,13 @@ pnpm install
 
 ### Create Smart Account
 
-Creates a ZeroDev smart account for a given EOA address:
+Creates a ZeroDev smart account for a given Origin wallet address:
 
 ```bash
 pnpm run example
 ```
 
-**Note:** Make sure to update the `userEOA` variable in `create-account.ts` with your actual EOA address before running.
+**Note:** Make sure to update the `userOriginWallet` variable in `create-account.ts` with your actual origin wallet address before running.
 
 ## Available Examples
 

@@ -5,10 +5,10 @@ import { Address, Chain } from './common';
  */
 export interface CreateSmartAccountParams {
   /**
-   * EOA address
+   * Origin wallet address
    * This is the user's wallet address
    */
-  eoa: Address;
+  origin_wallet: Address;
 }
 
 /**
@@ -21,9 +21,9 @@ export interface GetSmartAccountParams {
   smartAccount?: Address;
 
   /**
-   * EOA address to query
+   * Origin wallet address to query
    */
-  eoa?: Address;
+  origin_wallet?: Address;
 }
 
 /**
@@ -56,9 +56,9 @@ export interface SmartAccountInfo {
   backendWallet: Address;
 
   /**
-   * The EOA address that owns the smart account
+   * The origin wallet address that owns the smart account
    */
-  eoa: Address;
+  origin_wallet: Address;
 
   /**
    * The blockchain network the smart account is on

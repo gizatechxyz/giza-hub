@@ -40,7 +40,7 @@ const agent = new GizaAgent({
 
 // Create a smart account
 const account = await agent.smartAccount.create({
-  eoa: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+  origin_wallet: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
 });
 
 console.log('Smart Account:', account.smartAccountAddress);
@@ -108,7 +108,7 @@ pnpm run clean
 Features coming in future releases:
 
 - ✅ Smart account creation
-- ✅ Smart account queries by EOA
+- ✅ Smart account queries by origin wallet
 - 🔄 Smart account queries by address (planned)
 - 🔄 Permission updates (planned)
 - 🔄 Performance tracking module (planned)

@@ -44,17 +44,17 @@ export class SmartAccountModule {
    * @example
    * ```typescript
    * const account = await agent.smartAccount.create({
-   *   eoa: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+   *   origin_wallet: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
    * });
    * console.log(account.smartAccountAddress);
    * ```
    */
   public async create(params: CreateSmartAccountParams): Promise<SmartAccountInfo> {
-    // Validate EOA address
-    this.validateAddress(params.eoa, 'EOA address');
+    // Validate origin wallet address
+    this.validateAddress(params.origin_wallet, 'origin wallet address');
 
     const requestBody = {
-      eoa: params.eoa,
+      eoa: params.origin_wallet,
       chain: this.config.chainId,
       agent_id: this.config.agentId,
     };
@@ -68,7 +68,7 @@ export class SmartAccountModule {
     return {
       smartAccountAddress: response.smartAccount as Address,
       backendWallet: response.backendWallet as Address,
-      eoa: params.eoa,
+      origin_wallet: params.origin_wallet,
       chain: this.config.chainId,
     };
   }
@@ -76,45 +76,45 @@ export class SmartAccountModule {
   /**
    * Get smart account details and session key status
    * 
-   * Note: Currently only supports lookup by EOA address.
+   * Note: Currently only supports lookup by origin wallet address.
    * TODO: Implement lookup by smart account address
    * 
-   * @param params - Query parameters (eoa required)
+   * @param params - Query parameters (origin wallet required)
    * @returns Smart account information
    * 
-   * @throws {NotImplementedError} If only smartAccount is provided without eoa
+   * @throws {NotImplementedError} If only smartAccount is provided without origin wallet
    * @throws {ValidationError} If no parameters are provided
    * 
    * @example
    * ```typescript
    * const info = await agent.smartAccount.getInfo({
-   *   eoa: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+   *   origin_wallet: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
    * });
    * ```
    */
   public async getInfo(params: GetSmartAccountParams): Promise<SmartAccountInfo> {
     // Validate at least one parameter is provided
-    if (!params.smartAccount && !params.eoa) {
-      throw new ValidationError('Either smartAccount or eoa must be provided');
+    if (!params.smartAccount && !params.origin_wallet) {
+      throw new ValidationError('Either smartAccount or origin wallet must be provided');
     }
 
     // If only smartAccount is provided, throw not implemented error
-    if (params.smartAccount && !params.eoa) {
+    if (params.smartAccount && !params.origin_wallet) {
       throw new NotImplementedError(
         'Looking up smart account by address alone is not yet supported. ' +
-          'Please provide the EOA address instead. '       
+          'Please provide the origin wallet address instead. '       
         );
     }
 
-    // Validate EOA if provided
-    if (params.eoa) {
-      this.validateAddress(params.eoa, 'EOA address');
+    // Validate origin wallet if provided
+    if (params.origin_wallet) {
+      this.validateAddress(params.origin_wallet, 'origin wallet address');
     }
 
     // Build query parameters
     const queryParams = new URLSearchParams({
       chain: this.config.chainId.toString(),
-      eoa: params.eoa!,
+      eoa: params.origin_wallet!,
       agent_id: this.config.agentId,
     });
 
@@ -126,7 +126,7 @@ export class SmartAccountModule {
     return {
       smartAccountAddress: response.smartAccount as Address,
       backendWallet: response.backendWallet as Address,
-      eoa: params.eoa!,
+      origin_wallet: params.origin_wallet!,
       chain: this.config.chainId,
     };
   }

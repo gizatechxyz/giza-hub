@@ -24,7 +24,7 @@ import { DEFAULT_AGENT_ID, DEFAULT_TIMEOUT } from './constants';
  * 
  * // Create smart account
  * const account = await agent.smartAccount.create({
- *   eoa: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+ *   origin_wallet: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
  * });
  * ```
  */

@@ -14,8 +14,8 @@ async function main() {
   try {
     console.log('🚀 Giza Agent SDK - Create Smart Account Example\n');
 
-    // Replace with your actual EOA address
-    const userEOA = '0x742d35Cc6634C0532925a3b844Bc454e4438f44e';
+    // Replace with your actual origin wallet address
+    const userOriginWallet = '0x742d35Cc6634C0532925a3b844Bc454e4438f44e';
 
     // Initialize the SDK
     console.log('Initializing SDK...');
@@ -28,9 +28,9 @@ async function main() {
     console.log(`Agent ID: ${agent.getAgentId()}\n`);
 
     // Create smart account
-    console.log(`Creating smart account for EOA: ${userEOA}...`);
+    console.log(`Creating smart account for origin wallet: ${userOriginWallet}...`);
     const account = await agent.smartAccount.create({
-      eoa: userEOA,
+      origin_wallet: userOriginWallet,
     });
 
     // Display results
@@ -39,7 +39,7 @@ async function main() {
     console.log('─'.repeat(50));
     console.log(`Smart Account: ${account.smartAccountAddress}`);
     console.log(`Backend Wallet: ${account.backendWallet}`);
-    console.log(`EOA:           ${account.eoa}`);
+    console.log(`Origin Wallet:           ${account.origin_wallet}`);
     console.log(`Chain:         ${account.chain}`);
     console.log('─'.repeat(50));
 
