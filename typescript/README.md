@@ -103,6 +103,26 @@ This will watch for changes and rebuild automatically.
 pnpm run clean
 ```
 
+## Testing
+
+The SDK includes test suite with unit, integration, and E2E tests.
+
+### Run Tests
+
+```bash
+# Run all tests (unit + integration)
+pnpm test
+
+# Run E2E tests (requires local backend services)
+pnpm run test:e2e
+```
+
+### Test Structure
+
+- **Unit Tests** (`__tests__/unit/`): Test individual components in isolation
+- **Integration Tests** (`__tests__/integration/`): Test component interactions with mocked HTTP
+- **E2E Tests** (`__tests__/e2e/`): Test complete flows against local backend services
+
 ## Roadmap
 
 Features coming in future releases:
