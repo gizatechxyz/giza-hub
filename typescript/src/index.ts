@@ -40,6 +40,16 @@ export type {
   AccruedRewardsBySymbol,
   TokenDistribution,
 } from './types/performance';
+export type {
+  WithdrawalRequestParams,
+  WithdrawalRequestResponse,
+  WithdrawalStatusParams,
+  WithdrawalStatusResponse,
+  WithdrawalFeeParams,
+  WithdrawalFeeResponse,
+  WithdrawalHistoryParams,
+  PollStatusOptions,
+} from './types/withdrawal';
 
 // Enums
 export { Chain } from './types/common';
