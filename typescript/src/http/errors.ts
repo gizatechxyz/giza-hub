@@ -128,8 +128,8 @@ export class GizaAPIError extends GizaError {
  * Error thrown when network request times out
  */
 export class TimeoutError extends GizaError {
-  constructor(timeout: number) {
-    super(`Request timed out after ${timeout}ms`);
+  constructor(timeout: number, message?: string) {
+    super(message || `Request timed out after ${timeout}ms`);
     this.name = 'TimeoutError';
     Object.setPrototypeOf(this, TimeoutError.prototype);
   }
