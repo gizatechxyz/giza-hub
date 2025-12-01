@@ -1,5 +1,5 @@
 import { Chain } from '../../src/types/common';
-import { SmartAccountInfo, ZerodevSmartWalletResponse } from '../../src/types/smart-account';
+import { SmartAccountInfo, ZerodevSmartWalletResponse } from '../../src/types/agent';
 import { VALID_ADDRESSES } from './addresses';
 
 export const MOCK_SMART_ACCOUNT_RESPONSE_1: ZerodevSmartWalletResponse = {
@@ -25,4 +25,3 @@ export const MOCK_SMART_ACCOUNT_INFO_ARBITRUM: SmartAccountInfo = {
   origin_wallet: VALID_ADDRESSES.EOA_2,
   chain: Chain.ARBITRUM,
 };
-

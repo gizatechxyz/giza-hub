@@ -8,7 +8,7 @@ import {
   AgentStatus,
   TxAction,
   TxStatus,
-} from '../../src/types/performance';
+} from '../../src/types/agent';
 import { VALID_ADDRESSES } from './addresses';
 
 // Performance chart mock data
@@ -96,7 +96,7 @@ export const MOCK_AGENT_INFO: AgentInfo = {
   selected_protocols: ['aave-v3', 'compound-v3', 'morpho'],
   current_protocols: ['aave-v3', 'compound-v3'],
   current_token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-  origin_wallet: VALID_ADDRESSES.EOA_1,
+  eoa: VALID_ADDRESSES.EOA_1,
 };
 
 export const MOCK_AGENT_INFO_WITH_WITHDRAWS: AgentInfo = {
@@ -229,4 +229,3 @@ export const MOCK_APR_RESPONSE_ZERO: WalletAprResponse = {
   apr: 0.0,
   sub_periods: [],
 };
-

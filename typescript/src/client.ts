@@ -1,8 +1,6 @@
 import { HttpClient } from './http/client';
 import { PartnerAuth } from './auth/partner-auth';
-import { SmartAccountModule } from './modules/smart-account.module';
-import { PerformanceModule } from './modules/performance.module';
-import { WithdrawalModule } from './modules/withdrawal.module';
+import { AgentModule } from './modules/agent.module';
 import { GizaAgentConfig, ResolvedGizaAgentConfig } from './types/config';
 import { Chain, ValidationError } from './types/common';
 import { DEFAULT_AGENT_ID, DEFAULT_TIMEOUT } from './constants';
@@ -16,18 +14,37 @@ import { DEFAULT_AGENT_ID, DEFAULT_TIMEOUT } from './constants';
  * ```typescript
  * import { GizaAgent, Chain } from '@giza/agent-sdk';
  * 
- * // Set environment variables first:
- * // GIZA_API_KEY=...
+ * // Set environment variables:
+ * // GIZA_API_KEY=your-partner-api-key
  * // GIZA_API_URL=...
  * 
- * const agent = new GizaAgent({
+ * const giza = new GizaAgent({
  *   chainId: Chain.BASE,
  * });
  * 
- * // Create smart account
- * const account = await agent.smartAccount.create({
+ * // Create smart account for user
+ * const account = await giza.agent.createSmartAccount({
  *   origin_wallet: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
  * });
+ * 
+ * // Get available protocols
+ * const { protocols } = await giza.agent.getProtocols(USDC_ADDRESS);
+ * 
+ * // Activate agent after user deposits
+ * await giza.agent.activate({
+ *   wallet: account.smartAccountAddress,
+ *   origin_wallet: userWallet,
+ *   initial_token: USDC_ADDRESS,
+ *   selected_protocols: protocols,
+ *   tx_hash: depositTxHash,
+ * });
+ * 
+ * // Monitor performance
+ * const performance = await giza.agent.getPerformance({ wallet: account.smartAccountAddress });
+ * const apr = await giza.agent.getAPR({ wallet: account.smartAccountAddress });
+ * 
+ * // Withdraw
+ * await giza.agent.withdraw({ wallet: account.smartAccountAddress, transfer: true });
  * ```
  */
 export class GizaAgent {
@@ -36,19 +53,17 @@ export class GizaAgent {
   private readonly auth: PartnerAuth;
 
   /**
-   * Smart Account module for creating and managing ZeroDev smart accounts
+   * Unified Agent module for all agent operations
+   * 
+   * Provides:
+   * - Smart account creation and management
+   * - Protocol selection and configuration
+   * - Agent lifecycle (activate, deactivate, run, topUp)
+   * - Performance monitoring and history
+   * - Withdrawal operations
+   * - Rewards claiming
    */
-  public readonly smartAccount: SmartAccountModule;
-
-  /**
-   * Performance module for tracking agent performance and analytics
-   */
-  public readonly performance: PerformanceModule;
-
-  /**
-   * Withdrawal module for handling withdrawals and agent deactivation
-   */
-  public readonly withdrawal: WithdrawalModule;
+  public readonly agent: AgentModule;
 
   constructor(config: GizaAgentConfig) {
     // Validate and resolve configuration
@@ -65,10 +80,8 @@ export class GizaAgent {
       headers: this.auth.getHeaders(),
     });
 
-    // Initialize modules
-    this.smartAccount = new SmartAccountModule(this.httpClient, this.config);
-    this.performance = new PerformanceModule(this.httpClient, this.config);
-    this.withdrawal = new WithdrawalModule(this.httpClient, this.config);
+    // Initialize unified agent module
+    this.agent = new AgentModule(this.httpClient, this.config);
   }
 
   /**
@@ -128,7 +141,7 @@ export class GizaAgent {
   }
 
   /**
-   * Get the current configuration
+   * Get the current configuration 
    */
   public getConfig(): Omit<ResolvedGizaAgentConfig, 'partnerApiKey'> {
     const { partnerApiKey, ...safeConfig } = this.config;

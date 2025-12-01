@@ -1,13 +1,17 @@
 import {
-  WithdrawalRequestResponse,
+  WithdrawResponse,
   WithdrawalStatusResponse,
-  WithdrawalFeeResponse,
-} from '../../src/types/withdrawal';
-import { AgentStatus, TransactionHistoryResponse, Transaction, TxAction, TxStatus } from '../../src/types/performance';
+  FeeResponse,
+  AgentStatus,
+  TransactionHistoryResponse,
+  Transaction,
+  TxAction,
+  TxStatus,
+} from '../../src/types/agent';
 import { VALID_ADDRESSES } from './addresses';
 
 // Withdrawal request response mock
-export const MOCK_WITHDRAWAL_REQUEST_RESPONSE: WithdrawalRequestResponse = {
+export const MOCK_WITHDRAWAL_REQUEST_RESPONSE: WithdrawResponse = {
   message: 'Wallet deactivation initiated',
 };
 
@@ -39,12 +43,12 @@ export const MOCK_WITHDRAWAL_STATUS_FEE_NOT_PAID: WithdrawalStatusResponse = {
 };
 
 // Fee response mocks
-export const MOCK_FEE_RESPONSE: WithdrawalFeeResponse = {
+export const MOCK_FEE_RESPONSE: FeeResponse = {
   percentage_fee: 0.1, // 10%
   fee: 100.5,
 };
 
-export const MOCK_FEE_RESPONSE_ZERO: WithdrawalFeeResponse = {
+export const MOCK_FEE_RESPONSE_ZERO: FeeResponse = {
   percentage_fee: 0.0,
   fee: 0.0,
 };
@@ -155,4 +159,3 @@ export const MOCK_TRANSACTION_HISTORY_EMPTY: TransactionHistoryResponse = {
     items_per_page: 20,
   },
 };
-
