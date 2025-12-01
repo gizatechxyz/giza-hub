@@ -9,15 +9,15 @@ import {
 } from '../fixtures/accounts';
 
 describe('GizaAgent Client Integration', () => {
-  let agent: GizaAgent;
+  let giza: GizaAgent;
   let mockAxios: MockAdapter;
 
   beforeEach(() => {
     setupTestEnv();
-    agent = new GizaAgent({ chainId: Chain.BASE });
+    giza = new GizaAgent({ chainId: Chain.BASE });
 
     // Mock the underlying axios instance
-    const httpClient = (agent.smartAccount as any).httpClient;
+    const httpClient = (giza.agent as any).httpClient;
     const axiosInstance = (httpClient as any).axiosInstance;
     mockAxios = new MockAdapter(axiosInstance);
   });
@@ -28,21 +28,21 @@ describe('GizaAgent Client Integration', () => {
   });
 
   describe('full client initialization', () => {
-    it('should initialize with all modules accessible', () => {
-      expect(agent).toBeInstanceOf(GizaAgent);
-      expect(agent.smartAccount).toBeDefined();
-      expect(typeof agent.getChainId).toBe('function');
-      expect(typeof agent.getBackendUrl).toBe('function');
-      expect(typeof agent.getAgentId).toBe('function');
-      expect(typeof agent.getConfig).toBe('function');
+    it('should initialize with agent module accessible', () => {
+      expect(giza).toBeInstanceOf(GizaAgent);
+      expect(giza.agent).toBeDefined();
+      expect(typeof giza.getChainId).toBe('function');
+      expect(typeof giza.getBackendUrl).toBe('function');
+      expect(typeof giza.getAgentId).toBe('function');
+      expect(typeof giza.getConfig).toBe('function');
     });
 
     it('should have working getter methods', () => {
-      expect(agent.getChainId()).toBe(Chain.BASE);
-      expect(agent.getBackendUrl()).toBe('https://api.test.giza.example');
-      expect(agent.getAgentId()).toBe('arma-dev');
+      expect(giza.getChainId()).toBe(Chain.BASE);
+      expect(giza.getBackendUrl()).toBe('https://api.test.giza.example');
+      expect(giza.getAgentId()).toBe('arma-dev');
 
-      const config = agent.getConfig();
+      const config = giza.getConfig();
       expect(config.chainId).toBe(Chain.BASE);
       expect(config.backendUrl).toBe('https://api.test.giza.example');
       expect(config.agentId).toBe('arma-dev');
@@ -66,12 +66,12 @@ describe('GizaAgent Client Integration', () => {
         });
 
       // Test POST request
-      await agent.smartAccount.create({
+      await giza.agent.createSmartAccount({
         origin_wallet: VALID_ADDRESSES.EOA_1,
       });
 
       // Test GET request
-      await agent.smartAccount.getInfo({
+      await giza.agent.getSmartAccount({
         origin_wallet: VALID_ADDRESSES.EOA_1,
       });
 
@@ -84,7 +84,7 @@ describe('GizaAgent Client Integration', () => {
       
       const customAgent = new GizaAgent({ chainId: Chain.BASE });
       const customMock = new MockAdapter(
-        ((customAgent.smartAccount as any).httpClient as any).axiosInstance
+        ((customAgent.agent as any).httpClient as any).axiosInstance
       );
 
       customMock
@@ -94,7 +94,7 @@ describe('GizaAgent Client Integration', () => {
           return [200, MOCK_SMART_ACCOUNT_RESPONSE_1];
         });
 
-      await customAgent.smartAccount.create({
+      await customAgent.agent.createSmartAccount({
         origin_wallet: VALID_ADDRESSES.EOA_1,
       });
 
@@ -103,7 +103,7 @@ describe('GizaAgent Client Integration', () => {
   });
 
   describe('multiple sequential API calls', () => {
-    it('should handle create, getInfo, create sequence', async () => {
+    it('should handle create, getSmartAccount, create sequence', async () => {
       mockAxios
         .onPost('/api/v1/proxy/zerodev/smart-accounts')
         .replyOnce(200, MOCK_SMART_ACCOUNT_RESPONSE_1)
@@ -113,19 +113,19 @@ describe('GizaAgent Client Integration', () => {
         .replyOnce(200, MOCK_SMART_ACCOUNT_RESPONSE_2);
 
       // First create
-      const create1 = await agent.smartAccount.create({
+      const create1 = await giza.agent.createSmartAccount({
         origin_wallet: VALID_ADDRESSES.EOA_1,
       });
       expect(create1.smartAccountAddress).toBe(MOCK_SMART_ACCOUNT_RESPONSE_1.smartAccount);
 
       // Get info
-      const info = await agent.smartAccount.getInfo({
+      const info = await giza.agent.getSmartAccount({
         origin_wallet: VALID_ADDRESSES.EOA_1,
       });
       expect(info.smartAccountAddress).toBe(create1.smartAccountAddress);
 
       // Second create
-      const create2 = await agent.smartAccount.create({
+      const create2 = await giza.agent.createSmartAccount({
         origin_wallet: VALID_ADDRESSES.EOA_2,
       });
       expect(create2.smartAccountAddress).toBe(MOCK_SMART_ACCOUNT_RESPONSE_2.smartAccount);
@@ -140,9 +140,9 @@ describe('GizaAgent Client Integration', () => {
         .reply(200, MOCK_SMART_ACCOUNT_RESPONSE_1);
 
       const results = await Promise.all([
-        agent.smartAccount.create({ origin_wallet: VALID_ADDRESSES.EOA_1 }),
-        agent.smartAccount.create({ origin_wallet: VALID_ADDRESSES.EOA_1 }),
-        agent.smartAccount.create({ origin_wallet: VALID_ADDRESSES.EOA_1 }),
+        giza.agent.createSmartAccount({ origin_wallet: VALID_ADDRESSES.EOA_1 }),
+        giza.agent.createSmartAccount({ origin_wallet: VALID_ADDRESSES.EOA_1 }),
+        giza.agent.createSmartAccount({ origin_wallet: VALID_ADDRESSES.EOA_1 }),
       ]);
 
       expect(results).toHaveLength(3);
@@ -162,7 +162,7 @@ describe('GizaAgent Client Integration', () => {
         agentId: 'custom-agent-123',
       });
       const customMock = new MockAdapter(
-        ((customAgent.smartAccount as any).httpClient as any).axiosInstance
+        ((customAgent.agent as any).httpClient as any).axiosInstance
       );
 
       customMock
@@ -173,7 +173,7 @@ describe('GizaAgent Client Integration', () => {
           return [200, MOCK_SMART_ACCOUNT_RESPONSE_1];
         });
 
-      await customAgent.smartAccount.create({
+      await customAgent.agent.createSmartAccount({
         origin_wallet: VALID_ADDRESSES.EOA_1,
       });
 
@@ -188,7 +188,7 @@ describe('GizaAgent Client Integration', () => {
 
       expect(customAgent.getConfig().timeout).toBe(30000);
 
-      const httpClient = (customAgent.smartAccount as any).httpClient;
+      const httpClient = (customAgent.agent as any).httpClient;
       const axiosInstance = (httpClient as any).axiosInstance;
       expect(axiosInstance.defaults.timeout).toBe(30000);
     });
@@ -207,7 +207,7 @@ describe('GizaAgent Client Integration', () => {
         chainId: Chain.ARBITRUM,
       });
       const arbitrumMock = new MockAdapter(
-        ((arbitrumAgent.smartAccount as any).httpClient as any).axiosInstance
+        ((arbitrumAgent.agent as any).httpClient as any).axiosInstance
       );
 
       arbitrumMock
@@ -218,7 +218,7 @@ describe('GizaAgent Client Integration', () => {
           return [200, MOCK_SMART_ACCOUNT_RESPONSE_2];
         });
 
-      const result = await arbitrumAgent.smartAccount.create({
+      const result = await arbitrumAgent.agent.createSmartAccount({
         origin_wallet: VALID_ADDRESSES.EOA_2,
       });
 
@@ -228,13 +228,13 @@ describe('GizaAgent Client Integration', () => {
   });
 
   describe('error handling across client', () => {
-    it('should propagate errors from smart account module', async () => {
+    it('should propagate errors from agent module', async () => {
       mockAxios.onPost('/api/v1/proxy/zerodev/smart-accounts').reply(500, {
         message: 'Internal server error',
       });
 
       await expect(
-        agent.smartAccount.create({
+        giza.agent.createSmartAccount({
           origin_wallet: VALID_ADDRESSES.EOA_1,
         })
       ).rejects.toThrow();
@@ -244,7 +244,7 @@ describe('GizaAgent Client Integration', () => {
       mockAxios.onPost('/api/v1/proxy/zerodev/smart-accounts').networkError();
 
       await expect(
-        agent.smartAccount.create({
+        giza.agent.createSmartAccount({
           origin_wallet: VALID_ADDRESSES.EOA_1,
         })
       ).rejects.toThrow();
@@ -258,7 +258,7 @@ describe('GizaAgent Client Integration', () => {
         .reply(200, MOCK_SMART_ACCOUNT_RESPONSE_1);
 
       const promises = Array.from({ length: 5 }, (_, i) =>
-        agent.smartAccount.create({
+        giza.agent.createSmartAccount({
           origin_wallet: VALID_ADDRESSES.EOA_1,
         })
       );
@@ -269,13 +269,13 @@ describe('GizaAgent Client Integration', () => {
       expect(mockAxios.history.post).toHaveLength(5);
     });
 
-    it('should handle concurrent getInfo calls', async () => {
+    it('should handle concurrent getSmartAccount calls', async () => {
       mockAxios
         .onGet(/\/api\/v1\/proxy\/zerodev\/smart-accounts\?.*/)
         .reply(200, MOCK_SMART_ACCOUNT_RESPONSE_1);
 
       const promises = Array.from({ length: 3 }, () =>
-        agent.smartAccount.getInfo({
+        giza.agent.getSmartAccount({
           origin_wallet: VALID_ADDRESSES.EOA_1,
         })
       );
@@ -296,7 +296,7 @@ describe('GizaAgent Client Integration', () => {
           return [200, MOCK_SMART_ACCOUNT_RESPONSE_1];
         });
 
-      await agent.smartAccount.create({
+      await giza.agent.createSmartAccount({
         origin_wallet: VALID_ADDRESSES.EOA_1,
       });
     });
@@ -306,7 +306,7 @@ describe('GizaAgent Client Integration', () => {
 
       const customAgent = new GizaAgent({ chainId: Chain.BASE });
       const customMock = new MockAdapter(
-        ((customAgent.smartAccount as any).httpClient as any).axiosInstance
+        ((customAgent.agent as any).httpClient as any).axiosInstance
       );
 
       customMock
@@ -316,7 +316,7 @@ describe('GizaAgent Client Integration', () => {
           return [200, MOCK_SMART_ACCOUNT_RESPONSE_1];
         });
 
-      await customAgent.smartAccount.create({
+      await customAgent.agent.createSmartAccount({
         origin_wallet: VALID_ADDRESSES.EOA_1,
       });
 
@@ -341,12 +341,12 @@ describe('GizaAgent Client Integration', () => {
     it('should maintain independent state per instance', async () => {
       const agent1 = new GizaAgent({ chainId: Chain.BASE });
       const mock1 = new MockAdapter(
-        ((agent1.smartAccount as any).httpClient as any).axiosInstance
+        ((agent1.agent as any).httpClient as any).axiosInstance
       );
 
       const agent2 = new GizaAgent({ chainId: Chain.ARBITRUM });
       const mock2 = new MockAdapter(
-        ((agent2.smartAccount as any).httpClient as any).axiosInstance
+        ((agent2.agent as any).httpClient as any).axiosInstance
       );
 
       mock1
@@ -357,11 +357,11 @@ describe('GizaAgent Client Integration', () => {
         .onPost('/api/v1/proxy/zerodev/smart-accounts')
         .reply(200, MOCK_SMART_ACCOUNT_RESPONSE_2);
 
-      const result1 = await agent1.smartAccount.create({
+      const result1 = await agent1.agent.createSmartAccount({
         origin_wallet: VALID_ADDRESSES.EOA_1,
       });
 
-      const result2 = await agent2.smartAccount.create({
+      const result2 = await agent2.agent.createSmartAccount({
         origin_wallet: VALID_ADDRESSES.EOA_2,
       });
 
@@ -373,4 +373,3 @@ describe('GizaAgent Client Integration', () => {
     });
   });
 });
-
