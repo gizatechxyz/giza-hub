@@ -1,7 +1,7 @@
 /**
  * E2E Tests for Giza Agent SDK
  * 
- * These tests run on localbackend services (agents-api and arma-backend)
+ * These tests run on local backend services (agents-api and arma-backend)
  * 
  * Prerequisites:
  * - agents-api running locally
@@ -20,17 +20,21 @@ describe('Agent SDK E2E Tests', () => {
   const TEST_EOA_ARBITRUM =
     process.env.TEST_EOA_ARBITRUM || '0x1234567890123456789012345678901234567890';
 
+  // ============================================================================
+  // Smart Account Creation Tests
+  // ============================================================================
+
   describe('Smart Account Creation - BASE Chain', () => {
-    let agent: GizaAgent;
+    let giza: GizaAgent;
 
     beforeAll(() => {
-      agent = new GizaAgent({
+      giza = new GizaAgent({
         chainId: Chain.BASE,
       });
     });
 
     it('should create a smart account on BASE chain', async () => {
-      const result = await agent.smartAccount.create({
+      const result = await giza.agent.createSmartAccount({
         origin_wallet: TEST_EOA_BASE as any,
       });
 
@@ -57,31 +61,35 @@ describe('Agent SDK E2E Tests', () => {
 
     it('should reject invalid EOA address', async () => {
       await expect(
-        agent.smartAccount.create({
+        giza.agent.createSmartAccount({
           origin_wallet: 'invalid-address' as any,
         })
       ).rejects.toThrow(ValidationError);
     });
   });
 
+  // ============================================================================
+  // Get Smart Account Info Tests
+  // ============================================================================
+
   describe('Get Smart Account Info', () => {
-    let agent: GizaAgent;
+    let giza: GizaAgent;
     let smartAccountAddress: string;
 
     beforeAll(async () => {
-      agent = new GizaAgent({
+      giza = new GizaAgent({
         chainId: Chain.BASE,
       });
 
       // Create account first
-      const result = await agent.smartAccount.create({
+      const result = await giza.agent.createSmartAccount({
         origin_wallet: TEST_EOA_BASE as any,
       });
       smartAccountAddress = result.smartAccountAddress;
     }, 30000);
 
     it('should get smart account info by EOA', async () => {
-      const result = await agent.smartAccount.getInfo({
+      const result = await giza.agent.getSmartAccount({
         origin_wallet: TEST_EOA_BASE as any,
       });
 
@@ -99,23 +107,29 @@ describe('Agent SDK E2E Tests', () => {
       const nonExistentEOA = '0x9999999999999999999999999999999999999999';
 
       await expect(
-        agent.smartAccount.getInfo({
+        giza.agent.getSmartAccount({
           origin_wallet: nonExistentEOA as any,
         })
       ).rejects.toThrow();
     }, 30000);
   });
 
+  // ============================================================================
+  // Error Handling Tests
+  // ============================================================================
+
   describe('Error Handling', () => {
-    let agent: GizaAgent;
+    let giza: GizaAgent;
 
     beforeAll(() => {
-      agent = new GizaAgent({
+      giza = new GizaAgent({
         chainId: Chain.BASE,
       });
     });
 
-    it('should handle invalid authentication', async () => {
+    // Note: The zerodev proxy endpoint doesn't require authentication,
+    // so we test against an endpoint that does (e.g., getPortfolio for a wallet)
+    it('should handle invalid authentication on protected endpoints', async () => {
       const originalApiKey = process.env.GIZA_API_KEY;
 
       try {
@@ -125,9 +139,10 @@ describe('Agent SDK E2E Tests', () => {
           chainId: Chain.BASE,
         });
 
+        // getPortfolio requires authentication
         await expect(
-          unauthorizedAgent.smartAccount.create({
-            origin_wallet: TEST_EOA_BASE as any,
+          unauthorizedAgent.agent.getPortfolio({
+            wallet: TEST_EOA_BASE as any,
           })
         ).rejects.toThrow();
       } finally {
@@ -146,7 +161,7 @@ describe('Agent SDK E2E Tests', () => {
 
       for (const invalidAddress of invalidAddresses) {
         await expect(
-          agent.smartAccount.create({
+          giza.agent.createSmartAccount({
             origin_wallet: invalidAddress as any,
           })
         ).rejects.toThrow(ValidationError);
@@ -154,16 +169,20 @@ describe('Agent SDK E2E Tests', () => {
     });
   });
 
+  // ============================================================================
+  // Multiple Chains Tests
+  // ============================================================================
+
   describe('Multiple Chains', () => {
     it('should handle accounts on different chains independently', async () => {
       const baseAgent = new GizaAgent({ chainId: Chain.BASE });
       const arbitrumAgent = new GizaAgent({ chainId: Chain.ARBITRUM });
 
-      const baseResult = await baseAgent.smartAccount.create({
+      const baseResult = await baseAgent.agent.createSmartAccount({
         origin_wallet: TEST_EOA_BASE as any,
       });
 
-      const arbitrumResult = await arbitrumAgent.smartAccount.create({
+      const arbitrumResult = await arbitrumAgent.agent.createSmartAccount({
         origin_wallet: TEST_EOA_ARBITRUM as any,
       });
 
@@ -175,6 +194,10 @@ describe('Agent SDK E2E Tests', () => {
     }, 30000);
   });
 
+  // ============================================================================
+  // Custom Configuration Tests
+  // ============================================================================
+
   describe('Custom Configuration', () => {
     it('should work with custom agent ID', async () => {
       const customAgent = new GizaAgent({
@@ -184,12 +207,10 @@ describe('Agent SDK E2E Tests', () => {
 
       expect(customAgent.getAgentId()).toBe('test-agent-e2e');
 
-    
-        const result = await customAgent.smartAccount.create({
-            origin_wallet: TEST_EOA_BASE as any,
-        });
-        expect(result).toBeDefined();
-      
+      const result = await customAgent.agent.createSmartAccount({
+        origin_wallet: TEST_EOA_BASE as any,
+      });
+      expect(result).toBeDefined();
     }, 30000);
 
     it('should work with custom timeout', async () => {
@@ -200,7 +221,7 @@ describe('Agent SDK E2E Tests', () => {
 
       expect(customAgent.getConfig().timeout).toBe(60000);
 
-      const result = await customAgent.smartAccount.create({
+      const result = await customAgent.agent.createSmartAccount({
         origin_wallet: TEST_EOA_BASE as any,
       });
 
@@ -215,7 +236,7 @@ describe('Agent SDK E2E Tests', () => {
 
       expect(retryAgent.getConfig().enableRetry).toBe(true);
 
-      const result = await retryAgent.smartAccount.create({
+      const result = await retryAgent.agent.createSmartAccount({
         origin_wallet: TEST_EOA_BASE as any,
       });
 
@@ -223,24 +244,28 @@ describe('Agent SDK E2E Tests', () => {
     }, 30000);
   });
 
+  // ============================================================================
+  // Concurrent Operations Tests
+  // ============================================================================
+
   describe('Concurrent Operations', () => {
-    let agent: GizaAgent;
+    let giza: GizaAgent;
 
     beforeAll(() => {
-      agent = new GizaAgent({
+      giza = new GizaAgent({
         chainId: Chain.BASE,
       });
     });
 
     it('should handle concurrent create operations', async () => {
       const promises = [
-        agent.smartAccount.create({
+        giza.agent.createSmartAccount({
           origin_wallet: TEST_EOA_BASE as any,
         }),
-        agent.smartAccount.create({
+        giza.agent.createSmartAccount({
           origin_wallet: TEST_EOA_BASE as any,
         }),
-        agent.smartAccount.create({
+        giza.agent.createSmartAccount({
           origin_wallet: TEST_EOA_BASE as any,
         }),
       ];
@@ -253,20 +278,20 @@ describe('Agent SDK E2E Tests', () => {
       expect(results[1].smartAccountAddress).toBe(results[2].smartAccountAddress);
     }, 30000);
 
-    it('should handle concurrent getInfo operations', async () => {
+    it('should handle concurrent getSmartAccount operations', async () => {
       // Create account first
-      await agent.smartAccount.create({
+      await giza.agent.createSmartAccount({
         origin_wallet: TEST_EOA_BASE as any,
       });
 
       const promises = [
-        agent.smartAccount.getInfo({
+        giza.agent.getSmartAccount({
           origin_wallet: TEST_EOA_BASE as any,
         }),
-        agent.smartAccount.getInfo({
+        giza.agent.getSmartAccount({
           origin_wallet: TEST_EOA_BASE as any,
         }),
-        agent.smartAccount.getInfo({
+        giza.agent.getSmartAccount({
           origin_wallet: TEST_EOA_BASE as any,
         }),
       ];
@@ -279,4 +304,3 @@ describe('Agent SDK E2E Tests', () => {
     }, 30000);
   });
 });
-
