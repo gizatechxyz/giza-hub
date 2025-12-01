@@ -89,5 +89,22 @@ export const API_ERROR_RESPONSES = {
     message: 'Too many requests',
     statusCode: 429,
   },
+  // Performance-specific errors
+  WALLET_NOT_FOUND: {
+    message: 'Data not found for the wallet',
+    statusCode: 404,
+  },
+  INVALID_DATE_FORMAT: {
+    message: 'Invalid date format',
+    statusCode: 400,
+  },
+  INSUFFICIENT_APR_DATA: {
+    message: 'Not enough historical data for APR calculation',
+    statusCode: 400,
+  },
+  WALLET_DEACTIVATED: {
+    message: 'Wallet status is deactivated',
+    statusCode: 400,
+  },
 } as const;
 

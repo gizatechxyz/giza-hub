@@ -1,6 +1,7 @@
 import { HttpClient } from './http/client';
 import { PartnerAuth } from './auth/partner-auth';
 import { SmartAccountModule } from './modules/smart-account.module';
+import { PerformanceModule } from './modules/performance.module';
 import { GizaAgentConfig, ResolvedGizaAgentConfig } from './types/config';
 import { Chain, ValidationError } from './types/common';
 import { DEFAULT_AGENT_ID, DEFAULT_TIMEOUT } from './constants';
@@ -38,6 +39,11 @@ export class GizaAgent {
    */
   public readonly smartAccount: SmartAccountModule;
 
+  /**
+   * Performance module for tracking agent performance and analytics
+   */
+  public readonly performance: PerformanceModule;
+
   constructor(config: GizaAgentConfig) {
     // Validate and resolve configuration
     this.config = this.validateAndResolveConfig(config);
@@ -55,6 +61,7 @@ export class GizaAgent {
 
     // Initialize modules
     this.smartAccount = new SmartAccountModule(this.httpClient, this.config);
+    this.performance = new PerformanceModule(this.httpClient, this.config);
   }
 
   /**

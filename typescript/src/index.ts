@@ -18,9 +18,37 @@ export type {
   SmartAccountInfo,
 } from './types/smart-account';
 export type { Address } from './types/common';
+export type {
+  GetChartParams,
+  GetPortfolioParams,
+  GetTransactionsParams,
+  GetAPRParams,
+  PerformanceChartResponse,
+  PerformanceData,
+  AgentInfo,
+  Deposit,
+  Withdraw,
+  WithdrawDetail,
+  TransactionHistoryResponse,
+  Transaction,
+  PaginationInfo,
+  WalletAprResponse,
+  WalletAprSubPeriod,
+  AccruedRewardsWithValue,
+  AllocatedValue,
+  Portfolio,
+  AccruedRewardsBySymbol,
+  TokenDistribution,
+} from './types/performance';
 
 // Enums
 export { Chain } from './types/common';
+export { 
+  AgentStatus,
+  TxAction,
+  TxStatus,
+  SortOrder,
+} from './types/performance';
 
 // Errors
 export {
