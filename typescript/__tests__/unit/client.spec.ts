@@ -32,9 +32,21 @@ describe('GizaAgent', () => {
       );
     });
 
+    it('should throw ValidationError when GIZA_PARTNER_NAME is missing', () => {
+      clearTestEnv();
+      process.env.GIZA_API_KEY = 'test-key';
+      process.env.GIZA_API_URL = 'https://api.test.giza.example';
+
+      expect(() => new GizaAgent({ chainId: Chain.BASE })).toThrow(ValidationError);
+      expect(() => new GizaAgent({ chainId: Chain.BASE })).toThrow(
+        'GIZA_PARTNER_NAME environment variable is required'
+      );
+    });
+
     it('should throw ValidationError when GIZA_API_URL is missing', () => {
       clearTestEnv();
       process.env.GIZA_API_KEY = 'test-key';
+      process.env.GIZA_PARTNER_NAME = 'test-partner';
 
       expect(() => new GizaAgent({ chainId: Chain.BASE })).toThrow(ValidationError);
       expect(() => new GizaAgent({ chainId: Chain.BASE })).toThrow(
@@ -189,7 +201,7 @@ describe('GizaAgent', () => {
   });
 
   describe('getConfig', () => {
-    it('should return config without API key', () => {
+    it('should return config without API key and partner name', () => {
       const giza = new GizaAgent({ chainId: Chain.BASE });
       const config = giza.getConfig();
 
@@ -199,6 +211,7 @@ describe('GizaAgent', () => {
       expect(config).toHaveProperty('timeout');
       expect(config).toHaveProperty('enableRetry');
       expect(config).not.toHaveProperty('partnerApiKey');
+      expect(config).not.toHaveProperty('partnerName');
     });
 
     it('should return correct config values', () => {

@@ -9,6 +9,7 @@ import axios from 'axios';
 
 interface E2EConfig {
   apiKey: string;
+  partnerName: string;
   apiUrl: string;
 }
 
@@ -17,12 +18,20 @@ interface E2EConfig {
  */
 function validateEnvironment(): E2EConfig {
   const apiKey = process.env.GIZA_API_KEY;
+  const partnerName = process.env.GIZA_PARTNER_NAME;
   const apiUrl = process.env.GIZA_API_URL;
 
   if (!apiKey) {
     throw new Error(
       'E2E Tests require GIZA_API_KEY environment variable. ' +
         'Please set it to a valid API key for testing.'
+    );
+  }
+
+  if (!partnerName) {
+    throw new Error(
+      'E2E Tests require GIZA_PARTNER_NAME environment variable. ' +
+        'Please set it to the partner name associated with your API key.'
     );
   }
 
@@ -35,33 +44,35 @@ function validateEnvironment(): E2EConfig {
 
   console.log('✓ Environment variables validated');
   console.log(`  - API URL: ${apiUrl}`);
+  console.log(`  - Partner: ${partnerName}`);
   console.log(`  - API Key: ${apiKey.substring(0, 10)}...`);
 
-  return { apiKey, apiUrl };
+  return { apiKey, partnerName, apiUrl };
 }
 
 /**
  * Check if the backend API is healthy and accessible
  */
-async function checkBackendHealth(apiUrl: string, apiKey: string): Promise<void> {
+async function checkBackendHealth(config: E2EConfig): Promise<void> {
   try {
     // Try to hit a health check endpoint or root endpoint
-    const response = await axios.get(apiUrl, {
+    const response = await axios.get(config.apiUrl, {
       headers: {
-        'X-Partner-API-Key': apiKey,
+        'X-Partner-API-Key': config.apiKey,
+        'X-Partner-Name': config.partnerName,
       },
       timeout: 5000,
       validateStatus: () => true, // Accept any status
     });
 
-    console.log(`✓ Backend API is accessible at ${apiUrl}`);
+    console.log(`✓ Backend API is accessible at ${config.apiUrl}`);
     console.log(`  - Status: ${response.status}`);
   } catch (error) {
     if (axios.isAxiosError(error)) {
       if (error.code === 'ECONNREFUSED') {
         throw new Error(
-          `Cannot connect to backend at ${apiUrl}. ` +
-            'Please ensure the agents-api service is running locally. ' +
+          `Cannot connect to backend at ${config.apiUrl}. ` +
+            'Please ensure the arma-backend service is running locally. ' +
             'See __tests__/e2e/README.md for setup instructions.'
         );
       }
@@ -79,15 +90,21 @@ async function checkBackendHealth(apiUrl: string, apiKey: string): Promise<void>
  */
 function displayTestInfo(): void {
   console.log('\n' + '='.repeat(70));
-  console.log('E2E Test Environment Setup');
+  console.log('Agent SDK E2E Test Suite');
   console.log('='.repeat(70));
   console.log('');
-  console.log('These tests will connect to real backend services:');
-  console.log('  - agents-api: Handles smart account creation');
-  console.log('  - arma-backend: Provides backend functionality');
+  console.log('Test Flow:');
+  console.log('  01. Smart Account - Create and fund smart account');
+  console.log('  02. Protocols - Discover available DeFi protocols');
+  console.log('  03. Activation - Activate the agent');
+  console.log('  04. Performance - Monitor performance and portfolio');
+  console.log('  05. Withdrawal - Partial and full withdrawal');
   console.log('');
-  console.log('Make sure both services are running locally before running E2E tests.');
-  console.log('See __tests__/e2e/README.md for detailed setup instructions.');
+  console.log('Prerequisites:');
+  console.log('  - agents-api running locally');
+  console.log('  - arma-backend running locally');
+  console.log('  - Partner API key created');
+  console.log('  - Test EOA wallet funded with USDC on Base');
   console.log('');
   console.log('='.repeat(70));
   console.log('');
@@ -101,7 +118,7 @@ export default async function globalSetup(): Promise<void> {
 
   try {
     const config = validateEnvironment();
-    await checkBackendHealth(config.apiUrl, config.apiKey);
+    await checkBackendHealth(config);
 
     console.log('');
     console.log('✓ E2E environment is ready');

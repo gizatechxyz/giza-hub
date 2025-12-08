@@ -2,14 +2,17 @@ import { ValidationError } from '../types/common';
 
 /**
  * Partner authentication handler
- * Manages API key for partner-level authentication
+ * Manages API key and partner name for partner-level authentication
  */
 export class PartnerAuth {
   private readonly apiKey: string;
+  private readonly partnerName: string;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, partnerName: string) {
     this.validateApiKey(apiKey);
+    this.validatePartnerName(partnerName);
     this.apiKey = apiKey;
+    this.partnerName = partnerName;
   }
 
   /**
@@ -30,12 +33,30 @@ export class PartnerAuth {
   }
 
   /**
+   * Validate partner name format and presence
+   */
+  private validatePartnerName(partnerName: string): void {
+    if (!partnerName) {
+      throw new ValidationError('Partner name is required');
+    }
+
+    if (typeof partnerName !== 'string') {
+      throw new ValidationError('Partner name must be a string');
+    }
+
+    if (partnerName.trim().length === 0) {
+      throw new ValidationError('Partner name cannot be empty');
+    }
+  }
+
+  /**
    * Get authentication headers for API requests
-   * Returns headers object with X-Partner-API-Key
+   * Returns headers object with X-Partner-API-Key and X-Partner-Name
    */
   public getHeaders(): Record<string, string> {
     return {
       'X-Partner-API-Key': this.apiKey,
+      'X-Partner-Name': this.partnerName,
     };
   }
 
@@ -44,6 +65,13 @@ export class PartnerAuth {
    */
   public getApiKey(): string {
     return this.apiKey;
+  }
+
+  /**
+   * Get the partner name
+   */
+  public getPartnerName(): string {
+    return this.partnerName;
   }
 
   /**

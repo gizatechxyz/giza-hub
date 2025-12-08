@@ -37,6 +37,11 @@ export interface ResolvedGizaAgentConfig extends Required<GizaAgentConfig> {
   partnerApiKey: string;
 
   /**
+   * Partner name loaded from GIZA_PARTNER_NAME environment variable
+   */
+  partnerName: string;
+
+  /**
    * Backend URL loaded from GIZA_API_URL environment variable
    */
   backendUrl: string;

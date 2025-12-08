@@ -4,6 +4,7 @@
 
 export interface TestEnvConfig {
   GIZA_API_KEY: string;
+  GIZA_PARTNER_NAME: string;
   GIZA_API_URL: string;
 }
 
@@ -14,6 +15,7 @@ const ORIGINAL_ENV = { ...process.env };
  */
 export function setupTestEnv(config: Partial<TestEnvConfig> = {}): void {
   process.env.GIZA_API_KEY = config.GIZA_API_KEY || 'test-api-key-12345';
+  process.env.GIZA_PARTNER_NAME = config.GIZA_PARTNER_NAME || 'test-partner';
   process.env.GIZA_API_URL = config.GIZA_API_URL || 'https://api.test.giza.example';
 }
 
@@ -22,6 +24,7 @@ export function setupTestEnv(config: Partial<TestEnvConfig> = {}): void {
  */
 export function clearTestEnv(): void {
   delete process.env.GIZA_API_KEY;
+  delete process.env.GIZA_PARTNER_NAME;
   delete process.env.GIZA_API_URL;
 }
 
