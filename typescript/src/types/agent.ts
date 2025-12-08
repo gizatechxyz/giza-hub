@@ -8,11 +8,12 @@ import { Address, Chain } from './common';
  * Agent status enum
  */
 export enum AgentStatus {
-  ACTIVE = 'ACTIVE',
-  DEACTIVATED = 'DEACTIVATED',
-  DEACTIVATING = 'DEACTIVATING',
-  ACTIVATING = 'ACTIVATING',
-  DEACTIVATED_FEE_NOT_PAID = 'DEACTIVATED_FEE_NOT_PAID',
+  ACTIVE = 'active',
+  DEACTIVATED = 'deactivated',
+  DEACTIVATING = 'deactivating',
+  ACTIVATING = 'activating',
+  ACTIVATION_FAILED = 'activation_failed',
+  DEACTIVATED_FEE_NOT_PAID = 'deactivated_fee_not_paid',
 }
 
 /**

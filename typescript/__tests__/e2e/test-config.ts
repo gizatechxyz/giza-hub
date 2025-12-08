@@ -16,7 +16,6 @@ export const E2E_CONFIG = {
 
   /**
    * Default agent ID for testing
-   * Available: 'giza-app' (supports Base), 'pulse' (Arbitrum only)
    */
   AGENT_ID: 'giza-app',
 } as const;

@@ -1,7 +1,7 @@
 /**
  * Default agent ID for Giza smart accounts
  */
-export const DEFAULT_AGENT_ID = 'arma-dev';
+export const DEFAULT_AGENT_ID = 'giza-app';
 
 /**
  * Default HTTP timeout in milliseconds
