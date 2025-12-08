@@ -1,3 +1,6 @@
+/// <reference types="node" />
+/// <reference types="jest" />
+
 /**
  * E2E Test Setup
  * 
@@ -5,6 +8,8 @@
  * and ensure the backend services are running locally.
  */
 
+import * as fs from 'fs';
+import * as path from 'path';
 import axios from 'axios';
 
 interface E2EConfig {
@@ -12,6 +17,13 @@ interface E2EConfig {
   partnerName: string;
   apiUrl: string;
 }
+
+/**
+ * Path to the shared context file
+ * Jest provides __dirname in test files
+ */
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const CONTEXT_FILE_PATH = path.join(__dirname, '.e2e-context.json');
 
 /**
  * Validate required environment variables
@@ -114,6 +126,12 @@ function displayTestInfo(): void {
  * Global setup function called before all E2E tests
  */
 export default async function globalSetup(): Promise<void> {
+  // Clean up any existing context file from previous test runs
+  if (fs.existsSync(CONTEXT_FILE_PATH)) {
+    fs.unlinkSync(CONTEXT_FILE_PATH);
+    console.log('✓ Cleaned up previous test context');
+  }
+
   displayTestInfo();
 
   try {
@@ -144,6 +162,7 @@ export default async function globalSetup(): Promise<void> {
 }
 
 // Run setup immediately when loaded by Jest
+// @ts-expect-error - beforeAll is provided by Jest globally
 beforeAll(async () => {
   await globalSetup();
 }, 30000);
