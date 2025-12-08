@@ -112,7 +112,36 @@ export interface ZerodevSmartWalletResponse {
 // ============================================================================
 
 /**
- * Response from get protocols endpoint
+ * Pool information for a protocol
+ */
+export interface ProtocolPool {
+  name: string;
+  apy: number;
+}
+
+/**
+ * Protocol information from the API
+ */
+export interface Protocol {
+  name: string;
+  available: boolean;
+  description: string;
+  tvl: number;
+  apy: number;
+  pools: ProtocolPool[];
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Raw response from get protocols endpoint (from API)
+ */
+export interface ProtocolsRawResponse {
+  protocols: Protocol[];
+}
+
+/**
+ * Response from get protocols endpoint (transformed for SDK consumers)
  */
 export interface ProtocolsResponse {
   protocols: string[];
