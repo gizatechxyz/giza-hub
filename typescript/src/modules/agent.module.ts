@@ -9,6 +9,7 @@ import {
   SmartAccountInfo,
   ZerodevSmartWalletResponse,
   ProtocolsResponse,
+  ProtocolsRawResponse,
   ActivateParams,
   ActivateResponse,
   DeactivateParams,
@@ -180,11 +181,16 @@ export class AgentModule {
   public async getProtocols(tokenAddress: Address): Promise<ProtocolsResponse> {
     this.validateAddress(tokenAddress, 'token address');
 
-    const response = await this.httpClient.get<ProtocolsResponse>(
-      `/api/v1/protocols/${this.config.chainId}/${tokenAddress}/protocols`
+    const response = await this.httpClient.get<ProtocolsRawResponse>(
+      `/api/v1/${this.config.chainId}/${tokenAddress}/protocols`
     );
 
-    return response;
+    // Transform to extract just available protocol names
+    const availableProtocols = response.protocols
+      .filter(p => p.available)
+      .map(p => p.name);
+
+    return { protocols: availableProtocols };
   }
 
   /**
@@ -209,7 +215,7 @@ export class AgentModule {
     }
 
     await this.httpClient.put<void>(
-      `/api/v1/agents/${this.config.chainId}/wallets/${wallet}/protocols`,
+      `/api/v1/${this.config.chainId}/wallets/${wallet}/protocols`,
       protocols
     );
   }
@@ -254,7 +260,7 @@ export class AgentModule {
     };
 
     const response = await this.httpClient.post<ActivateResponse>(
-      `/api/v1/agents/${this.config.chainId}/wallets`,
+      `/api/v1/${this.config.chainId}/wallets`,
       requestBody
     );
 
@@ -284,7 +290,7 @@ export class AgentModule {
     });
 
     const response = await this.httpClient.post<DeactivateResponse>(
-      `/api/v1/agents/${this.config.chainId}/wallets/${params.wallet}:deactivate?${queryParams.toString()}`
+      `/api/v1/${this.config.chainId}/wallets/${params.wallet}:deactivate?${queryParams.toString()}`
     );
 
     return response;
@@ -316,7 +322,7 @@ export class AgentModule {
     });
 
     const response = await this.httpClient.post<TopUpResponse>(
-      `/api/v1/agents/${this.config.chainId}/wallets/${params.wallet}:top-up?${queryParams.toString()}`
+      `/api/v1/${this.config.chainId}/wallets/${params.wallet}:top-up?${queryParams.toString()}`
     );
 
     return response;
@@ -338,7 +344,7 @@ export class AgentModule {
     this.validateAddress(params.wallet, 'wallet address');
 
     const response = await this.httpClient.post<RunResponse>(
-      `/api/v1/agents/${this.config.chainId}/wallets/${params.wallet}:run`
+      `/api/v1/${this.config.chainId}/wallets/${params.wallet}:run`
     );
 
     return response;
@@ -371,7 +377,7 @@ export class AgentModule {
     }
 
     const queryString = queryParams.toString();
-    const url = `/api/v1/agents/${this.config.chainId}/wallets/${params.wallet}/performance${
+    const url = `/api/v1/${this.config.chainId}/wallets/${params.wallet}/performance${
       queryString ? `?${queryString}` : ''
     }`;
 
@@ -403,7 +409,7 @@ export class AgentModule {
     }
 
     const queryString = queryParams.toString();
-    const url = `/api/v1/agents/${this.config.chainId}/wallets/${params.wallet}${
+    const url = `/api/v1/${this.config.chainId}/wallets/${params.wallet}${
       queryString ? `?${queryString}` : ''
     }`;
 
@@ -441,7 +447,7 @@ export class AgentModule {
     }
 
     const queryString = queryParams.toString();
-    const url = `/api/v1/agents/${this.config.chainId}/wallets/${params.wallet}/apr${
+    const url = `/api/v1/${this.config.chainId}/wallets/${params.wallet}/apr${
       queryString ? `?${queryString}` : ''
     }`;
 
@@ -470,7 +476,7 @@ export class AgentModule {
     }
 
     const queryString = queryParams.toString();
-    const url = `/api/v1/agents/${this.config.chainId}/wallets/${wallet}/deposits${
+    const url = `/api/v1/${this.config.chainId}/wallets/${wallet}/deposits${
       queryString ? `?${queryString}` : ''
     }`;
 
@@ -512,7 +518,7 @@ export class AgentModule {
       queryParams.append('sort', params.sort);
     }
 
-    const url = `/api/v1/agents/${this.config.chainId}/wallets/${params.wallet}/transactions?${queryParams.toString()}`;
+    const url = `/api/v1/${this.config.chainId}/wallets/${params.wallet}/transactions?${queryParams.toString()}`;
 
     const response = await this.httpClient.get<TransactionHistoryResponse>(url);
     return response;
@@ -609,7 +615,7 @@ export class AgentModule {
     amount: string
   ): Promise<WithdrawResponse> {
     const response = await this.httpClient.post<WithdrawResponse>(
-      `/api/v1/agents/${this.config.chainId}/wallets/${wallet}:withdraw`,
+      `/api/v1/${this.config.chainId}/wallets/${wallet}:withdraw`,
       { amount: parseInt(amount, 10) }
     );
 
@@ -630,7 +636,7 @@ export class AgentModule {
     });
 
     const response = await this.httpClient.post<WithdrawResponse>(
-      `/api/v1/agents/${this.config.chainId}/wallets/${wallet}:deactivate?${queryParams.toString()}`
+      `/api/v1/${this.config.chainId}/wallets/${wallet}:deactivate?${queryParams.toString()}`
     );
 
     return response;
@@ -651,7 +657,7 @@ export class AgentModule {
   public async getWithdrawalStatus(wallet: Address): Promise<WithdrawalStatusResponse> {
     this.validateAddress(wallet, 'wallet address');
 
-    const url = `/api/v1/agents/${this.config.chainId}/wallets/${wallet}`;
+    const url = `/api/v1/${this.config.chainId}/wallets/${wallet}`;
 
     const agentInfo = await this.httpClient.get<{
       wallet: string;
@@ -747,7 +753,7 @@ export class AgentModule {
   public async getFees(wallet: Address): Promise<FeeResponse> {
     this.validateAddress(wallet, 'wallet address');
 
-    const url = `/api/v1/agents/${this.config.chainId}/wallets/${wallet}/fee`;
+    const url = `/api/v1/${this.config.chainId}/wallets/${wallet}/fee`;
 
     const response = await this.httpClient.get<FeeResponse>(url);
     return response;
@@ -780,7 +786,7 @@ export class AgentModule {
       eoa: params.origin_wallet,
     });
 
-    const url = `/api/v1/agents/${this.config.chainId}/wallets/${params.wallet}/limit?${queryParams.toString()}`;
+    const url = `/api/v1/${this.config.chainId}/wallets/${params.wallet}/limit?${queryParams.toString()}`;
 
     const response = await this.httpClient.get<LimitResponse>(url);
     return response;
@@ -808,7 +814,7 @@ export class AgentModule {
     this.validateAddress(wallet, 'wallet address');
 
     const response = await this.httpClient.post<ClaimedRewardsResponse>(
-      `/api/v1/agents/${this.config.chainId}/wallets/${wallet}:claim-rewards`
+      `/api/v1/${this.config.chainId}/wallets/${wallet}:claim-rewards`
     );
 
     return response;

@@ -4,7 +4,8 @@ module.exports = {
   roots: ['<rootDir>/__tests__'],
   testMatch: ['**/__tests__/e2e/**/*.e2e.spec.ts'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  testTimeout: 30000, // 30 seconds for E2E tests
+  // Increased timeout for E2E tests (5 minutes for long operations)
+  testTimeout: 300000,
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
@@ -20,5 +21,9 @@ module.exports = {
   restoreMocks: true,
   setupFiles: ['<rootDir>/__tests__/e2e/dotenv-config.ts'],
   setupFilesAfterEnv: ['<rootDir>/__tests__/e2e/setup.ts'],
+  maxWorkers: 1,
+  // Show console output immediately
+  verbose: true,
+  silent: false,
 };
 

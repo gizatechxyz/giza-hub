@@ -70,7 +70,7 @@ export class GizaAgent {
     this.config = this.validateAndResolveConfig(config);
 
     // Initialize authentication
-    this.auth = new PartnerAuth(this.config.partnerApiKey);
+    this.auth = new PartnerAuth(this.config.partnerApiKey, this.config.partnerName);
 
     // Initialize HTTP client with authentication headers
     this.httpClient = new HttpClient({
@@ -94,6 +94,15 @@ export class GizaAgent {
     if (!partnerApiKey) {
       throw new ValidationError(
         'GIZA_API_KEY environment variable is required'
+      );
+    }
+
+    // Get partner name from environment
+    const partnerName = process.env.GIZA_PARTNER_NAME;
+
+    if (!partnerName) {
+      throw new ValidationError(
+        'GIZA_PARTNER_NAME environment variable is required'
       );
     }
 
@@ -132,6 +141,7 @@ export class GizaAgent {
 
     return {
       partnerApiKey,
+      partnerName,
       backendUrl: backendUrl.replace(/\/$/, ''), // Remove trailing slash
       chainId: config.chainId,
       agentId: config.agentId || DEFAULT_AGENT_ID,
@@ -143,8 +153,8 @@ export class GizaAgent {
   /**
    * Get the current configuration 
    */
-  public getConfig(): Omit<ResolvedGizaAgentConfig, 'partnerApiKey'> {
-    const { partnerApiKey, ...safeConfig } = this.config;
+  public getConfig(): Omit<ResolvedGizaAgentConfig, 'partnerApiKey' | 'partnerName'> {
+    const { partnerApiKey, partnerName, ...safeConfig } = this.config;
     return safeConfig;
   }
 

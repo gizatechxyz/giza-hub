@@ -10,7 +10,7 @@ export interface GizaAgentConfig {
   chainId: Chain;
 
   /**
-   * Agent identifier (optional, defaults to "arma-dev")
+   * Agent identifier (optional, defaults to "giza-app")
    * Used to identify which agent manages the smart accounts
    */
   agentId?: string;
@@ -35,6 +35,11 @@ export interface ResolvedGizaAgentConfig extends Required<GizaAgentConfig> {
    * Partner API key loaded from GIZA_API_KEY environment variable
    */
   partnerApiKey: string;
+
+  /**
+   * Partner name loaded from GIZA_PARTNER_NAME environment variable
+   */
+  partnerName: string;
 
   /**
    * Backend URL loaded from GIZA_API_URL environment variable

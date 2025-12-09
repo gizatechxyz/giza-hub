@@ -6,4 +6,5 @@ dist
 .env.local
 *.tsbuildinfo
 coverage
+__tests__/e2e/.e2e-context.json
 

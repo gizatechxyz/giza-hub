@@ -8,11 +8,12 @@ import { Address, Chain } from './common';
  * Agent status enum
  */
 export enum AgentStatus {
-  ACTIVE = 'ACTIVE',
-  DEACTIVATED = 'DEACTIVATED',
-  DEACTIVATING = 'DEACTIVATING',
-  ACTIVATING = 'ACTIVATING',
-  DEACTIVATED_FEE_NOT_PAID = 'DEACTIVATED_FEE_NOT_PAID',
+  ACTIVE = 'active',
+  DEACTIVATED = 'deactivated',
+  DEACTIVATING = 'deactivating',
+  ACTIVATING = 'activating',
+  ACTIVATION_FAILED = 'activation_failed',
+  DEACTIVATED_FEE_NOT_PAID = 'deactivated_fee_not_paid',
 }
 
 /**
@@ -112,7 +113,36 @@ export interface ZerodevSmartWalletResponse {
 // ============================================================================
 
 /**
- * Response from get protocols endpoint
+ * Pool information for a protocol
+ */
+export interface ProtocolPool {
+  name: string;
+  apy: number;
+}
+
+/**
+ * Protocol information from the API
+ */
+export interface Protocol {
+  name: string;
+  available: boolean;
+  description: string;
+  tvl: number;
+  apy: number;
+  pools: ProtocolPool[];
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Raw response from get protocols endpoint (from API)
+ */
+export interface ProtocolsRawResponse {
+  protocols: Protocol[];
+}
+
+/**
+ * Response from get protocols endpoint (transformed for SDK consumers)
  */
 export interface ProtocolsResponse {
   protocols: string[];

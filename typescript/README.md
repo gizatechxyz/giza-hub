@@ -25,6 +25,7 @@ pnpm add @giza/agent-sdk
 Create a `.env` file:
 ```bash
 export GIZA_API_KEY="your-partner-api-key"
+export GIZA_PARTNER_NAME="your-partner-name"
 export GIZA_API_URL="giza-api-url"
 ```
 
@@ -215,6 +216,7 @@ await giza.agent.withdraw({
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `GIZA_API_KEY` | Partner API key from Giza | ✅ Yes |
+| `GIZA_PARTNER_NAME` | Partner name associated with the API key | ✅ Yes |
 | `GIZA_API_URL` | Backend API URL | ✅ Yes |
 
 ### Constructor Options
@@ -222,7 +224,7 @@ await giza.agent.withdraw({
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | `chainId` | `Chain` | ✅ | - | Blockchain network (BASE or ARBITRUM) |
-| `agentId` | `string` | ❌ | `"arma-dev"` | Agent identifier |
+| `agentId` | `string` | ❌ | `"giza-app"` | Agent identifier |
 | `timeout` | `number` | ❌ | `45000` | Request timeout in ms |
 | `enableRetry` | `boolean` | ❌ | `false` | Enable retry on 5xx errors |
 
@@ -291,12 +293,54 @@ pnpm run dev
 ### Testing
 
 ```bash
-# Run all tests
+# Run unit and integration tests
 pnpm test
 
-# Run E2E tests (requires local backend)
+# Run E2E tests (requires local backend services)
 pnpm run test:e2e
 ```
+
+### E2E Tests
+
+E2E tests run against local backend services and test the complete partner workflow:
+
+1. **Smart Account Creation** - Create and fund a smart account
+2. **Protocol Discovery** - Get available DeFi protocols
+3. **Agent Activation** - Activate the agent with protocols
+4. **Performance Monitoring** - Test all monitoring endpoints
+5. **Withdrawal** - Test partial and full withdrawal
+
+#### Prerequisites
+
+1. **Start backend services locally:**
+   ```bash
+   # Terminal 1: Start agents-api
+   cd agents-api && pnpm start:dev
+   
+   # Terminal 2: Start arma-backend
+   cd arma-backend && uv run uvicorn arma.main:app --port 8000
+   ```
+
+2. **Create a partner API key:**
+   ```bash
+   cd arma-backend
+   uv run arma partners create --name "e2e-test-partner" --description "E2E testing"
+   ```
+
+3. **Configure environment variables** (`.env` file):
+   ```bash
+   GIZA_API_KEY=<your-partner-api-key>
+   GIZA_PARTNER_NAME=e2e-test-partner
+   GIZA_API_URL=http://localhost:8000
+   E2E_TEST_EOA=<your-funded-eoa-on-base>
+   ```
+
+4. **Run E2E tests:**
+   ```bash
+   pnpm run test:e2e
+   ```
+
+The tests will prompt you to fund the smart account with USDC on Base chain during execution.
 
 ## License
 
