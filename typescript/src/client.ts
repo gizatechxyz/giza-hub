@@ -1,6 +1,7 @@
 import { HttpClient } from './http/client';
 import { PartnerAuth } from './auth/partner-auth';
 import { AgentModule } from './modules/agent.module';
+import { OptimizerModule } from './modules/optimizer.module';
 import { GizaAgentConfig, ResolvedGizaAgentConfig } from './types/config';
 import { Chain, ValidationError } from './types/common';
 import { DEFAULT_AGENT_ID, DEFAULT_TIMEOUT } from './constants';
@@ -45,6 +46,15 @@ import { DEFAULT_AGENT_ID, DEFAULT_TIMEOUT } from './constants';
  * 
  * // Withdraw
  * await giza.agent.withdraw({ wallet: account.smartAccountAddress, transfer: true });
+ * 
+ * // Optimize capital allocation
+ * const result = await giza.optimizer.optimize({
+ *   chainId: Chain.BASE,
+ *   total_capital: "1000000000",
+ *   token_address: USDC_ADDRESS,
+ *   current_allocations: { aave: "500000000", compound: "500000000" },
+ *   protocols: ["aave", "compound", "moonwell"],
+ * });
  * ```
  */
 export class GizaAgent {
@@ -65,6 +75,19 @@ export class GizaAgent {
    */
   public readonly agent: AgentModule;
 
+  /**
+   * Optimizer module for capital allocation optimization
+   * 
+   * Provides:
+   * - Capital allocation optimization across lending protocols
+   * - Action plan generation (deposits/withdrawals)
+   * - Execution-ready calldata for transactions
+   * 
+   * Note: The optimizer is stateless and accepts chainId as a parameter
+   * rather than being tied to the client's configured chain.
+   */
+  public readonly optimizer: OptimizerModule;
+
   constructor(config: GizaAgentConfig) {
     // Validate and resolve configuration
     this.config = this.validateAndResolveConfig(config);
@@ -82,6 +105,9 @@ export class GizaAgent {
 
     // Initialize unified agent module
     this.agent = new AgentModule(this.httpClient, this.config);
+
+    // Initialize optimizer module
+    this.optimizer = new OptimizerModule(this.httpClient, this.config);
   }
 
   /**

@@ -21,7 +21,7 @@ cp env-template .env
 pnpm install
 ```
 
-## Running Examples
+## Agent Examples
 
 ### Complete Partner Workflow
 
@@ -31,17 +31,34 @@ Demonstrates the complete partner integration workflow:
 pnpm run example
 ```
 
-**Note:** Update the `userOriginWallet` variable in `create-account.ts` with your actual user's wallet address before running.
+**Note:** 
+- Update the `userOriginWallet` variable in `agent.example.ts` with your actual user's wallet address before running.
+
+
+### Optimizer Example
+
+Demonstrates how to use Giza's optimizer service for capital allocation optimization:
+
+```bash
+pnpm run example:optimizer
+```
 
 ## Available Examples
 
-- **`create-account.ts`** - Complete partner workflow example:
+- **`agent.example.ts`** - Complete partner workflow example:
   1. Create a smart account for a user
   2. Get available DeFi protocols
   3. Activate the agent after user deposits
   4. Monitor performance metrics
   5. View transaction history
   6. Withdraw funds to origin wallet
+
+- **`optimizer.example.ts`** - Optimizer service example:
+  1. Basic optimization without constraints
+  2. Optimization with constraints (min protocols, exclude protocol)
+  3. Optimization for different chains
+  4. Optimization with maximum allocation constraints
+  5. Display optimization results, action plans, and calldata
 
 ## Example Code Snippets
 
@@ -84,4 +101,29 @@ await giza.agent.withdraw({
   wallet: account.smartAccountAddress,
   transfer: true,
 });
+```
+
+### Optimize Capital Allocation
+
+```typescript
+const result = await giza.optimizer.optimize({
+  chainId: Chain.BASE,
+  total_capital: "1000000000", // 1000 USDC (6 decimals)
+  token_address: USDC_ADDRESS,
+  current_allocations: {
+    aave: "500000000",
+    compound: "500000000",
+  },
+  protocols: ["aave", "compound", "moonwell", "fluid"],
+  constraints: [
+    {
+      kind: WalletConstraints.MIN_PROTOCOLS,
+      params: { min_protocols: 2 },
+    },
+  ],
+});
+
+console.log(`APR Improvement: ${result.optimization_result.apr_improvement}%`);
+console.log(`Actions: ${result.action_plan.length}`);
+console.log(`Calldata: ${result.calldata.length} transactions`);
 ```

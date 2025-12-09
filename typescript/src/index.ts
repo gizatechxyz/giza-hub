@@ -103,6 +103,21 @@ export type {
   DepositListResponse,
 } from './types/agent';
 
+// Optimizer types - Request & Response
+export type {
+  OptimizeRequest,
+  OptimizeParams,
+  OptimizeResponse,
+  OptimizationResult,
+  ProtocolAllocation,
+  ActionDetail,
+  CalldataInfo,
+  ConstraintConfig as OptimizerConstraintConfig,
+} from './types/optimizer';
+
+// Optimizer module
+export { OptimizerModule } from './modules/optimizer.module';
+
 // Enums
 export {
   AgentStatus,
@@ -110,6 +125,11 @@ export {
   TxStatus,
   SortOrder,
 } from './types/agent';
+
+// Optimizer enums
+export {
+  WalletConstraints,
+} from './types/optimizer';
 
 // HTTP Errors
 export {
