@@ -19,7 +19,7 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "clean": "rm -rf dist",
-    "example": "tsx examples/create-account.ts",
+    "example": "tsx examples/e2e.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",

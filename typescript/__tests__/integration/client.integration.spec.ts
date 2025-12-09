@@ -40,12 +40,12 @@ describe('GizaAgent Client Integration', () => {
     it('should have working getter methods', () => {
       expect(giza.getChainId()).toBe(Chain.BASE);
       expect(giza.getBackendUrl()).toBe('https://api.test.giza.example');
-      expect(giza.getAgentId()).toBe('arma-dev');
+      expect(giza.getAgentId()).toBe('giza-app');
 
       const config = giza.getConfig();
       expect(config.chainId).toBe(Chain.BASE);
       expect(config.backendUrl).toBe('https://api.test.giza.example');
-      expect(config.agentId).toBe('arma-dev');
+      expect(config.agentId).toBe('giza-app');
       expect(config.timeout).toBe(45000);
       expect(config.enableRetry).toBe(false);
     });

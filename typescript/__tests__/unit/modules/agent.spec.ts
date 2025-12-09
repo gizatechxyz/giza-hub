@@ -38,7 +38,7 @@ describe('AgentModule', () => {
       partnerApiKey: 'test-api-key',
       backendUrl: 'https://api.test.giza.example',
       chainId: Chain.BASE,
-      agentId: 'arma-dev',
+      agentId: 'giza-app',
       timeout: 45000,
       enableRetry: false,
     };
@@ -67,7 +67,7 @@ describe('AgentModule', () => {
         {
           eoa: VALID_ADDRESSES.EOA_1,
           chain: Chain.BASE,
-          agent_id: 'arma-dev',
+          agent_id: 'giza-app',
         }
       );
 
@@ -129,13 +129,19 @@ describe('AgentModule', () => {
 
   describe('getProtocols', () => {
     it('should get protocols for token', async () => {
-      const mockResponse = { protocols: ['aave', 'compound', 'morpho'] };
+      const mockResponse = {
+        protocols: [
+          { name: 'aave', available: true, description: 'Aave protocol', tvl: 1000, apy: 5.0 },
+          { name: 'compound', available: true, description: 'Compound protocol', tvl: 2000, apy: 4.5 },
+          { name: 'morpho', available: true, description: 'Morpho protocol', tvl: 500, apy: 6.0 },
+        ],
+      };
       mockHttpClient.get.mockResolvedValue(mockResponse);
 
       const result = await module.getProtocols(VALID_ADDRESSES.EOA_1);
 
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        `/api/v1/protocols/${Chain.BASE}/${VALID_ADDRESSES.EOA_1}/protocols`
+        `/api/v1/${Chain.BASE}/${VALID_ADDRESSES.EOA_1}/protocols`
       );
       expect(result.protocols).toEqual(['aave', 'compound', 'morpho']);
     });
@@ -157,7 +163,7 @@ describe('AgentModule', () => {
       );
 
       expect(mockHttpClient.put).toHaveBeenCalledWith(
-        `/api/v1/agents/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}/protocols`,
+        `/api/v1/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}/protocols`,
         ['aave', 'compound']
       );
     });
@@ -187,7 +193,7 @@ describe('AgentModule', () => {
       });
 
       expect(mockHttpClient.post).toHaveBeenCalledWith(
-        `/api/v1/agents/${Chain.BASE}/wallets`,
+        `/api/v1/${Chain.BASE}/wallets`,
         expect.objectContaining({
           wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
           eoa: VALID_ADDRESSES.EOA_1,
@@ -281,7 +287,7 @@ describe('AgentModule', () => {
       });
 
       expect(mockHttpClient.post).toHaveBeenCalledWith(
-        `/api/v1/agents/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}:run`
+        `/api/v1/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}:run`
       );
       expect(result.status).toBe('success');
     });
@@ -300,7 +306,7 @@ describe('AgentModule', () => {
       });
 
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        `/api/v1/agents/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}/performance`
+        `/api/v1/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}/performance`
       );
       expect(result.performance).toHaveLength(2);
     });
@@ -328,7 +334,7 @@ describe('AgentModule', () => {
       });
 
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        `/api/v1/agents/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}`
+        `/api/v1/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}`
       );
       expect(result.status).toBe(AgentStatus.ACTIVE);
     });
@@ -343,7 +349,7 @@ describe('AgentModule', () => {
       });
 
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        `/api/v1/agents/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}/apr`
+        `/api/v1/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}/apr`
       );
       expect(result.apr).toBe(12.5);
     });
@@ -541,7 +547,7 @@ describe('AgentModule', () => {
       const result = await module.getFees(VALID_ADDRESSES.SMART_ACCOUNT_1);
 
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        `/api/v1/agents/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}/fee`
+        `/api/v1/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}/fee`
       );
       expect(result.percentage_fee).toBe(0.1);
       expect(result.fee).toBe(100.5);
@@ -584,7 +590,7 @@ describe('AgentModule', () => {
       const result = await module.claimRewards(VALID_ADDRESSES.SMART_ACCOUNT_1);
 
       expect(mockHttpClient.post).toHaveBeenCalledWith(
-        `/api/v1/agents/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}:claim-rewards`
+        `/api/v1/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}:claim-rewards`
       );
       expect(result.rewards).toHaveLength(1);
     });

@@ -61,7 +61,7 @@ describe('Agent Module Integration', () => {
       expect(requestData).toEqual({
         eoa: VALID_ADDRESSES.EOA_1,
         chain: Chain.BASE,
-        agent_id: 'arma-dev',
+        agent_id: 'giza-app',
       });
     });
 
@@ -126,9 +126,15 @@ describe('Agent Module Integration', () => {
 
   describe('getProtocols', () => {
     it('should get available protocols', async () => {
-      const mockProtocols = { protocols: ['aave', 'compound', 'morpho'] };
+      const mockProtocols = {
+        protocols: [
+          { name: 'aave', available: true, description: 'Aave protocol', tvl: 1000, apy: 5.0 },
+          { name: 'compound', available: true, description: 'Compound protocol', tvl: 2000, apy: 4.5 },
+          { name: 'morpho', available: true, description: 'Morpho protocol', tvl: 500, apy: 6.0 },
+        ],
+      };
       mockAxios
-        .onGet(new RegExp(`/api/v1/protocols/${Chain.BASE}/.*/protocols`))
+        .onGet(new RegExp(`/api/v1/${Chain.BASE}/.*/protocols`))
         .reply(200, mockProtocols);
 
       const result = await giza.agent.getProtocols(VALID_ADDRESSES.EOA_1);
@@ -140,7 +146,7 @@ describe('Agent Module Integration', () => {
   describe('updateProtocols', () => {
     it('should update selected protocols', async () => {
       mockAxios
-        .onPut(new RegExp(`/api/v1/agents/${Chain.BASE}/wallets/.*/protocols`))
+        .onPut(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*/protocols`))
         .reply(204);
 
       await giza.agent.updateProtocols(
@@ -162,7 +168,7 @@ describe('Agent Module Integration', () => {
     it('should activate agent with full flow', async () => {
       const mockResponse = { message: 'Agent starting activation', wallet: VALID_ADDRESSES.SMART_ACCOUNT_1 };
       mockAxios
-        .onPost(`/api/v1/agents/${Chain.BASE}/wallets`)
+        .onPost(`/api/v1/${Chain.BASE}/wallets`)
         .reply(201, mockResponse);
 
       const result = await giza.agent.activate({
@@ -181,7 +187,7 @@ describe('Agent Module Integration', () => {
   describe('deactivate', () => {
     it('should deactivate agent', async () => {
       mockAxios
-        .onPost(new RegExp(`/api/v1/agents/${Chain.BASE}/wallets/.*:deactivate`))
+        .onPost(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*:deactivate`))
         .reply(201, { message: 'Wallet deactivation initiated' });
 
       const result = await giza.agent.deactivate({
@@ -196,7 +202,7 @@ describe('Agent Module Integration', () => {
   describe('topUp', () => {
     it('should top up agent', async () => {
       mockAxios
-        .onPost(new RegExp(`/api/v1/agents/${Chain.BASE}/wallets/.*:top-up`))
+        .onPost(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*:top-up`))
         .reply(201, { message: 'Top-up process started' });
 
       const result = await giza.agent.topUp({
@@ -211,7 +217,7 @@ describe('Agent Module Integration', () => {
   describe('run', () => {
     it('should run agent', async () => {
       mockAxios
-        .onPost(new RegExp(`/api/v1/agents/${Chain.BASE}/wallets/.*:run`))
+        .onPost(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*:run`))
         .reply(200, { status: 'success' });
 
       const result = await giza.agent.run({
@@ -229,7 +235,7 @@ describe('Agent Module Integration', () => {
   describe('getPerformance', () => {
     it('should get performance data', async () => {
       mockAxios
-        .onGet(new RegExp(`/api/v1/agents/${Chain.BASE}/wallets/.*/performance`))
+        .onGet(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*/performance`))
         .reply(200, MOCK_PERFORMANCE_CHART_RESPONSE);
 
       const result = await giza.agent.getPerformance({
@@ -241,7 +247,7 @@ describe('Agent Module Integration', () => {
 
     it('should include from_date in query', async () => {
       mockAxios
-        .onGet(new RegExp(`/api/v1/agents/${Chain.BASE}/wallets/.*/performance`))
+        .onGet(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*/performance`))
         .reply((config) => {
           expect(config.url).toContain('from_date=2024-01-01');
           return [200, MOCK_PERFORMANCE_CHART_RESPONSE];
@@ -257,14 +263,14 @@ describe('Agent Module Integration', () => {
   describe('getPortfolio', () => {
     it('should get portfolio data', async () => {
       mockAxios
-        .onGet(new RegExp(`/api/v1/agents/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}$`))
+        .onGet(new RegExp(`/api/v1/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}$`))
         .reply(200, MOCK_AGENT_INFO);
 
       const result = await giza.agent.getPortfolio({
         wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
       });
 
-      expect(result.status).toBe('ACTIVE');
+      expect(result.status).toBe('active');
       expect(result.deposits).toHaveLength(1);
     });
   });
@@ -272,7 +278,7 @@ describe('Agent Module Integration', () => {
   describe('getAPR', () => {
     it('should get APR data', async () => {
       mockAxios
-        .onGet(new RegExp(`/api/v1/agents/${Chain.BASE}/wallets/.*/apr`))
+        .onGet(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*/apr`))
         .reply(200, MOCK_APR_RESPONSE);
 
       const result = await giza.agent.getAPR({
@@ -290,7 +296,7 @@ describe('Agent Module Integration', () => {
   describe('getTransactions', () => {
     it('should get transaction history', async () => {
       mockAxios
-        .onGet(new RegExp(`/api/v1/agents/${Chain.BASE}/wallets/.*/transactions`))
+        .onGet(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*/transactions`))
         .reply(200, MOCK_TRANSACTION_HISTORY_PAGE_1);
 
       const result = await giza.agent.getTransactions({
@@ -309,7 +315,7 @@ describe('Agent Module Integration', () => {
   describe('withdraw', () => {
     it('should initiate full withdrawal (deactivate) when no amount specified', async () => {
       mockAxios
-        .onPost(new RegExp(`/api/v1/agents/${Chain.BASE}/wallets/.*:deactivate`))
+        .onPost(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*:deactivate`))
         .reply(201, { message: 'Wallet deactivation initiated' });
 
       const result = await giza.agent.withdraw({
@@ -330,7 +336,7 @@ describe('Agent Module Integration', () => {
         ],
       };
       mockAxios
-        .onPost(new RegExp(`/api/v1/agents/${Chain.BASE}/wallets/.*:withdraw`))
+        .onPost(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*:withdraw`))
         .reply(200, mockPartialResponse);
 
       const result = await giza.agent.withdraw({
@@ -347,7 +353,7 @@ describe('Agent Module Integration', () => {
     it('should get fee information', async () => {
       const mockFees = { percentage_fee: 0.1, fee: 100.5 };
       mockAxios
-        .onGet(new RegExp(`/api/v1/agents/${Chain.BASE}/wallets/.*/fee`))
+        .onGet(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*/fee`))
         .reply(200, mockFees);
 
       const result = await giza.agent.getFees(VALID_ADDRESSES.SMART_ACCOUNT_1);
@@ -369,7 +375,7 @@ describe('Agent Module Integration', () => {
         ]
       };
       mockAxios
-        .onPost(new RegExp(`/api/v1/agents/${Chain.BASE}/wallets/.*:claim-rewards`))
+        .onPost(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*:claim-rewards`))
         .reply(200, mockRewards);
 
       const result = await giza.agent.claimRewards(VALID_ADDRESSES.SMART_ACCOUNT_1);
@@ -400,7 +406,7 @@ describe('Agent Module Integration', () => {
 
     it('should handle 404 Not Found error', async () => {
       mockAxios
-        .onGet(new RegExp(`/api/v1/agents/${Chain.BASE}/wallets/.*/performance`))
+        .onGet(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*/performance`))
         .reply(404, API_ERROR_RESPONSES.WALLET_NOT_FOUND);
 
       await expect(

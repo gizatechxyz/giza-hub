@@ -10,7 +10,7 @@ export interface GizaAgentConfig {
   chainId: Chain;
 
   /**
-   * Agent identifier (optional, defaults to "arma-dev")
+   * Agent identifier (optional, defaults to "giza-app")
    * Used to identify which agent manages the smart accounts
    */
   agentId?: string;

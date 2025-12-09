@@ -224,7 +224,7 @@ await giza.agent.withdraw({
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | `chainId` | `Chain` | ✅ | - | Blockchain network (BASE or ARBITRUM) |
-| `agentId` | `string` | ❌ | `"arma-dev"` | Agent identifier |
+| `agentId` | `string` | ❌ | `"giza-app"` | Agent identifier |
 | `timeout` | `number` | ❌ | `45000` | Request timeout in ms |
 | `enableRetry` | `boolean` | ❌ | `false` | Enable retry on 5xx errors |
 

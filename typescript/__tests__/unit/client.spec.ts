@@ -136,7 +136,7 @@ describe('GizaAgent', () => {
   describe('config resolution', () => {
     it('should apply default agent ID when not provided', () => {
       const giza = new GizaAgent({ chainId: Chain.BASE });
-      expect(giza.getAgentId()).toBe('arma-dev');
+      expect(giza.getAgentId()).toBe('giza-app');
     });
 
     it('should use provided agent ID', () => {
@@ -259,7 +259,7 @@ describe('GizaAgent', () => {
   describe('getAgentId', () => {
     it('should return default agent ID', () => {
       const giza = new GizaAgent({ chainId: Chain.BASE });
-      expect(giza.getAgentId()).toBe('arma-dev');
+      expect(giza.getAgentId()).toBe('giza-app');
     });
 
     it('should return custom agent ID', () => {
@@ -276,7 +276,7 @@ describe('GizaAgent', () => {
         chainId: Chain.BASE,
         agentId: '',
       });
-      expect(giza.getAgentId()).toBe('arma-dev');
+      expect(giza.getAgentId()).toBe('giza-app');
     });
   });
 
