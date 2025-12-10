@@ -1,0 +1,120 @@
+---
+title: Advanced Patterns
+description: 'Advanced usage patterns and techniques'
+---
+
+## Custom Rebalancing Strategy
+
+```typescript
+class CustomStrategy {
+  constructor(private giza: GizaAgent) {}
+  
+  async shouldRebalance(address: string): Promise<boolean> {
+    // Get current performance
+    const { performance } = await this.giza.agent.getPerformance({
+      wallet: address
+    });
+    
+    // Custom logic: only rebalance if been > 24 hours
+    const lastPoint = performance[performance.length - 1];
+    const hoursSinceUpdate = (Date.now() - new Date(lastPoint.date).getTime()) / 3600000;
+    
+    return hoursSinceUpdate > 24;
+  }
+  
+  async run(address: string) {
+    if (await this.shouldRebalance(address)) {
+      await this.giza.agent.run({ wallet: address });
+    }
+  }
+}
+```
+
+## Multi-Chain Management
+
+```typescript
+const baseGiza = new GizaAgent({ chainId: Chain.BASE });
+const arbGiza = new GizaAgent({ chainId: Chain.ARBITRUM });
+
+// User has accounts on both chains
+const accounts = await Promise.all([
+  baseGiza.agent.createSmartAccount({ origin_wallet: userWallet }),
+  arbGiza.agent.createSmartAccount({ origin_wallet: userWallet })
+]);
+
+// Get combined performance
+const basePerf = await baseGiza.agent.getAPR({ wallet: accounts[0].smartAccountAddress });
+const arbPerf = await arbGiza.agent.getAPR({ wallet: accounts[1].smartAccountAddress });
+
+console.log('Total APR:', (basePerf.apr + arbPerf.apr) / 2);
+```
+
+## Constraint-Based Risk Management
+
+```typescript
+await giza.agent.activate({
+  wallet: smartAccountAddress,
+  origin_wallet: userWallet,
+  initial_token: USDC,
+  selected_protocols: ['aave', 'compound', 'moonwell', 'seamless'],
+  constraints: [
+    // Diversification
+    { kind: 'min_protocols', params: { min_protocols: 3 } },
+    // Risk limits
+    { kind: 'max_amount_per_protocol', params: { max_amount: '5000000000' } },
+    // Conservative on newer protocols
+    { kind: 'max_allocation_amount_per_protocol', params: {
+      protocol: 'seamless',
+      max_amount: '1000000000'
+    }},
+    // Avoid dust allocations
+    { kind: 'min_amount', params: { min_amount: '100000000' } }
+  ]
+});
+```
+
+## Transaction History Analysis
+
+```typescript
+import { TxAction, TxStatus } from '@giza/agent-sdk';
+
+const { transactions } = await giza.agent.getTransactions({
+  wallet: smartAccountAddress,
+  limit: 100
+});
+
+// Group by action
+const byAction = transactions.reduce((acc, tx) => {
+  acc[tx.action] = (acc[tx.action] || 0) + 1;
+  return acc;
+}, {} as Record<string, number>);
+
+// Count failed transactions
+const failed = transactions.filter(tx => tx.status === TxStatus.FAILED).length;
+
+// Protocol distribution
+const protocols = [...new Set(transactions.map(tx => tx.protocol))];
+
+console.log('Activity summary:', { byAction, failed, protocols });
+```
+
+## Performance Dashboard
+
+```typescript
+async function buildDashboard(address: string) {
+  const [portfolio, apr, performance, txHistory] = await Promise.all([
+    giza.agent.getPortfolio({ wallet: address }),
+    giza.agent.getAPR({ wallet: address }),
+    giza.agent.getPerformance({ wallet: address }),
+    giza.agent.getTransactions({ wallet: address, limit: 10 })
+  ]);
+  
+  return {
+    status: portfolio.status,
+    currentAPR: apr.apr,
+    totalValue: performance.performance[performance.performance.length - 1].value_in_usd,
+    protocols: portfolio.selected_protocols,
+    recentActivity: txHistory.transactions
+  };
+}
+```

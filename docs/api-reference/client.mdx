@@ -1,0 +1,307 @@
+---
+title: GizaAgent Client
+description: 'Main SDK client for accessing Giza agent operations'
+---
+
+## Overview
+
+The `GizaAgent` class is the main entry point for the Giza Agent SDK. It provides access to agent operations and the optimizer service through two modules:
+
+- `agent` - Agent lifecycle, portfolio management, and withdrawals
+- `optimizer` - Capital allocation optimization service
+
+## Constructor
+
+```typescript
+import { GizaAgent, Chain } from '@giza/agent-sdk';
+
+const giza = new GizaAgent(config);
+```
+
+### Configuration
+
+<ParamField path="chainId" type="Chain" required>
+  Chain to operate on. Supported values:
+  - `Chain.BASE` (8453)
+  - `Chain.ARBITRUM` (42161)
+</ParamField>
+
+<ParamField path="agentId" type="string" default="giza_v1">
+  Agent identifier. Use default unless instructed otherwise by Giza.
+</ParamField>
+
+<ParamField path="timeout" type="number" default="30000">
+  Request timeout in milliseconds (max 600000 / 10 minutes).
+</ParamField>
+
+<ParamField path="enableRetry" type="boolean" default="false">
+  Enable automatic retry for failed requests with exponential backoff.
+</ParamField>
+
+### Environment Variables
+
+The SDK reads credentials from environment variables:
+
+```bash
+GIZA_API_KEY=...      # Required
+GIZA_API_URL=...    # Required
+GIZA_PARTNER_NAME=...    # Required
+```
+
+<Warning>
+Never commit API keys to version control. Use `.env` files and ensure they're in `.gitignore`.
+</Warning>
+
+## Example
+
+```typescript
+import { GizaAgent, Chain } from '@giza/agent-sdk';
+
+// Basic initialization
+const giza = new GizaAgent({
+  chainId: Chain.BASE,
+});
+
+// With custom options
+const gizaCustom = new GizaAgent({
+  chainId: Chain.ARBITRUM,
+  timeout: 60000,      // 60 second timeout
+  enableRetry: true,   // Retry failed requests
+  agentId: 'custom_v1', // Custom agent ID
+});
+```
+
+## Instance Methods
+
+### getChainId()
+
+Get the configured chain ID.
+
+```typescript
+const chainId = giza.getChainId();
+console.log('Operating on chain:', chainId); // 8453 or 42161
+```
+
+**Returns:** `Chain`
+
+### getBackendUrl()
+
+Get the configured backend URL.
+
+```typescript
+const url = giza.getBackendUrl();
+console.log('API URL:', url); // https://api.giza.tech
+```
+
+**Returns:** `string`
+
+### getAgentId()
+
+Get the configured agent ID.
+
+```typescript
+const agentId = giza.getAgentId();
+console.log('Agent ID:', agentId);
+```
+
+**Returns:** `string`
+
+### getConfig()
+
+Get the full configuration (excluding sensitive data).
+
+```typescript
+const config = giza.getConfig();
+console.log('Configuration:', config);
+```
+
+**Returns:** `Omit<ResolvedGizaAgentConfig, 'partnerApiKey' | 'partnerName'>`
+
+## Modules
+
+### agent
+
+Access all agent operations:
+
+```typescript
+// Create smart account
+const account = await giza.agent.createSmartAccount({
+  origin_wallet: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+});
+
+// Activate agent
+await giza.agent.activate({
+  wallet: account.smartAccountAddress,
+  origin_wallet: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
+  initial_token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+  selected_protocols: ['aave', 'compound'],
+});
+
+// Get performance
+const performance = await giza.agent.getPerformance({
+  wallet: account.smartAccountAddress
+});
+
+// Withdraw
+await giza.agent.withdraw({
+  wallet: account.smartAccountAddress,
+  transfer: true
+});
+```
+
+<Card title="Agent Module API" icon="robot" href="/api-reference/agent/create-smart-account">
+  Complete documentation for all agent methods
+</Card>
+
+### optimizer
+
+Access the optimization service:
+
+```typescript
+const result = await giza.optimizer.optimize({
+  chainId: Chain.BASE,
+  total_capital: "1000000000",
+  token_address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  current_allocations: {
+    aave: "500000000",
+    compound: "500000000"
+  },
+  protocols: ["aave", "compound", "moonwell"],
+});
+
+console.log('Optimal allocation:', result.optimization_result.allocations);
+console.log('APR improvement:', result.optimization_result.apr_improvement);
+```
+
+<Card title="Optimizer Module API" icon="chart-mixed" href="/api-reference/optimizer/optimize">
+  Complete documentation for the optimizer
+</Card>
+
+## Error Handling
+
+All SDK methods can throw errors. Always use try-catch:
+
+```typescript
+import {
+  ValidationError,
+  GizaAPIError,
+  TimeoutError,
+  NotImplementedError
+} from '@giza/agent-sdk';
+
+try {
+  const account = await giza.agent.createSmartAccount({
+    origin_wallet: userWallet
+  });
+} catch (error) {
+  if (error instanceof ValidationError) {
+    // Input validation failed
+    console.error('Invalid input:', error.message);
+  } else if (error instanceof GizaAPIError) {
+    // API error (4xx, 5xx)
+    console.error('API error:', error.statusCode, error.message);
+    console.error('Details:', error.details);
+  } else if (error instanceof TimeoutError) {
+    // Request timed out
+    console.error('Request timed out');
+  } else if (error instanceof NotImplementedError) {
+    // Feature not yet implemented
+    console.error('Not implemented:', error.message);
+  } else {
+    // Unexpected error
+    console.error('Unexpected error:', error);
+  }
+}
+```
+
+## Type Safety
+
+The SDK is fully typed with TypeScript:
+
+```typescript
+import type {
+  SmartAccountInfo,
+  ActivateParams,
+  PerformanceChartResponse,
+  WithdrawParams,
+  OptimizeParams,
+  // ... and many more
+} from '@giza/agent-sdk';
+
+// Type-safe parameters
+const activateParams: ActivateParams = {
+  wallet: account.smartAccountAddress,
+  origin_wallet: userWallet,
+  initial_token: USDC_ADDRESS,
+  selected_protocols: ['aave', 'compound'],
+};
+
+await giza.agent.activate(activateParams);
+```
+
+## Chain Support
+
+The SDK supports multiple chains:
+
+```typescript
+import { Chain, CHAIN_NAMES } from '@giza/agent-sdk';
+
+// Supported chains
+console.log(Chain.BASE);      // 8453
+console.log(Chain.ARBITRUM);  // 42161
+
+// Chain names
+console.log(CHAIN_NAMES[Chain.BASE]);      // 'Base'
+console.log(CHAIN_NAMES[Chain.ARBITRUM]);  // 'Arbitrum'
+
+// Use with constructor
+const gizaBase = new GizaAgent({ chainId: Chain.BASE });
+const gizaArb = new GizaAgent({ chainId: Chain.ARBITRUM });
+```
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card
+    title="Agent Module"
+    icon="robot"
+    href="/api-reference/agent/create-smart-account"
+  >
+    Explore agent operations
+  </Card>
+  <Card
+    title="Optimizer Module"
+    icon="chart-mixed"
+    href="/api-reference/optimizer/optimize"
+  >
+    Capital optimization API
+  </Card>
+  <Card
+    title="Quick Start"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Get started with the SDK
+  </Card>
+  <Card
+    title="Integration Guide"
+    icon="book"
+    href="/integration/agentic"
+  >
+    Complete integration walkthrough
+  </Card>
+  <Card
+    title="Examples"
+    icon="lightbulb"
+    href="/examples/basic-usage"
+  >
+    Code examples and patterns
+  </Card>
+  <Card
+    title="Error Handling"
+    icon="shield-exclamation"
+    href="/guides/error-handling"
+  >
+    Comprehensive error handling
+  </Card>
+</CardGroup>

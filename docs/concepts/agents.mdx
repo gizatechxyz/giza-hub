@@ -1,0 +1,86 @@
+---
+title: Agents
+description: 'Understanding autonomous yield optimization agents'
+---
+
+## What are Giza Agents?
+
+**Giza Agents** are autonomous AI-powered systems that manage capital in smart accounts to maximize yield across DeFi lending protocols. Once activated, agents continuously monitor APRs, identify opportunities, and execute rebalancing transactions—all without manual intervention.
+
+## How Agents Work
+
+### Optimization Cycle
+
+1. **Monitor**: Agent continuously monitors APRs across selected protocols
+2. **Analyze**: Calculates optimal allocation considering:
+   - Current APRs
+   - Gas costs
+   - Slippage
+   - Protocol limits
+   - User constraints
+3. **Execute**: If rebalancing improves net returns (after gas), execute transactions
+4. **Report**: Update performance metrics and portfolio data
+5. **Repeat**: Continue monitoring for next opportunity
+
+## Agent Lifecycle
+
+### States
+
+<Steps>
+  <Step title="Inactive">
+    Smart account exists but no agent is activated. User funds are not being managed.
+  </Step>
+  
+  <Step title="Activating">
+    Agent initialization in progress. Session keys being granted, initial deposits being allocated. Brief transition state.
+  </Step>
+  
+  <Step title="Active">
+    Agent is running and optimizing. Capital is deployed across protocols, automatic rebalancing occurs.
+  </Step>
+  
+  <Step title="Deactivating">
+    Withdrawal in progress. Agent pulling funds from all protocols, revoking permissions. Brief transition state.
+  </Step>
+  
+  <Step title="Deactivated">
+    Agent stopped, funds returned to user. No active management. Can be reactivated.
+  </Step>
+  
+  <Step title="Activation Failed">
+    Activation encountered an error. Funds remain safe in smart account. User can retry or withdraw.
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Protocols"
+    icon="layer-group"
+    href="/concepts/protocols"
+  >
+    Learn about supported DeFi protocols
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference/agent/activate"
+  >
+    Complete agent API documentation
+  </Card>
+  <Card
+    title="Complete Workflow"
+    icon="map"
+    href="/guides/complete-workflow"
+  >
+    Step-by-step integration guide
+  </Card>
+  <Card
+    title="Monitoring Guide"
+    icon="chart-line"
+    href="/guides/monitoring-performance"
+  >
+    Track agent performance effectively
+  </Card>
+</CardGroup>

@@ -1,0 +1,74 @@
+---
+title: optimize
+description: 'Calculate optimal capital allocation across protocols'
+---
+
+## Method Signature
+
+```typescript
+optimizer.optimize(params: OptimizeParams): Promise<OptimizeResponse>
+```
+
+## Description
+
+Calculates the optimal allocation of capital across DeFi lending protocols to maximize APR while respecting constraints.
+
+## Parameters
+
+<ParamField path="chainId" type="Chain" required>
+  Chain to optimize for (Base or Arbitrum).
+</ParamField>
+
+<ParamField path="total_capital" type="string" required>
+  Total capital to allocate (bigint as string, in token's smallest unit).
+</ParamField>
+
+<ParamField path="token_address" type="Address" required>
+  Token to optimize (e.g., USDC address).
+</ParamField>
+
+<ParamField path="current_allocations" type="Record<string, string>" required>
+  Current distribution across protocols.
+</ParamField>
+
+<ParamField path="protocols" type="string[]" required>
+  Protocols to consider.
+</ParamField>
+
+<ParamField path="constraints" type="ConstraintConfig[]">
+  Optional constraints.
+</ParamField>
+
+## Return Value
+
+<ResponseField name="optimization_result" type="OptimizationResult">
+  Optimal allocations, APR improvement, and gas costs.
+</ResponseField>
+
+<ResponseField name="action_plan" type="ActionDetail[]">
+  Step-by-step rebalancing actions.
+</ResponseField>
+
+<ResponseField name="calldata" type="CalldataInfo[]">
+  Execution-ready transaction data.
+</ResponseField>
+
+## Example
+
+```typescript
+const result = await giza.optimizer.optimize({
+  chainId: Chain.BASE,
+  total_capital: "1000000000",
+  token_address: USDC_ADDRESS,
+  current_allocations: {
+    aave: "500000000",
+    compound: "500000000"
+  },
+  protocols: ["aave", "compound", "moonwell"],
+});
+
+console.log(`APR improvement: +${result.optimization_result.apr_improvement}%`);
+console.log('Optimal allocation:', result.optimization_result.allocations);
+```
+
+See [Optimizer Concept](/concepts/optimizer) for detailed information.

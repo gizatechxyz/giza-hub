@@ -1,0 +1,536 @@
+---
+title: Optimizer
+description: "Understanding Giza's capital allocation optimization engine"
+---
+
+## What is the Optimizer?
+
+The **Giza Optimizer** is a stateless service that calculates optimal capital allocation across DeFi lending protocols. It analyzes current APRs, gas costs, and constraints to determine the best distribution of capital for maximum net returns.
+
+## How It Works
+
+```mermaid
+graph TD
+    A[Input: Current State] --> B[Fetch Protocol APRs]
+    A --> C[Get Gas Prices]
+    A --> D[Load Constraints]
+    
+    B --> E[Optimization Engine]
+    C --> E
+    D --> E
+    
+    E --> F[Calculate Optimal Allocation]
+    F --> G[Generate Action Plan]
+    G --> H[Create Transaction Calldata]
+    
+    H --> I[Output: Optimization Result]
+```
+
+## Two Integration Patterns
+
+### 1. Automatic (Agentic)
+
+Agents use the optimizer automatically:
+
+```typescript
+// You just activate the agent
+await giza.agent.activate({
+  wallet: smartAccountAddress,
+  origin_wallet: userWallet,
+  initial_token: USDC_ADDRESS,
+  selected_protocols: ['aave', 'compound', 'moonwell'],
+});
+
+// Agent internally calls optimizer, then executes the plan
+```
+
+Behind the scenes:
+1. Agent calls optimizer with current allocations
+2. Optimizer returns optimal allocation + action plan
+3. Agent executes the rebalancing transactions
+4. Repeat on regular optimization cycles
+
+### 2. Manual (IaaS)
+
+Call the optimizer directly for custom implementations:
+
+```typescript
+const result = await giza.optimizer.optimize({
+  chainId: Chain.BASE,
+  total_capital: "1000000000", // 1000 USDC (6 decimals)
+  token_address: USDC_ADDRESS,
+  current_allocations: {
+    aave: "500000000",
+    compound: "500000000"
+  },
+  protocols: ["aave", "compound", "moonwell", "seamless"],
+});
+
+console.log('Optimal allocation:', result.optimization_result.allocations);
+console.log('Action plan:', result.action_plan);
+console.log('Execution calldata:', result.calldata);
+```
+
+Use this for:
+- Partners with existing execution infrastructure
+- Custom rebalancing schedules and strategies
+- Integration with your own capital management systems
+- Full control over execution while leveraging Giza's optimization intelligence
+
+## Stateless Design
+
+The optimizer is **completely stateless**:
+
+- ✅ No storage of historical data
+- ✅ Each call is independent
+- ✅ Same inputs always return same outputs (for same market conditions)
+- ✅ No side effects
+- ✅ Can be called from anywhere
+
+This stateless design enables:
+- **Predictable**: Results depend only on inputs
+- **Testable**: Easy to unit test scenarios
+- **Composable**: Integrate with any system
+- **Scalable**: No state to manage
+- **Private**: Giza doesn't store your data
+- **IaaS-Ready**: Perfect for Intelligence as a Service consumption
+
+## Optimizer Input
+
+### Required Parameters
+
+<ParamField path="chainId" type="Chain" required>
+  Chain to optimize for (Base or Arbitrum)
+</ParamField>
+
+<ParamField path="total_capital" type="string" required>
+  Total capital to allocate (bigint as string, in token's smallest unit)
+  
+  Example: `"1000000000"` for 1000 USDC (6 decimals)
+</ParamField>
+
+<ParamField path="token_address" type="Address" required>
+  Token to optimize (e.g., USDC address)
+</ParamField>
+
+<ParamField path="current_allocations" type="Record<string, string>" required>
+  Current distribution across protocols (bigint as string)
+  
+  Example:
+  ```typescript
+  {
+    aave: "500000000",
+    compound: "300000000",
+    moonwell: "200000000"
+  }
+  ```
+</ParamField>
+
+<ParamField path="protocols" type="string[]" required>
+  Protocols to consider in optimization
+  
+  Example: `["aave", "compound", "moonwell", "seamless"]`
+</ParamField>
+
+### Optional Parameters
+
+<ParamField path="constraints" type="ConstraintConfig[]">
+  Constraints to respect during optimization
+  
+  Example:
+  ```typescript
+  [
+    {
+      kind: WalletConstraints.MIN_PROTOCOLS,
+      params: { min_protocols: 2 }
+    },
+    {
+      kind: WalletConstraints.MAX_AMOUNT_PER_PROTOCOL,
+      params: { max_amount: "5000000000" }
+    }
+  ]
+  ```
+</ParamField>
+
+## Optimizer Output
+
+### Optimization Result
+
+```typescript
+interface OptimizationResult {
+  // Optimal allocation for each protocol
+  allocations: ProtocolAllocation[];
+  
+  // Total gas costs for rebalancing
+  total_costs: number;
+  
+  // Initial weighted APR (before optimization)
+  weighted_apr_initial: number;
+  
+  // Final weighted APR (after optimization)
+  weighted_apr_final: number;
+  
+  // Improvement in APR (percentage points)
+  apr_improvement: number;
+}
+```
+
+Example:
+
+```typescript
+{
+  allocations: [
+    {
+      protocol: "moonwell",
+      allocation: "450000000",
+      apr: 8.5
+    },
+    {
+      protocol: "aave",
+      allocation: "350000000",
+      apr: 7.2
+    },
+    {
+      protocol: "compound",
+      allocation: "200000000",
+      apr: 6.8
+    }
+  ],
+  total_costs: 0.45, // USD
+  weighted_apr_initial: 7.1,
+  weighted_apr_final: 7.8,
+  apr_improvement: 0.7 // +0.7% APR
+}
+```
+
+### Action Plan
+
+Step-by-step instructions to achieve the optimal allocation:
+
+```typescript
+interface ActionDetail {
+  action_type: 'deposit' | 'withdraw';
+  protocol: string;
+  amount: string;
+  underlying_amount?: string; // For withdrawals
+}
+```
+
+Example:
+
+```typescript
+[
+  {
+    action_type: "withdraw",
+    protocol: "compound",
+    amount: "300000000",
+    underlying_amount: "301234567" // Amount + accrued interest
+  },
+  {
+    action_type: "deposit",
+    protocol: "moonwell",
+    amount: "450000000"
+  },
+  {
+    action_type: "deposit",
+    protocol: "aave",
+    amount: "100000000"
+  }
+]
+```
+
+### Execution Calldata
+
+Ready-to-execute transaction data:
+
+```typescript
+interface CalldataInfo {
+  contract_address: string;    // Target contract
+  function_name: string;        // Function to call
+  parameters: string[];         // ABI-encoded parameters
+  value: string;                // Native token value (usually "0")
+  protocol: string;             // Protocol name
+  description: string;          // Human-readable description
+}
+```
+
+Example:
+
+```typescript
+[
+  {
+    contract_address: "0xCompoundComet...",
+    function_name: "withdraw",
+    parameters: ["0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "300000000"],
+    value: "0",
+    protocol: "compound",
+    description: "Withdraw 300 USDC from Compound"
+  },
+  {
+    contract_address: "0xMoonwellMarket...",
+    function_name: "supply",
+    parameters: ["0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "450000000"],
+    value: "0",
+    protocol: "moonwell",
+    description: "Deposit 450 USDC to Moonwell"
+  }
+]
+```
+
+## Optimization Algorithm
+
+### Factors Considered
+
+<AccordionGroup>
+  <Accordion title="Protocol APRs">
+    Real-time APRs from each protocol for the specific token. Weighted by allocation size.
+  </Accordion>
+  
+  <Accordion title="Gas Costs">
+    Estimated gas for each rebalancing transaction. Optimization only proceeds if APR improvement exceeds gas costs.
+  </Accordion>
+  
+  <Accordion title="Protocol Liquidity">
+    Available liquidity in each protocol. Won't allocate more than what the protocol can efficiently handle.
+  </Accordion>
+  
+  <Accordion title="Slippage">
+    Price impact of large deposits/withdrawals, especially for smaller protocols.
+  </Accordion>
+  
+  <Accordion title="Constraints">
+    User-defined constraints (min protocols, max per protocol, exclusions, etc.).
+  </Accordion>
+  
+  <Accordion title="Transaction Minimization">
+    Prefer fewer, larger transactions over many small ones to save gas.
+  </Accordion>
+</AccordionGroup>
+
+### Optimization Goals
+
+The optimizer uses a **constraint-based optimization** approach:
+
+1. **Fetch Data**: Get current APRs, gas prices, liquidity
+2. **Apply Constraints**: Filter out invalid allocations
+3. **Calculate Scores**: Score each possible allocation
+4. **Select Optimal**: Choose highest net return allocation
+5. **Generate Plan**: Create minimal set of transactions
+6. **Validate**: Ensure plan respects all constraints
+
+## Constraints
+
+### Available Constraint Types
+
+```typescript
+enum WalletConstraints {
+  MIN_PROTOCOLS = 'min_protocols',
+  MAX_ALLOCATION_AMOUNT_PER_PROTOCOL = 'max_allocation_amount_per_protocol',
+  MAX_AMOUNT_PER_PROTOCOL = 'max_amount_per_protocol',
+  MIN_AMOUNT = 'min_amount',
+  EXCLUDE_PROTOCOL = 'exclude_protocol',
+  MIN_ALLOCATION_AMOUNT_PER_PROTOCOL = 'min_allocation_amount_per_protocol',
+}
+```
+
+### Constraint Examples
+
+<CodeGroup>
+
+```typescript Min Protocols
+{
+  kind: WalletConstraints.MIN_PROTOCOLS,
+  params: { min_protocols: 2 }
+}
+// Always diversify across at least 2 protocols
+```
+
+```typescript Max Per Protocol
+{
+  kind: WalletConstraints.MAX_AMOUNT_PER_PROTOCOL,
+  params: { max_amount: "5000000000" }
+}
+// Cap any single protocol at 5000 USDC
+```
+
+```typescript Max Specific Protocol
+{
+  kind: WalletConstraints.MAX_ALLOCATION_AMOUNT_PER_PROTOCOL,
+  params: {
+    protocol: "moonwell",
+    max_amount: "2000000000"
+  }
+}
+// Cap Moonwell specifically at 2000 USDC
+```
+
+```typescript Exclude Protocol
+{
+  kind: WalletConstraints.EXCLUDE_PROTOCOL,
+  params: { protocol: "compound" }
+}
+// Never use Compound
+```
+
+```typescript Min Amount
+{
+  kind: WalletConstraints.MIN_AMOUNT,
+  params: { min_amount: "100000000" }
+}
+// Don't allocate less than 100 USDC to any protocol
+```
+
+</CodeGroup>
+
+### Combining Constraints
+
+```typescript
+await giza.optimizer.optimize({
+  chainId: Chain.BASE,
+  total_capital: "10000000000", // 10k USDC
+  token_address: USDC_ADDRESS,
+  current_allocations: { aave: "10000000000" },
+  protocols: ["aave", "compound", "moonwell", "seamless"],
+  constraints: [
+    // Diversify
+    {
+      kind: WalletConstraints.MIN_PROTOCOLS,
+      params: { min_protocols: 3 }
+    },
+    // Cap newer protocols
+    {
+      kind: WalletConstraints.MAX_ALLOCATION_AMOUNT_PER_PROTOCOL,
+      params: { protocol: "seamless", max_amount: "2000000000" }
+    },
+    // Avoid dust allocations
+    {
+      kind: WalletConstraints.MIN_AMOUNT,
+      params: { min_amount: "500000000" }
+    }
+  ]
+});
+```
+
+## Using the Optimizer
+
+### Basic Usage
+
+```typescript
+import { GizaAgent, Chain, WalletConstraints } from '@giza/agent-sdk';
+
+const giza = new GizaAgent({ chainId: Chain.BASE });
+
+const result = await giza.optimizer.optimize({
+  chainId: Chain.BASE,
+  total_capital: "1000000000",
+  token_address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  current_allocations: {
+    aave: "600000000",
+    compound: "400000000"
+  },
+  protocols: ["aave", "compound", "moonwell"],
+});
+
+console.log(`APR improvement: +${result.optimization_result.apr_improvement}%`);
+console.log(`From ${result.optimization_result.weighted_apr_initial}% to ${result.optimization_result.weighted_apr_final}%`);
+console.log(`Actions needed: ${result.action_plan.length}`);
+console.log(`Gas cost: $${result.optimization_result.total_costs}`);
+
+// Execute the plan (if using IaaS)
+for (const calldata of result.calldata) {
+  console.log(`Execute: ${calldata.description}`);
+  // Send transaction to calldata.contract_address
+  // Call calldata.function_name with calldata.parameters
+}
+```
+
+### Dry Run Scenarios
+
+Test different scenarios without executing:
+
+```typescript
+// Scenario 1: Current allocation
+const current = await giza.optimizer.optimize({
+  chainId: Chain.BASE,
+  total_capital: "1000000000",
+  token_address: USDC_ADDRESS,
+  current_allocations: { aave: "1000000000" },
+  protocols: ["aave", "compound", "moonwell"],
+});
+
+// Scenario 2: Add more protocols
+const expanded = await giza.optimizer.optimize({
+  chainId: Chain.BASE,
+  total_capital: "1000000000",
+  token_address: USDC_ADDRESS,
+  current_allocations: { aave: "1000000000" },
+  protocols: ["aave", "compound", "moonwell", "seamless", "fluid"],
+});
+
+// Compare
+console.log(`Current APR: ${current.optimization_result.weighted_apr_final}%`);
+console.log(`With more protocols: ${expanded.optimization_result.weighted_apr_final}%`);
+console.log(`Potential gain: +${expanded.optimization_result.weighted_apr_final - current.optimization_result.weighted_apr_final}%`);
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Don't over-optimize">
+    Calling the optimizer too frequently wastes gas. Let APR differences accumulate before rebalancing.
+    
+    **Good:** Every 6-24 hours
+    **Bad:** Every 5 minutes
+  </Accordion>
+  
+  <Accordion title="Set minimum APR improvement threshold">
+    Only rebalance if APR improvement exceeds a threshold (e.g., 0.3%).
+    
+    ```typescript
+    if (result.optimization_result.apr_improvement > 0.3) {
+      // Execute rebalancing
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Use constraints for risk management">
+    Always set constraints to match your risk tolerance and diversification requirements.
+  </Accordion>
+  
+  <Accordion title="Consider gas prices">
+    During high gas periods, higher APR improvement may be needed to justify rebalancing.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="IaaS Integration"
+    icon="server"
+    href="/integration/iaas"
+  >
+    Build custom strategies with the optimizer
+  </Card>
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api-reference/optimizer/optimize"
+  >
+    Complete optimizer API documentation
+  </Card>
+  <Card
+    title="Examples"
+    icon="lightbulb"
+    href="/examples/advanced-patterns"
+  >
+    Advanced optimization patterns
+  </Card>
+  <Card
+    title="Agentic Integration"
+    icon="robot"
+    href="/integration/agentic"
+  >
+    Use agents with automatic optimization
+  </Card>
+</CardGroup>

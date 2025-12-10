@@ -1,0 +1,70 @@
+---
+title: Handling Withdrawals
+description: 'Guide to implementing partial and full withdrawals'
+---
+
+## Overview
+
+Learn how to implement both partial and full withdrawals for users.
+
+## Partial Withdrawal
+
+Agent remains active, only withdraw specified amount:
+
+```typescript
+const result = await giza.agent.withdraw({
+  wallet: smartAccountAddress,
+  amount: '500000000', // 500 USDC (6 decimals)
+});
+
+if ('total_value' in result) {
+  console.log(`Withdrawn: ${result.total_value_in_usd} USD`);
+  console.log('Details:', result.withdraw_details);
+}
+```
+
+## Full Withdrawal
+
+Deactivate agent and withdraw everything:
+
+```typescript
+// Initiate withdrawal
+await giza.agent.withdraw({
+  wallet: smartAccountAddress,
+  transfer: true, // Transfer to origin wallet
+});
+
+// Poll for completion
+const finalStatus = await giza.agent.pollWithdrawalStatus(
+  smartAccountAddress,
+  {
+    interval: 5000,
+    timeout: 300000,
+    onUpdate: (status) => {
+      updateUI(status); // Update progress in UI
+    }
+  }
+);
+
+console.log('Withdrawal complete:', finalStatus.status);
+```
+
+## Error Handling
+
+```typescript
+try {
+  await giza.agent.withdraw({ wallet: address, transfer: true });
+} catch (error) {
+  if (error instanceof TimeoutError) {
+    // Still polling, funds safe
+    showMessage('Withdrawal taking longer than expected...');
+  } else if (error instanceof GizaAPIError) {
+    // Check agent status
+    const status = await giza.agent.getWithdrawalStatus(address);
+    if (status.status === 'deactivating') {
+      // Still in progress
+      continue polling
+    }
+  }
+}
+```

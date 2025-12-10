@@ -1,0 +1,151 @@
+---
+title: Error Handling
+description: 'Comprehensive error handling strategies'
+---
+
+## Error Types
+
+The SDK provides specific error classes:
+
+### ValidationError
+
+Input validation failures:
+
+```typescript
+import { ValidationError } from '@giza/agent-sdk';
+
+try {
+  await giza.agent.createSmartAccount({
+    origin_wallet: 'invalid-address'
+  });
+} catch (error) {
+  if (error instanceof ValidationError) {
+    // Invalid input
+    console.error('Validation failed:', error.message);
+    showUserError('Please provide a valid Ethereum address');
+  }
+}
+```
+
+### GizaAPIError
+
+API errors (4xx, 5xx):
+
+```typescript
+import { GizaAPIError } from '@giza/agent-sdk';
+
+try {
+  await giza.agent.activate({...});
+} catch (error) {
+  if (error instanceof GizaAPIError) {
+    console.error('API error:', {
+      status: error.statusCode,
+      message: error.message,
+      details: error.details
+    });
+    
+    if (error.statusCode === 401) {
+      // Authentication issue
+      checkAPICredentials();
+    } else if (error.statusCode === 429) {
+      // Rate limited
+      retryWithBackoff();
+    }
+  }
+}
+```
+
+### TimeoutError
+
+Request timeouts:
+
+```typescript
+import { TimeoutError } from '@giza/agent-sdk';
+
+try {
+  await giza.agent.withdraw({...});
+} catch (error) {
+  if (error instanceof TimeoutError) {
+    console.error('Request timed out');
+    showMessage('Operation taking longer than expected. Please try again.');
+  }
+}
+```
+
+### NotImplementedError
+
+Features not yet available:
+
+```typescript
+import { NotImplementedError } from '@giza/agent-sdk';
+
+try {
+  await giza.agent.getSmartAccount({
+    smartAccount: address // Not supported yet
+  });
+} catch (error) {
+  if (error instanceof NotImplementedError) {
+    // Feature not available
+    console.log('Use origin_wallet instead');
+  }
+}
+```
+
+## Error Handling Patterns
+
+### Retry with Exponential Backoff
+
+```typescript
+async function retryOperation<T>(
+  operation: () => Promise<T>,
+  maxRetries = 3
+): Promise<T> {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (i === maxRetries - 1) throw error;
+      
+      if (error instanceof GizaAPIError && error.statusCode >= 500) {
+        // Server error, retry
+        const delay = Math.pow(2, i) * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      } else {
+        // Client error, don't retry
+        throw error;
+      }
+    }
+  }
+  throw new Error('Max retries exceeded');
+}
+```
+
+### User-Friendly Messages
+
+```typescript
+function getUserFriendlyError(error: unknown): string {
+  if (error instanceof ValidationError) {
+    return 'Please check your input and try again.';
+  } else if (error instanceof GizaAPIError) {
+    if (error.statusCode === 404) {
+      return 'Agent not found. Please create one first.';
+    } else if (error.statusCode === 429) {
+      return 'Too many requests. Please wait a moment.';
+    }
+    return 'An error occurred. Please try again later.';
+  } else if (error instanceof TimeoutError) {
+    return 'Request timed out. Please check your connection.';
+  }
+  return 'An unexpected error occurred.';
+}
+```
+
+## Best Practices
+
+1. **Always use try-catch** around SDK calls
+2. **Check error types** with `instanceof`
+3. **Log errors** for debugging
+4. **Show user-friendly messages** to users
+5. **Implement retry logic** for transient failures
+6. **Monitor error rates** in production
+7. **Have fallbacks** for non-critical features

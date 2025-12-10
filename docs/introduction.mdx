@@ -1,0 +1,179 @@
+---
+title: Introduction
+description: "Welcome to Giza Agent SDK for autonomous DeFi yield optimization."
+---
+
+## What is Giza Agent SDK?
+
+Giza Agent SDK enables partners to integrate **AI-powered DeFi yield optimization** into their applications through two powerful approaches:
+
+1. **Agentic Integration** - Full autonomous solution where Giza creates self-custodied smart accounts, handles execution infrastructure, and optimization
+2. **IaaS (Intelligence as a Service)** - Consume Giza's Optimizer as a stateless intelligence service with your own execution infrastructure
+
+Whether you want a complete hands-off solution or just the optimization brain, Giza provides the tools to maximize returns across leading DeFi lending protocols.
+
+## Two Integration Approaches
+
+<CardGroup cols={2}>
+  <Card title="Agentic Integration" icon="robot" color="#BDEE63" href="/integration/agentic">
+    **Full autonomous solution**
+    
+    Giza creates self-custodied smart accounts, handles execution, and optimization. You build the UI and monitor performance.
+    
+    Perfect for fast integration and hands-off yield.
+  </Card>
+  <Card title="IaaS (Intelligence as a Service)" icon="brain" color="#BDEE63" href="/integration/iaas">
+    **Optimization intelligence only**
+    
+    Bring your own execution infrastructure. Giza provides optimal allocation intelligence.
+    
+    Perfect for custom strategies and existing systems.
+  </Card>
+</CardGroup>
+
+<Card title="Compare Integration Methods" icon="code-branch" href="/integration-methods">
+  See detailed comparison to choose the right approach for your needs
+</Card>
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="AI-Powered Optimization" icon="brain" iconType="duotone">
+    Advanced algorithms calculate optimal capital allocation across protocols
+    for maximum APR
+  </Card>
+  <Card title="Smart Account Support" icon="shield-check" iconType="duotone">
+    In agentic mode Giza creates self-custodied smart accounts with session keys.
+  </Card>
+  <Card title="Multi-Protocol Support" icon="layer-group" iconType="duotone">
+    Seamless integration with Aave, Compound, Morpho, Moonwell, Fluid, and other leading
+    DeFi protocols
+  </Card>
+  <Card title="Real-Time Analytics" icon="chart-line" iconType="duotone">
+    Track performance, APR, portfolio allocation, and transaction history in
+    real-time
+  </Card>
+</CardGroup>
+
+## How It Works
+
+<Tabs>
+  <Tab title="Agentic Integration">
+    <Steps>
+      <Step title="Create Smart Account">
+        Giza generates a self-custodied smart account for your user's wallet. This becomes the deposit
+        address for agent-managed funds.
+      </Step>
+      <Step title="User Deposits">
+        User deposits USDC or other supported tokens to their smart account address.
+      </Step>
+      <Step title="Activate Agent">
+        Activate the agent with selected protocols and your constraints. Giza's agent starts autonomous optimization.
+      </Step>
+      <Step title="Automatic Rebalancing">
+        The agent continuously monitors APRs and automatically rebalances capital
+        across protocols for maximum yield.
+      </Step>
+      <Step title="Monitor & Withdraw">
+        Track performance in real-time. Users can withdraw partially or fully at any
+        time.
+      </Step>
+    </Steps>
+  </Tab>
+  
+  <Tab title="IaaS (Intelligence as a Service)">
+    <Steps>
+      <Step title="Call Giza Optimizer">
+        Request optimization: send current allocations, capital, and protocols to Giza's Optimizer API.
+      </Step>
+      <Step title="Receive Intelligence">
+        Get optimal allocation, action plan, expected APR improvement, and execution-ready calldata.
+      </Step>
+      <Step title="Apply Your Logic">
+        Decide whether to execute based on YOUR criteria (APR threshold, gas costs, risk rules).
+      </Step>
+      <Step title="Execute with Your Infrastructure">
+        Use the provided calldata to execute rebalancing with your own execution engine.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## Use Cases
+
+<Tabs>
+  <Tab title="Agentic Use Cases">
+    ### DeFi Wallets & Exchanges
+    
+    Add autonomous yield generation to user wallets. Set it and forget it - agents handle the optimization.
+    
+    ### Yield Aggregators
+    
+    Integrate Giza agents as a hands-off yield source alongside your existing strategies.
+    
+    ### Portfolio Apps
+    
+    Offer users autonomous yield optimization without requiring DeFi expertise or manual rebalancing.
+    
+    ### Neobanks & Fintech
+    
+    Provide "high-yield savings" powered by DeFi with zero user management required.
+  </Tab>
+  
+  <Tab title="IaaS Use Cases">
+    ### Treasury Management
+    
+    Optimize DAO or protocol treasuries using Giza's intelligence with your custom execution logic and risk controls.
+    
+    ### Existing DeFi Platforms
+    
+    Enhance your capital management strategies with AI-powered allocation intelligence while keeping full execution control.
+    
+    ### Institutional Asset Managers
+    
+    Integrate optimization intelligence into sophisticated trading systems with custom risk parameters.
+    
+    ### Vault Protocols
+    
+    Use Giza's Optimizer to inform rebalancing decisions in your vault strategies while maintaining your execution infrastructure.
+  </Tab>
+</Tabs>
+
+## What's Next?
+
+<CardGroup cols={2}>
+  <Card
+    title="Integration Methods"
+    icon="code-branch"
+    href="/integration-methods"
+  >
+    Choose between Agentic (full solution) or IaaS (optimization intelligence) approaches
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get up and running in minutes with our quickstart guide
+  </Card>
+  <Card title="Core Concepts" icon="book" href="/concepts/overview">
+    Understand smart accounts, agents, protocols, and optimization
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/client">
+    Explore the complete API documentation
+  </Card>
+</CardGroup>
+
+## Community & Support
+
+<CardGroup cols={3}>
+  <Card title="Discord" icon="discord" href="https://discord.gg/giza">
+    Join our community
+  </Card>
+  <Card
+    title="GitHub"
+    icon="github"
+    href="https://github.com/gizatech/agent-sdk"
+  >
+    View source code
+  </Card>
+  <Card title="Website" icon="globe" href="https://www.gizatech.xyz/">
+    Visit Giza
+  </Card>
+</CardGroup>

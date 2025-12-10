@@ -1,0 +1,39 @@
+---
+title: deactivate
+description: 'Deactivate an agent and stop yield optimization'
+---
+
+## Method Signature
+
+```typescript
+agent.deactivate(params: DeactivateParams): Promise<DeactivateResponse>
+```
+
+## Description
+
+Deactivates the agent, withdraws funds from all protocols, and optionally transfers them to the origin wallet.
+
+## Parameters
+
+<ParamField path="wallet" type="Address" required>
+  Smart account address to deactivate.
+</ParamField>
+
+<ParamField path="transfer" type="boolean" default="true">
+  Whether to transfer withdrawn funds to origin wallet.
+</ParamField>
+
+## Example
+
+```typescript
+await giza.agent.deactivate({
+  wallet: smartAccountAddress,
+  transfer: true, // Transfer to origin wallet
+});
+
+// Poll for completion
+const finalStatus = await giza.agent.pollWithdrawalStatus(
+  smartAccountAddress,
+  { interval: 5000, timeout: 300000 }
+);
+```

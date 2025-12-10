@@ -1,0 +1,125 @@
+---
+title: claimRewards
+description: 'Claim accrued rewards for an agent'
+---
+
+## Method Signature
+
+```typescript
+agent.claimRewards(wallet: Address): Promise<ClaimedRewardsResponse>
+```
+
+## Description
+
+Claims accrued rewards from DeFi protocols for an agent. Many protocols distribute reward tokens (like AAVE, COMP, etc.) that accumulate over time and can be claimed.
+
+## Parameters
+
+<ParamField path="wallet" type="Address" required>
+  Smart account wallet address.
+</ParamField>
+
+## Return Value
+
+<ResponseField name="rewards" type="ClaimedReward[]">
+  Array of claimed rewards, each containing:
+  - `token` - Token address of the reward
+  - `amount` - Raw amount claimed
+  - `amount_float` - Human-readable amount
+  - `current_price_in_underlying` - Price in the underlying token
+</ResponseField>
+
+## Example
+
+```typescript
+import { GizaAgent, Chain } from '@giza/agent-sdk';
+
+const giza = new GizaAgent({ chainId: Chain.BASE });
+
+// Claim rewards
+const rewards = await giza.agent.claimRewards(smartAccountAddress);
+
+console.log(`Claimed ${rewards.rewards.length} reward tokens`);
+
+rewards.rewards.forEach((reward) => {
+  console.log(`Token: ${reward.token}`);
+  console.log(`  Amount: ${reward.amount_float}`);
+  console.log(`  Value: ${reward.current_price_in_underlying}`);
+});
+
+// Calculate total value
+const totalValue = rewards.rewards.reduce(
+  (sum, r) => sum + r.amount_float * r.current_price_in_underlying,
+  0
+);
+console.log(`Total claimed value: ${totalValue}`);
+```
+
+## Output
+
+```typescript
+{
+  rewards: [
+    {
+      token: '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9', // AAVE
+      amount: 500000000000000000,
+      amount_float: 0.5,
+      current_price_in_underlying: 100
+    },
+    {
+      token: '0xc00e94Cb662C3520282E6f5717214004A7f26888', // COMP
+      amount: 250000000000000000,
+      amount_float: 0.25,
+      current_price_in_underlying: 50
+    }
+  ]
+}
+```
+
+## Error Handling
+
+```typescript
+import { ValidationError, GizaAPIError } from '@giza/agent-sdk';
+
+try {
+  const rewards = await giza.agent.claimRewards(smartAccountAddress);
+  console.log('Rewards claimed successfully');
+} catch (error) {
+  if (error instanceof ValidationError) {
+    console.error('Invalid wallet address:', error.message);
+  } else if (error instanceof GizaAPIError) {
+    console.error('Failed to claim rewards:', error.message);
+  }
+}
+```
+
+## Common Errors
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| `ValidationError: wallet address is required` | Missing wallet parameter | Provide a valid wallet address |
+| `GizaAPIError: No rewards to claim` | No accrued rewards available | Wait for rewards to accumulate |
+| `GizaAPIError: Agent not active` | Agent is not active | Only active agents can claim rewards |
+
+## Notes
+
+<AccordionGroup>
+  <Accordion title="When to Claim">
+    Rewards accumulate over time from various protocols. There's no need to claim frequently - the agent will continue earning rewards even if unclaimed.
+  </Accordion>
+  
+  <Accordion title="Reward Types">
+    Different protocols distribute different reward tokens. AAVE distributes AAVE tokens, Compound distributes COMP tokens, etc.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Get Performance" href="/api-reference/agent/get-performance">
+    View accrued rewards over time
+  </Card>
+  <Card title="Get Portfolio" href="/api-reference/agent/get-portfolio">
+    Check portfolio status
+  </Card>
+</CardGroup>
