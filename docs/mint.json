@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "name": "Giza Agent SDK",
+  "name": "Giza Integrations",
   "logo": {
     "dark": "/logo/dark.svg",
     "light": "/logo/light.svg"
@@ -126,16 +126,8 @@
     }
   ],
   "footerSocials": {
-    "twitter": "https://twitter.com/gizatech",
-    "github": "https://github.com/gizatech",
-    "telegram": "https://t.me/gizatech"
-  },
-  "api": {
-    "baseUrl": "https://api.giza.tech",
-    "auth": {
-      "method": "key",
-      "name": "GIZA_API_KEY"
-    }
+    "twitter": "https://x.com/gizatechxyz",
+    "github": "https://github.com/gizatech"
   },
   "openapi": [],
   "feedback": {
@@ -144,7 +136,7 @@
     "raiseIssue": true
   },
   "search": {
-    "prompt": "Search Giza Agent SDK documentation..."
+    "prompt": "Search Giza Integrations documentation..."
   },
   "analytics": {
     "ga4": {
@@ -153,9 +145,9 @@
   },
   "redirects": [],
   "metadata": {
-    "og:site_name": "Giza Agent SDK",
+    "og:site_name": "Giza Integrations",
     "og:type": "website",
-    "og:description": "TypeScript SDK for integrating Giza's autonomous DeFi yield optimization agents",
-    "twitter:site": "@gizatech"
+    "og:description": "Toolkit for integrating Giza's autonomous DeFi yield optimization agents",
+    "twitter:site": "@gizatechxyz"
   }
 }
