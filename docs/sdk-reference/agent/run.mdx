@@ -32,7 +32,7 @@ Agents automatically optimize on a regular schedule. Use `run()` only when you n
 ## Example
 
 ```typescript
-import { GizaAgent, Chain } from '@giza/agent-sdk';
+import { GizaAgent, Chain } from '@gizatech/agent-sdk';
 
 const giza = new GizaAgent({ chainId: Chain.BASE });
 
@@ -47,7 +47,7 @@ console.log('Run status:', result.status);
 ## Error Handling
 
 ```typescript
-import { ValidationError, GizaAPIError } from '@giza/agent-sdk';
+import { ValidationError, GizaAPIError } from '@gizatech/agent-sdk';
 
 try {
   const result = await giza.agent.run({

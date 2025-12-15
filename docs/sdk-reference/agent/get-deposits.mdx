@@ -36,7 +36,7 @@ Retrieves the list of deposits made to an agent's smart account.
 ## Example
 
 ```typescript
-import { GizaAgent, Chain } from '@giza/agent-sdk';
+import { GizaAgent, Chain } from '@gizatech/agent-sdk';
 
 const giza = new GizaAgent({ chainId: Chain.BASE });
 
@@ -87,7 +87,7 @@ const depositsByOrigin = await giza.agent.getDeposits(userWallet, true);
 ## Error Handling
 
 ```typescript
-import { ValidationError, GizaAPIError } from '@giza/agent-sdk';
+import { ValidationError, GizaAPIError } from '@gizatech/agent-sdk';
 
 try {
   const deposits = await giza.agent.getDeposits(smartAccountAddress);

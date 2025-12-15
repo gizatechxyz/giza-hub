@@ -52,7 +52,7 @@ Calculates the Annual Percentage Rate (APR) realized by an agent over a specifie
 ## Example
 
 ```typescript
-import { GizaAgent, Chain } from '@giza/agent-sdk';
+import { GizaAgent, Chain } from '@gizatech/agent-sdk';
 
 const giza = new GizaAgent({ chainId: Chain.BASE });
 
@@ -105,7 +105,7 @@ if (periodApr.sub_periods) {
 ## Error Handling
 
 ```typescript
-import { ValidationError, GizaAPIError } from '@giza/agent-sdk';
+import { ValidationError, GizaAPIError } from '@gizatech/agent-sdk';
 
 try {
   const aprData = await giza.agent.getAPR({

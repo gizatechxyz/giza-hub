@@ -59,15 +59,15 @@ graph TB
 <CodeGroup>
 
 ```bash npm
-npm install @giza/agent-sdk
+npm install @gizatech/agent-sdk
 ```
 
 ```bash pnpm
-pnpm add @giza/agent-sdk
+pnpm add @gizatech/agent-sdk
 ```
 
 ```bash yarn
-yarn add @giza/agent-sdk
+yarn add @gizatech/agent-sdk
 ```
 
 </CodeGroup>
@@ -91,7 +91,7 @@ Never commit your `.env` file to version control! Add it to `.gitignore`.
 ### Step 1: Initialize the SDK
 
 ```typescript
-import { GizaAgent, Chain } from '@giza/agent-sdk';
+import { GizaAgent, Chain } from '@gizatech/agent-sdk';
 
 // Initialize once, reuse throughout your app
 const giza = new GizaAgent({
@@ -288,7 +288,7 @@ const result = await giza.agent.run({
 Always wrap SDK calls in try-catch blocks:
 
 ```typescript
-import { ValidationError, GizaAPIError, TimeoutError } from '@giza/agent-sdk';
+import { ValidationError, GizaAPIError, TimeoutError } from '@gizatech/agent-sdk';
 
 try {
   const account = await giza.agent.createSmartAccount({

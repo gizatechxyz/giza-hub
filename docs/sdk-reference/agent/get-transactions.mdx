@@ -59,7 +59,7 @@ Retrieves the transaction history for an agent, including deposits, withdrawals,
 ## Example
 
 ```typescript
-import { GizaAgent, Chain, SortOrder } from '@giza/agent-sdk';
+import { GizaAgent, Chain, SortOrder } from '@gizatech/agent-sdk';
 
 const giza = new GizaAgent({ chainId: Chain.BASE });
 
@@ -140,7 +140,7 @@ while (page <= history.pagination.total_pages) {
 ## Error Handling
 
 ```typescript
-import { ValidationError, GizaAPIError } from '@giza/agent-sdk';
+import { ValidationError, GizaAPIError } from '@gizatech/agent-sdk';
 
 try {
   const history = await giza.agent.getTransactions({

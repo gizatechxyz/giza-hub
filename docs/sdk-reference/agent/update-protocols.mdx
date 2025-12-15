@@ -32,7 +32,7 @@ Returns `Promise<void>` - resolves when the protocols are successfully updated.
 ## Example
 
 ```typescript
-import { GizaAgent, Chain } from '@giza/agent-sdk';
+import { GizaAgent, Chain } from '@gizatech/agent-sdk';
 
 const giza = new GizaAgent({ chainId: Chain.BASE });
 
@@ -48,7 +48,7 @@ console.log('Protocols updated successfully');
 ## Error Handling
 
 ```typescript
-import { ValidationError, GizaAPIError } from '@giza/agent-sdk';
+import { ValidationError, GizaAPIError } from '@gizatech/agent-sdk';
 
 try {
   await giza.agent.updateProtocols(

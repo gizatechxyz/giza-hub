@@ -50,7 +50,7 @@ Gets the current status of a withdrawal or deactivation operation. Use this to c
 ## Example
 
 ```typescript
-import { GizaAgent, Chain } from '@giza/agent-sdk';
+import { GizaAgent, Chain } from '@gizatech/agent-sdk';
 
 const giza = new GizaAgent({ chainId: Chain.BASE });
 
@@ -85,7 +85,7 @@ if (status.status === 'deactivated') {
 ## Error Handling
 
 ```typescript
-import { ValidationError, GizaAPIError } from '@giza/agent-sdk';
+import { ValidationError, GizaAPIError } from '@gizatech/agent-sdk';
 
 try {
   const status = await giza.agent.getWithdrawalStatus(smartAccountAddress);

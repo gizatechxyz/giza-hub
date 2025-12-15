@@ -18,17 +18,17 @@ Giza Agent SDK enables partners to integrate self-driving capital management int
 ## Installation
 
 ```bash
-npm install @giza/agent-sdk
+npm install @gizatech/agent-sdk
 # or
-pnpm add @giza/agent-sdk
+pnpm add @gizatech/agent-sdk
 # or
-yarn add @giza/agent-sdk
+yarn add @gizatech/agent-sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { GizaAgent, Chain } from '@giza/agent-sdk';
+import { GizaAgent, Chain } from '@gizatech/agent-sdk';
 
 // Initialize the SDK
 const giza = new GizaAgent({

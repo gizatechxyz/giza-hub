@@ -53,7 +53,7 @@ Returns `Promise<WithdrawalStatusResponse>` when the agent status becomes `deact
 ## Example
 
 ```typescript
-import { GizaAgent, Chain } from '@giza/agent-sdk';
+import { GizaAgent, Chain } from '@gizatech/agent-sdk';
 
 const giza = new GizaAgent({ chainId: Chain.BASE });
 
@@ -83,7 +83,7 @@ console.log('Deactivated at:', finalStatus.last_deactivation_date);
 ## Error Handling
 
 ```typescript
-import { ValidationError, TimeoutError, GizaAPIError } from '@giza/agent-sdk';
+import { ValidationError, TimeoutError, GizaAPIError } from '@gizatech/agent-sdk';
 
 try {
   const finalStatus = await giza.agent.pollWithdrawalStatus(

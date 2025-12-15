@@ -48,7 +48,7 @@ Returns a `Promise<SmartAccountInfo>` with:
 ## Example
 
 ```typescript
-import { GizaAgent, Chain } from '@giza/agent-sdk';
+import { GizaAgent, Chain } from '@gizatech/agent-sdk';
 
 const giza = new GizaAgent({ chainId: Chain.BASE });
 
@@ -79,7 +79,7 @@ console.log(`Deposit USDC to: ${account.smartAccountAddress}`);
 ## Error Handling
 
 ```typescript
-import { ValidationError, GizaAPIError } from '@giza/agent-sdk';
+import { ValidationError, GizaAPIError } from '@gizatech/agent-sdk';
 
 try {
   const account = await giza.agent.createSmartAccount({

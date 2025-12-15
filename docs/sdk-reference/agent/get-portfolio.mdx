@@ -70,7 +70,7 @@ Retrieves comprehensive information about an agent including current status, dep
 ## Example
 
 ```typescript
-import { GizaAgent, Chain } from '@giza/agent-sdk';
+import { GizaAgent, Chain } from '@gizatech/agent-sdk';
 
 const giza = new GizaAgent({ chainId: Chain.BASE });
 
@@ -123,7 +123,7 @@ const portfolioByOrigin = await giza.agent.getPortfolio({
 ## Error Handling
 
 ```typescript
-import { ValidationError, GizaAPIError } from '@giza/agent-sdk';
+import { ValidationError, GizaAPIError } from '@gizatech/agent-sdk';
 
 try {
   const portfolio = await giza.agent.getPortfolio({

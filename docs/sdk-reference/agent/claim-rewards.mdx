@@ -32,7 +32,7 @@ Claims accrued rewards from DeFi protocols for an agent. Many protocols distribu
 ## Example
 
 ```typescript
-import { GizaAgent, Chain } from '@giza/agent-sdk';
+import { GizaAgent, Chain } from '@gizatech/agent-sdk';
 
 const giza = new GizaAgent({ chainId: Chain.BASE });
 
@@ -79,7 +79,7 @@ console.log(`Total claimed value: ${totalValue}`);
 ## Error Handling
 
 ```typescript
-import { ValidationError, GizaAPIError } from '@giza/agent-sdk';
+import { ValidationError, GizaAPIError } from '@gizatech/agent-sdk';
 
 try {
   const rewards = await giza.agent.claimRewards(smartAccountAddress);

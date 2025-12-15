@@ -5,7 +5,7 @@ description: 'TypeScript SDK for integrating Giza Agent services'
 
 ## Introduction
 
-The `@giza/agent-sdk` is a TypeScript SDK that provides a simple and type-safe interface for interacting with Giza's autonomous DeFi yield optimization agents.
+The `@gizatech/agent-sdk` is a TypeScript SDK that provides a simple and type-safe interface for interacting with Giza's autonomous DeFi yield optimization agents.
 
 <Info>
 The SDK wraps the [HTTP API](/api-reference/introduction) in a convenient TypeScript interface with automatic authentication, type safety, and error handling.
@@ -16,15 +16,15 @@ The SDK wraps the [HTTP API](/api-reference/introduction) in a convenient TypeSc
 <CodeGroup>
 
 ```bash npm
-npm install @giza/agent-sdk
+npm install @gizatech/agent-sdk
 ```
 
 ```bash pnpm
-pnpm add @giza/agent-sdk
+pnpm add @gizatech/agent-sdk
 ```
 
 ```bash yarn
-yarn add @giza/agent-sdk
+yarn add @gizatech/agent-sdk
 ```
 
 </CodeGroup>
@@ -32,7 +32,7 @@ yarn add @giza/agent-sdk
 ## Quick Start
 
 ```typescript
-import { GizaAgent, Chain } from '@giza/agent-sdk';
+import { GizaAgent, Chain } from '@gizatech/agent-sdk';
 
 // Environment variables required:
 // GIZA_API_KEY=your-partner-api-key
@@ -108,7 +108,7 @@ const giza = new GizaAgent({
 ## Supported Chains
 
 ```typescript
-import { Chain } from '@giza/agent-sdk';
+import { Chain } from '@gizatech/agent-sdk';
 
 Chain.BASE          // 8453 - Base Mainnet
 Chain.ETHEREUM      // 1 - Ethereum Mainnet
@@ -128,7 +128,7 @@ import {
   GizaAPIError, 
   TimeoutError, 
   NetworkError 
-} from '@giza/agent-sdk';
+} from '@gizatech/agent-sdk';
 
 try {
   await giza.agent.activate({...});

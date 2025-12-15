@@ -32,7 +32,7 @@ Retrieves the deposit limit for an agent. This indicates the maximum amount that
 ## Example
 
 ```typescript
-import { GizaAgent, Chain } from '@giza/agent-sdk';
+import { GizaAgent, Chain } from '@gizatech/agent-sdk';
 
 const giza = new GizaAgent({ chainId: Chain.BASE });
 
@@ -64,7 +64,7 @@ if (depositAmount <= limit) {
 ## Error Handling
 
 ```typescript
-import { ValidationError, GizaAPIError } from '@giza/agent-sdk';
+import { ValidationError, GizaAPIError } from '@gizatech/agent-sdk';
 
 try {
   const { limit } = await giza.agent.getLimit({

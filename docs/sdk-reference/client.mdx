@@ -13,7 +13,7 @@ The `GizaAgent` class is the main entry point for the Giza Agent SDK. It provide
 ## Constructor
 
 ```typescript
-import { GizaAgent, Chain } from '@giza/agent-sdk';
+import { GizaAgent, Chain } from '@gizatech/agent-sdk';
 
 const giza = new GizaAgent(config);
 ```
@@ -55,7 +55,7 @@ Never commit API keys to version control. Use `.env` files and ensure they're in
 ## Example
 
 ```typescript
-import { GizaAgent, Chain } from '@giza/agent-sdk';
+import { GizaAgent, Chain } from '@gizatech/agent-sdk';
 
 // Basic initialization
 const giza = new GizaAgent({
@@ -187,7 +187,7 @@ import {
   GizaAPIError,
   TimeoutError,
   NotImplementedError
-} from '@giza/agent-sdk';
+} from '@gizatech/agent-sdk';
 
 try {
   const account = await giza.agent.createSmartAccount({
@@ -226,7 +226,7 @@ import type {
   WithdrawParams,
   OptimizeParams,
   // ... and many more
-} from '@giza/agent-sdk';
+} from '@gizatech/agent-sdk';
 
 // Type-safe parameters
 const activateParams: ActivateParams = {
@@ -244,7 +244,7 @@ await giza.agent.activate(activateParams);
 The SDK supports multiple chains:
 
 ```typescript
-import { Chain, CHAIN_NAMES } from '@giza/agent-sdk';
+import { Chain, CHAIN_NAMES } from '@gizatech/agent-sdk';
 
 // Supported chains
 console.log(Chain.BASE);      // 8453

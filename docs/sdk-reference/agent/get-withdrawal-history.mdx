@@ -44,7 +44,7 @@ Retrieves only withdrawal transactions for an agent. This is a filtered view of 
 ## Example
 
 ```typescript
-import { GizaAgent, Chain } from '@giza/agent-sdk';
+import { GizaAgent, Chain } from '@gizatech/agent-sdk';
 
 const giza = new GizaAgent({ chainId: Chain.BASE });
 
@@ -100,7 +100,7 @@ withdrawals.transactions.forEach((tx) => {
 ## Error Handling
 
 ```typescript
-import { ValidationError, GizaAPIError } from '@giza/agent-sdk';
+import { ValidationError, GizaAPIError } from '@gizatech/agent-sdk';
 
 try {
   const withdrawals = await giza.agent.getWithdrawalHistory(

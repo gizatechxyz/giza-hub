@@ -32,7 +32,7 @@ Retrieves fee information for an agent, including the percentage fee and the cur
 ## Example
 
 ```typescript
-import { GizaAgent, Chain } from '@giza/agent-sdk';
+import { GizaAgent, Chain } from '@gizatech/agent-sdk';
 
 const giza = new GizaAgent({ chainId: Chain.BASE });
 
@@ -55,7 +55,7 @@ console.log(`Current fee owed: ${fees.fee}`);
 ## Error Handling
 
 ```typescript
-import { ValidationError, GizaAPIError } from '@giza/agent-sdk';
+import { ValidationError, GizaAPIError } from '@gizatech/agent-sdk';
 
 try {
   const fees = await giza.agent.getFees(smartAccountAddress);

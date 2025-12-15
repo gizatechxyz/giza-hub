@@ -32,7 +32,7 @@ Adds additional funds to an active agent. Call this method after the user has de
 ## Example
 
 ```typescript
-import { GizaAgent, Chain } from '@giza/agent-sdk';
+import { GizaAgent, Chain } from '@gizatech/agent-sdk';
 
 const giza = new GizaAgent({ chainId: Chain.BASE });
 
@@ -48,7 +48,7 @@ console.log('Top-up successful! Agent will optimize the new funds.');
 ## Error Handling
 
 ```typescript
-import { ValidationError, GizaAPIError } from '@giza/agent-sdk';
+import { ValidationError, GizaAPIError } from '@gizatech/agent-sdk';
 
 try {
   await giza.agent.topUp({

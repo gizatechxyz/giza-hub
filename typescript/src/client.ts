@@ -13,7 +13,7 @@ import { DEFAULT_AGENT_ID, DEFAULT_TIMEOUT } from './constants';
  * 
  * @example
  * ```typescript
- * import { GizaAgent, Chain } from '@giza/agent-sdk';
+ * import { GizaAgent, Chain } from '@gizatech/agent-sdk';
  * 
  * // Set environment variables:
  * // GIZA_API_KEY=your-partner-api-key
