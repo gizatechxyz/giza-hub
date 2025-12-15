@@ -17,6 +17,10 @@
   },
   "tabs": [
     {
+      "name": "SDK Reference",
+      "url": "sdk-reference"
+    },
+    {
       "name": "API Reference",
       "url": "api-reference"
     },
@@ -44,11 +48,7 @@
   "navigation": [
     {
       "group": "Get Started",
-      "pages": [
-        "introduction",
-        "integration-methods",
-        "quickstart"
-      ]
+      "pages": ["introduction", "integration-methods", "quickstart"]
     },
     {
       "group": "Core Concepts",
@@ -61,52 +61,100 @@
       ]
     },
     {
-      "group": "Integration",
-      "pages": [
-        "integration/agentic",
-        "integration/iaas"
-      ]
-    },
-    {
-      "group": "Overview",
-      "pages": [
-        "api-reference/client"
-      ]
+      "group": "SDK Overview",
+      "pages": ["sdk-reference/overview", "sdk-reference/client"]
     },
     {
       "group": "Agent Module",
       "pages": [
-        "api-reference/agent/create-smart-account",
-        "api-reference/agent/get-smart-account",
-        "api-reference/agent/get-protocols",
-        "api-reference/agent/update-protocols",
-        "api-reference/agent/activate",
-        "api-reference/agent/deactivate",
-        "api-reference/agent/top-up",
-        "api-reference/agent/run",
-        "api-reference/agent/get-performance",
-        "api-reference/agent/get-portfolio",
-        "api-reference/agent/get-apr",
-        "api-reference/agent/get-deposits",
-        "api-reference/agent/get-transactions",
-        "api-reference/agent/get-withdrawal-history",
-        "api-reference/agent/withdraw",
-        "api-reference/agent/get-withdrawal-status",
-        "api-reference/agent/poll-withdrawal-status",
-        "api-reference/agent/get-fees",
-        "api-reference/agent/get-limit",
-        "api-reference/agent/claim-rewards"
+        "sdk-reference/agent/create-smart-account",
+        "sdk-reference/agent/get-smart-account",
+        "sdk-reference/agent/get-protocols",
+        "sdk-reference/agent/update-protocols",
+        "sdk-reference/agent/activate",
+        "sdk-reference/agent/deactivate",
+        "sdk-reference/agent/top-up",
+        "sdk-reference/agent/run",
+        "sdk-reference/agent/get-performance",
+        "sdk-reference/agent/get-portfolio",
+        "sdk-reference/agent/get-apr",
+        "sdk-reference/agent/get-deposits",
+        "sdk-reference/agent/get-transactions",
+        "sdk-reference/agent/get-withdrawal-history",
+        "sdk-reference/agent/withdraw",
+        "sdk-reference/agent/get-withdrawal-status",
+        "sdk-reference/agent/poll-withdrawal-status",
+        "sdk-reference/agent/get-fees",
+        "sdk-reference/agent/get-limit",
+        "sdk-reference/agent/claim-rewards"
       ]
     },
     {
       "group": "Optimizer Module",
+      "pages": ["sdk-reference/optimizer/optimize"]
+    },
+    {
+      "group": "API Overview",
+      "pages": ["api-reference/introduction", "api-reference/authentication"]
+    },
+    {
+      "group": "Agents",
       "pages": [
-        "api-reference/optimizer/optimize"
+        "api-reference/agents/activate-wallet",
+        "api-reference/agents/get-wallet-info",
+        "api-reference/agents/get-wallet-deposits",
+        "api-reference/agents/get-performance",
+        "api-reference/agents/get-apr",
+        "api-reference/agents/get-transactions",
+        "api-reference/agents/deactivate-wallet",
+        "api-reference/agents/withdraw",
+        "api-reference/agents/top-up",
+        "api-reference/agents/run-agent",
+        "api-reference/agents/claim-rewards",
+        "api-reference/agents/get-fee",
+        "api-reference/agents/get-limit",
+        "api-reference/agents/update-protocols"
+      ]
+    },
+    {
+      "group": "Protocols",
+      "pages": [
+        "api-reference/protocols/get-protocols",
+        "api-reference/protocols/get-protocols-supply"
+      ]
+    },
+    {
+      "group": "Optimizer",
+      "pages": ["api-reference/optimizer/optimize"]
+    },
+    {
+      "group": "Statistics",
+      "pages": [
+        "api-reference/statistics/get-stats",
+        "api-reference/statistics/get-tvl"
+      ]
+    },
+    {
+      "group": "Rewards",
+      "pages": [
+        "api-reference/rewards/get-status",
+        "api-reference/rewards/set-status",
+        "api-reference/rewards/get-history"
+      ]
+    },
+    {
+      "group": "Support",
+      "pages": [
+        "api-reference/support/get-chains",
+        "api-reference/support/get-tokens",
+        "api-reference/support/healthcheck"
       ]
     },
     {
       "group": "Practical Guides",
       "pages": [
+        "guides/agentic-integration",
+        "guides/iaas-integration",
         "guides/monitoring-performance",
         "guides/handling-withdrawals",
         "guides/error-handling"
@@ -114,22 +162,21 @@
     },
     {
       "group": "Code Examples",
-      "pages": [
-        "examples/advanced-patterns"
-      ]
+      "pages": ["examples/advanced-patterns"]
     },
     {
       "group": "Resources",
-      "pages": [
-        "troubleshooting"
-      ]
+      "pages": ["troubleshooting"]
     }
   ],
   "footerSocials": {
     "twitter": "https://x.com/gizatechxyz",
     "github": "https://github.com/gizatech"
   },
-  "openapi": [],
+  "openapi": ["openapi.json"],
+  "api": {
+    "baseUrl": "https://partners-backend-1038109371738.europe-west1.run.app"
+  },
   "feedback": {
     "thumbsRating": true,
     "suggestEdit": true,
@@ -143,7 +190,20 @@
       "measurementId": "G-XXXXXXXXXX"
     }
   },
-  "redirects": [],
+  "redirects": [
+    {
+      "source": "/api-reference/client",
+      "destination": "/sdk-reference/client"
+    },
+    {
+      "source": "/api-reference/agent/:slug",
+      "destination": "/sdk-reference/agent/:slug"
+    },
+    {
+      "source": "/api-reference/optimizer/:slug",
+      "destination": "/sdk-reference/optimizer/:slug"
+    }
+  ],
   "metadata": {
     "og:site_name": "Giza Integrations",
     "og:type": "website",

@@ -1,0 +1,84 @@
+---
+title: Get Statistics
+api: GET /api/v1/{chain_id}/stats
+description: 'Get platform statistics'
+---
+
+## Description
+
+Retrieves aggregate statistics for the Giza platform on a specific chain.
+
+## Path Parameters
+
+<ParamField path="chain_id" type="integer" required>
+  The blockchain chain ID
+</ParamField>
+
+## Response
+
+<ResponseField name="total_balance" type="number">
+  Total balance across all agents
+</ResponseField>
+
+<ResponseField name="total_deposits" type="number">
+  Total deposits across all agents
+</ResponseField>
+
+<ResponseField name="total_users" type="integer">
+  Total number of active users
+</ResponseField>
+
+<ResponseField name="total_transactions" type="integer">
+  Total number of transactions
+</ResponseField>
+
+<ResponseField name="total_apr" type="number">
+  Average APR across all agents
+</ResponseField>
+
+<ResponseField name="liquidity_distribution" type="object">
+  Distribution of liquidity across protocols
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl "https://partners-backend-1038109371738.europe-west1.run.app/api/v1/8453/stats"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://partners-backend-1038109371738.europe-west1.run.app/api/v1/8453/stats'
+);
+const data = await response.json();
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200 OK
+{
+  "total_balance": 15000000.50,
+  "total_deposits": 14500000.00,
+  "total_users": 1250,
+  "total_transactions": 45000,
+  "total_apr": 5.8,
+  "liquidity_distribution": {
+    "initial_deposits": [
+      {"token": "USDC", "amount": 14500000}
+    ],
+    "current_tokens": [
+      {"token": "USDC", "amount": 15000000}
+    ],
+    "protocols": [
+      {
+        "protocol": "aave",
+        "balances": [{"token": "USDC", "amount": 8000000}]
+      },
+      {
+        "protocol": "compound",
+        "balances": [{"token": "USDC", "amount": 7000000}]
+      }
+    ]
+  }
+}
+```
+</ResponseExample>

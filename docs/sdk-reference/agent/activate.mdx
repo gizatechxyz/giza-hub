@@ -1,0 +1,166 @@
+---
+title: activate
+description: 'Activate an agent to start autonomous yield optimization'
+---
+
+## Method Signature
+
+```typescript
+agent.activate(params: ActivateParams): Promise<ActivateResponse>
+```
+
+## Description
+
+Activates an autonomous agent to manage capital in a smart account. Once activated, the agent continuously monitors APRs and automatically rebalances funds across selected protocols for optimal yield.
+
+## Parameters
+
+<ParamField path="wallet" type="Address" required>
+  Smart account address to activate.
+</ParamField>
+
+<ParamField path="origin_wallet" type="Address" required>
+  User's origin wallet (EOA or smart wallet).
+</ParamField>
+
+<ParamField path="initial_token" type="Address" required>
+  Token address deposited (e.g., USDC address).
+</ParamField>
+
+<ParamField path="selected_protocols" type="string[]" required>
+  Array of protocol names the agent can use. Get available protocols with `getProtocols()`.
+  
+  Example: `["aave", "compound", "moonwell"]`
+</ParamField>
+
+<ParamField path="tx_hash" type="string">
+  Optional but recommended. Deposit transaction hash for verification.
+</ParamField>
+
+<ParamField path="constraints" type="ConstraintConfig[]">
+  Optional constraints to control agent behavior.
+  
+  Example:
+  ```typescript
+  [{
+    kind: 'min_protocols',
+    params: { min_protocols: 2 }
+  }]
+  ```
+</ParamField>
+
+## Return Value
+
+<ResponseField name="message" type="string">
+  Success message confirming activation.
+</ResponseField>
+
+<ResponseField name="wallet" type="string">
+  Smart account address that was activated.
+</ResponseField>
+
+## Example
+
+```typescript
+import { GizaAgent, Chain } from '@giza/agent-sdk';
+
+const giza = new GizaAgent({ chainId: Chain.BASE });
+
+const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+
+await giza.agent.activate({
+  wallet: smartAccountAddress,
+  origin_wallet: userWallet,
+  initial_token: USDC_BASE,
+  selected_protocols: ['aave', 'compound', 'moonwell'],
+  tx_hash: depositTxHash, // Optional but recommended
+  constraints: [
+    {
+      kind: 'min_protocols',
+      params: { min_protocols: 2 } // Always diversify
+    },
+    {
+      kind: 'max_amount_per_protocol',
+      params: { max_amount: '5000000000' } // Cap at 5000 USDC per protocol
+    }
+  ]
+});
+
+console.log('✅ Agent activated and optimizing!');
+```
+
+## Constraints
+
+Available constraint types:
+
+| Constraint | Description | Parameters |
+|------------|-------------|------------|
+| `min_protocols` | Minimum protocols to use | `{ min_protocols: number }` |
+| `max_amount_per_protocol` | Cap per any protocol | `{ max_amount: string }` |
+| `max_allocation_amount_per_protocol` | Cap specific protocol | `{ protocol: string, max_amount: string }` |
+| `exclude_protocol` | Blacklist protocol | `{ protocol: string }` |
+| `min_amount` | Min per protocol | `{ min_amount: string }` |
+
+## Error Handling
+
+```typescript
+import { ValidationError, GizaAPIError } from '@giza/agent-sdk';
+
+try {
+  await giza.agent.activate({
+    wallet: smartAccountAddress,
+    origin_wallet: userWallet,
+    initial_token: USDC_ADDRESS,
+    selected_protocols: ['aave', 'compound'],
+  });
+} catch (error) {
+  if (error instanceof ValidationError) {
+    console.error('Invalid parameters:', error.message);
+  } else if (error instanceof GizaAPIError) {
+    console.error('Activation failed:', error.message);
+    // Check if funds were deposited
+    // Check if protocols are available
+  }
+}
+```
+
+## Common Errors
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| `ValidationError: At least one protocol must be selected` | Empty protocols array | Provide at least one protocol |
+| `GizaAPIError: No deposits found` | Smart account has no balance | Ensure user deposited funds first |
+| `GizaAPIError: Invalid protocol` | Protocol not available | Check available protocols with `getProtocols()` |
+
+## Notes
+
+<AccordionGroup>
+  <Accordion title="Activation is Asynchronous">
+    Activation initiates the process but agents may take a few moments to start optimizing. Check status with `getPortfolio()`.
+  </Accordion>
+  
+  <Accordion title="Provide Transaction Hash">
+    Including the deposit `tx_hash` helps verify funds and speeds up activation.
+  </Accordion>
+  
+  <Accordion title="Select Multiple Protocols">
+    Choose at least 2-3 protocols for diversification and better optimization opportunities.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Get Performance" href="/sdk-reference/agent/get-performance">
+    Monitor agent performance
+  </Card>
+  <Card title="Get APR" href="/sdk-reference/agent/get-apr">
+    Track realized APR
+  </Card>
+  <Card title="Deactivate" href="/sdk-reference/agent/deactivate">
+    Stop the agent
+  </Card>
+  <Card title="Agents Concept" href="/concepts/agents">
+    Learn more about agents
+  </Card>
+</CardGroup>

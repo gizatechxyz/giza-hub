@@ -1,0 +1,84 @@
+---
+title: Get Wallet Deposits
+api: GET /api/v1/{chain_id}/wallets/{wallet}/deposits
+description: 'Get deposit information for a wallet'
+---
+
+<Note>
+**SDK Alternative**: Use `giza.agent.getDeposits()` for a simpler TypeScript interface. [See SDK docs](/sdk-reference/agent/get-deposits)
+</Note>
+
+## Description
+
+Retrieves the list of deposits made to a specific wallet.
+
+## Path Parameters
+
+<ParamField path="chain_id" type="integer" required>
+  The blockchain chain ID
+</ParamField>
+
+<ParamField path="wallet" type="string" required>
+  The wallet address
+</ParamField>
+
+## Query Parameters
+
+<ParamField query="eoa" type="boolean" default="false">
+  If `true`, treats wallet as an EOA address
+</ParamField>
+
+## Response
+
+<ResponseField name="deposits" type="array">
+  List of deposits
+  
+  <Expandable>
+    <ResponseField name="amount" type="integer">
+      Deposit amount in smallest token unit
+    </ResponseField>
+    <ResponseField name="token_type" type="string">
+      Token address
+    </ResponseField>
+    <ResponseField name="date" type="string">
+      ISO date of deposit
+    </ResponseField>
+    <ResponseField name="tx_hash" type="string">
+      Transaction hash
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl "https://partners-backend-1038109371738.europe-west1.run.app/api/v1/8453/wallets/0x.../deposits"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://partners-backend-1038109371738.europe-west1.run.app/api/v1/8453/wallets/0x.../deposits'
+);
+const data = await response.json();
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200 OK
+{
+  "deposits": [
+    {
+      "amount": 1000000000,
+      "token_type": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "date": "2024-01-15T10:30:00Z",
+      "tx_hash": "0xabc123..."
+    },
+    {
+      "amount": 500000000,
+      "token_type": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "date": "2024-01-20T14:00:00Z",
+      "tx_hash": "0xdef456..."
+    }
+  ]
+}
+```
+</ResponseExample>

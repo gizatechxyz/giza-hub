@@ -1,0 +1,127 @@
+---
+title: getWithdrawalHistory
+description: 'Get withdrawal transaction history'
+---
+
+## Method Signature
+
+```typescript
+agent.getWithdrawalHistory(
+  wallet: Address,
+  page?: number,
+  limit?: number
+): Promise<TransactionHistoryResponse>
+```
+
+## Description
+
+Retrieves only withdrawal transactions for an agent. This is a filtered view of `getTransactions()` showing only `WITHDRAW` actions.
+
+## Parameters
+
+<ParamField path="wallet" type="Address" required>
+  Smart account wallet address.
+</ParamField>
+
+<ParamField path="page" type="number" default="1">
+  Page number for pagination (starts at 1).
+</ParamField>
+
+<ParamField path="limit" type="number" default="20">
+  Number of items per page (max 100).
+</ParamField>
+
+## Return Value
+
+<ResponseField name="transactions" type="Transaction[]">
+  Array of withdrawal transactions only.
+</ResponseField>
+
+<ResponseField name="pagination" type="PaginationInfo">
+  Pagination metadata for the filtered results.
+</ResponseField>
+
+## Example
+
+```typescript
+import { GizaAgent, Chain } from '@giza/agent-sdk';
+
+const giza = new GizaAgent({ chainId: Chain.BASE });
+
+// Get withdrawal history
+const withdrawals = await giza.agent.getWithdrawalHistory(
+  smartAccountAddress,
+  1,  // page
+  20  // limit
+);
+
+console.log(`Total withdrawals: ${withdrawals.pagination.total_items}`);
+
+withdrawals.transactions.forEach((tx) => {
+  console.log(`${tx.date}: ${tx.amount} ${tx.token_type}`);
+  console.log(`  Status: ${tx.status}`);
+  if (tx.transaction_hash) {
+    console.log(`  Hash: ${tx.transaction_hash}`);
+  }
+});
+```
+
+## Output
+
+```typescript
+{
+  transactions: [
+    {
+      action: 'WITHDRAW',
+      date: '2024-01-20T15:30:00Z',
+      amount: 1000000000,
+      token_type: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+      status: 'SUCCESS',
+      transaction_hash: '0x123...'
+    },
+    {
+      action: 'WITHDRAW',
+      date: '2024-01-10T10:00:00Z',
+      amount: 500000000,
+      token_type: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+      status: 'SUCCESS',
+      transaction_hash: '0x456...'
+    }
+  ],
+  pagination: {
+    total_items: 2,
+    total_pages: 1,
+    current_page: 1,
+    items_per_page: 20
+  }
+}
+```
+
+## Error Handling
+
+```typescript
+import { ValidationError, GizaAPIError } from '@giza/agent-sdk';
+
+try {
+  const withdrawals = await giza.agent.getWithdrawalHistory(
+    smartAccountAddress
+  );
+} catch (error) {
+  if (error instanceof ValidationError) {
+    console.error('Invalid wallet address:', error.message);
+  } else if (error instanceof GizaAPIError) {
+    console.error('Failed to get withdrawal history:', error.message);
+  }
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Get Transactions" href="/sdk-reference/agent/get-transactions">
+    View all transactions
+  </Card>
+  <Card title="Withdraw" href="/sdk-reference/agent/withdraw">
+    Make a withdrawal
+  </Card>
+</CardGroup>

@@ -1,0 +1,84 @@
+---
+title: topUp
+description: 'Add additional funds to an active agent'
+---
+
+## Method Signature
+
+```typescript
+agent.topUp(params: TopUpParams): Promise<TopUpResponse>
+```
+
+## Description
+
+Adds additional funds to an active agent. Call this method after the user has deposited additional funds to the smart account.
+
+## Parameters
+
+<ParamField path="wallet" type="Address" required>
+  Smart account wallet address to top up.
+</ParamField>
+
+<ParamField path="tx_hash" type="string" required>
+  Transaction hash of the top-up deposit. Used for verification.
+</ParamField>
+
+## Return Value
+
+<ResponseField name="message" type="string">
+  Success message confirming the top-up.
+</ResponseField>
+
+## Example
+
+```typescript
+import { GizaAgent, Chain } from '@giza/agent-sdk';
+
+const giza = new GizaAgent({ chainId: Chain.BASE });
+
+// After user deposits additional funds to the smart account
+await giza.agent.topUp({
+  wallet: smartAccountAddress,
+  tx_hash: depositTxHash,
+});
+
+console.log('Top-up successful! Agent will optimize the new funds.');
+```
+
+## Error Handling
+
+```typescript
+import { ValidationError, GizaAPIError } from '@giza/agent-sdk';
+
+try {
+  await giza.agent.topUp({
+    wallet: smartAccountAddress,
+    tx_hash: depositTxHash,
+  });
+} catch (error) {
+  if (error instanceof ValidationError) {
+    console.error('Invalid parameters:', error.message);
+  } else if (error instanceof GizaAPIError) {
+    console.error('Top-up failed:', error.message);
+  }
+}
+```
+
+## Common Errors
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| `ValidationError: wallet address is required` | Missing wallet parameter | Provide a valid wallet address |
+| `ValidationError: Transaction hash is required` | Missing tx_hash parameter | Provide the deposit transaction hash |
+| `GizaAPIError: Agent not active` | Agent is not in active state | Activate the agent before topping up |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Get Portfolio" href="/sdk-reference/agent/get-portfolio">
+    Check updated portfolio after top-up
+  </Card>
+  <Card title="Get Performance" href="/sdk-reference/agent/get-performance">
+    Monitor performance over time
+  </Card>
+</CardGroup>

@@ -1,0 +1,88 @@
+---
+title: getFees
+description: 'Get fee information for an agent'
+---
+
+## Method Signature
+
+```typescript
+agent.getFees(wallet: Address): Promise<FeeResponse>
+```
+
+## Description
+
+Retrieves fee information for an agent, including the percentage fee and the current fee amount.
+
+## Parameters
+
+<ParamField path="wallet" type="Address" required>
+  Smart account wallet address.
+</ParamField>
+
+## Return Value
+
+<ResponseField name="percentage_fee" type="number">
+  Fee percentage charged on profits. For example, `0.1` represents 10%.
+</ResponseField>
+
+<ResponseField name="fee" type="number">
+  Current absolute fee amount owed.
+</ResponseField>
+
+## Example
+
+```typescript
+import { GizaAgent, Chain } from '@giza/agent-sdk';
+
+const giza = new GizaAgent({ chainId: Chain.BASE });
+
+// Get fee information
+const fees = await giza.agent.getFees(smartAccountAddress);
+
+console.log(`Fee percentage: ${fees.percentage_fee * 100}%`);
+console.log(`Current fee owed: ${fees.fee}`);
+```
+
+## Output
+
+```typescript
+{
+  percentage_fee: 0.1,  // 10%
+  fee: 5.25             // Current fee amount
+}
+```
+
+## Error Handling
+
+```typescript
+import { ValidationError, GizaAPIError } from '@giza/agent-sdk';
+
+try {
+  const fees = await giza.agent.getFees(smartAccountAddress);
+} catch (error) {
+  if (error instanceof ValidationError) {
+    console.error('Invalid wallet address:', error.message);
+  } else if (error instanceof GizaAPIError) {
+    console.error('Failed to get fees:', error.message);
+  }
+}
+```
+
+## Notes
+
+<AccordionGroup>
+  <Accordion title="Fee Structure">
+    Fees are typically charged as a percentage of realized profits. The exact fee structure may vary based on your agreement with Giza.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Get Portfolio" href="/sdk-reference/agent/get-portfolio">
+    View portfolio details
+  </Card>
+  <Card title="Get Performance" href="/sdk-reference/agent/get-performance">
+    Check performance metrics
+  </Card>
+</CardGroup>

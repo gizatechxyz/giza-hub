@@ -1,0 +1,55 @@
+---
+title: Get Protocols Supply
+api: GET /api/v1/{chain_id}/{token_address}/protocols/supply
+description: 'Get the total supply for each protocol'
+---
+
+## Description
+
+Retrieves the total supply and available tokens for each protocol on a chain.
+
+## Path Parameters
+
+<ParamField path="chain_id" type="integer" required>
+  The blockchain chain ID
+</ParamField>
+
+<ParamField path="token_address" type="string" required>
+  The token address
+</ParamField>
+
+## Response
+
+Returns supply information for each protocol.
+
+<RequestExample>
+```bash cURL
+curl "https://partners-backend-1038109371738.europe-west1.run.app/api/v1/8453/0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913/protocols/supply"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://partners-backend-1038109371738.europe-west1.run.app/api/v1/8453/0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913/protocols/supply'
+);
+const data = await response.json();
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200 OK
+{
+  "protocols": [
+    {
+      "name": "aave",
+      "total_supply": 1500000000,
+      "available_liquidity": 500000000
+    },
+    {
+      "name": "compound",
+      "total_supply": 800000000,
+      "available_liquidity": 200000000
+    }
+  ]
+}
+```
+</ResponseExample>

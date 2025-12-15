@@ -1,0 +1,132 @@
+---
+title: getPerformance
+description: 'Get historical performance data for an agent'
+---
+
+## Method Signature
+
+```typescript
+agent.getPerformance(params: GetPerformanceParams): Promise<PerformanceChartResponse>
+```
+
+## Description
+
+Retrieves historical performance data for an agent, including portfolio value over time, token distribution, accrued rewards, and protocol allocations.
+
+## Parameters
+
+<ParamField path="wallet" type="Address" required>
+  Smart account wallet address.
+</ParamField>
+
+<ParamField path="from_date" type="string">
+  Start date for performance data. Format: `"YYYY-MM-DD HH:MM:SS"` or ISO format.
+  
+  Example: `"2024-01-01 00:00:00"`
+</ParamField>
+
+## Return Value
+
+<ResponseField name="performance" type="PerformanceData[]">
+  Array of performance data points, each containing:
+  
+  - `date` - Date of the snapshot
+  - `value` - Total portfolio value
+  - `value_in_usd` - Total value in USD (optional)
+  - `token_distribution` - Token amounts by symbol (optional)
+  - `accrued_rewards` - Rewards by token (optional)
+  - `portfolio` - Allocation by protocol (optional)
+</ResponseField>
+
+## Example
+
+```typescript
+import { GizaAgent, Chain } from '@giza/agent-sdk';
+
+const giza = new GizaAgent({ chainId: Chain.BASE });
+
+// Get all performance data
+const performance = await giza.agent.getPerformance({
+  wallet: smartAccountAddress,
+});
+
+// Get performance from a specific date
+const recentPerformance = await giza.agent.getPerformance({
+  wallet: smartAccountAddress,
+  from_date: '2024-01-01 00:00:00',
+});
+
+// Display latest value
+const latest = performance.performance[performance.performance.length - 1];
+console.log('Current value:', latest.value);
+console.log('Value in USD:', latest.value_in_usd);
+
+// Display allocation by protocol
+if (latest.portfolio) {
+  Object.entries(latest.portfolio).forEach(([protocol, allocation]) => {
+    console.log(`${protocol}: $${allocation.value_in_usd}`);
+  });
+}
+```
+
+## Output
+
+```typescript
+{
+  performance: [
+    {
+      date: '2024-01-15T12:00:00Z',
+      value: 1000.5,
+      value_in_usd: 1000.5,
+      token_distribution: {
+        USDC: 500.25,
+        aUSDC: 500.25
+      },
+      accrued_rewards: {
+        AAVE: {
+          locked: 0,
+          unlocked: 0.5,
+          locked_value: 0,
+          locked_value_usd: 0,
+          unlocked_value: 50,
+          unlocked_value_usd: 50
+        }
+      },
+      portfolio: {
+        aave: { value: 500.25, value_in_usd: 500.25 },
+        compound: { value: 500.25, value_in_usd: 500.25 }
+      }
+    }
+  ]
+}
+```
+
+## Error Handling
+
+```typescript
+import { ValidationError, GizaAPIError } from '@giza/agent-sdk';
+
+try {
+  const performance = await giza.agent.getPerformance({
+    wallet: smartAccountAddress,
+    from_date: '2024-01-01 00:00:00',
+  });
+} catch (error) {
+  if (error instanceof ValidationError) {
+    console.error('Invalid parameters:', error.message);
+  } else if (error instanceof GizaAPIError) {
+    console.error('Failed to get performance:', error.message);
+  }
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Get APR" href="/sdk-reference/agent/get-apr">
+    Calculate realized APR
+  </Card>
+  <Card title="Get Portfolio" href="/sdk-reference/agent/get-portfolio">
+    Get current portfolio status
+  </Card>
+</CardGroup>

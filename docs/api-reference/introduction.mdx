@@ -1,0 +1,149 @@
+---
+title: API Introduction
+description: 'HTTP API for Giza Agent services'
+---
+
+## Overview
+
+The Giza API provides direct HTTP access to all agent services. This is the underlying API that powers the [SDK](/sdk-reference/overview).
+
+<Info>
+**For most use cases, we recommend using the [TypeScript SDK](/sdk-reference/overview)** which provides type safety, automatic authentication, and better error handling. Use the HTTP API directly when:
+- Building in a language without SDK support
+- Needing lower-level control
+- Integrating with existing HTTP infrastructure
+</Info>
+
+## Base URL
+
+```
+https://partners-backend-1038109371738.europe-west1.run.app
+```
+
+## API Groups
+
+<CardGroup cols={2}>
+  <Card title="Agents" icon="robot" href="/api-reference/agents/activate-wallet">
+    Core agent operations: activation, monitoring, withdrawals
+  </Card>
+  <Card title="Protocols" icon="layer-group" href="/api-reference/protocols/get-protocols">
+    DeFi protocol information and availability
+  </Card>
+  <Card title="Optimizer" icon="brain" href="/api-reference/optimizer/optimize">
+    Capital allocation optimization
+  </Card>
+  <Card title="Statistics" icon="chart-line" href="/api-reference/statistics/get-stats">
+    Platform-wide statistics and TVL
+  </Card>
+  <Card title="Rewards" icon="gift" href="/api-reference/rewards/get-status">
+    Reward staking status and history
+  </Card>
+  <Card title="Support" icon="circle-info" href="/api-reference/support/get-chains">
+    Supported chains and tokens
+  </Card>
+</CardGroup>
+
+## Common Parameters
+
+### Chain ID
+
+Most endpoints require a `chain_id` path parameter:
+
+| Chain | ID |
+|-------|-----|
+| Base | `8453` |
+| Ethereum | `1` |
+| Arbitrum | `42161` |
+| Polygon | `137` |
+| Base Sepolia | `84532` |
+| Sepolia | `11155111` |
+
+### Wallet Address
+
+Wallet addresses must be valid Ethereum addresses:
+- Start with `0x`
+- 42 characters total (0x + 40 hex characters)
+- Case-insensitive
+
+## Response Format
+
+All successful responses return JSON with the following structure:
+
+```json
+{
+  "data": { ... }
+}
+```
+
+Error responses follow this format:
+
+```json
+{
+  "detail": [
+    {
+      "loc": ["path", "wallet"],
+      "msg": "Invalid wallet address",
+      "type": "value_error"
+    }
+  ]
+}
+```
+
+## HTTP Status Codes
+
+| Code | Description |
+|------|-------------|
+| `200` | Success |
+| `201` | Created |
+| `204` | No Content (success with no response body) |
+| `400` | Bad Request - Invalid parameters |
+| `401` | Unauthorized - Invalid API key |
+| `403` | Forbidden - Access denied |
+| `404` | Not Found - Resource doesn't exist |
+| `422` | Validation Error - Invalid input |
+| `500` | Internal Server Error |
+| `503` | Service Unavailable |
+
+## Rate Limits
+
+API requests are rate-limited per partner. If you exceed limits, you'll receive a `429 Too Many Requests` response.
+
+<Tip>
+Contact Giza to discuss rate limit increases for production use cases.
+</Tip>
+
+## OpenAPI Specification
+
+The complete API specification is available in OpenAPI 3.1 format:
+
+```
+https://partners-backend-1038109371738.europe-west1.run.app/api/v1/openapi.json
+```
+
+You can use this to:
+- Generate client libraries
+- Import into Postman
+- Validate requests
+
+## Interactive API Explorer
+
+<Card title="Swagger UI" icon="play" href="https://partners-backend-1038109371738.europe-west1.run.app/docs">
+  Try API endpoints directly in the interactive Swagger documentation
+</Card>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/api-reference/authentication">
+    Learn how to authenticate API requests
+  </Card>
+  <Card title="Activate Wallet" icon="rocket" href="/api-reference/agents/activate-wallet">
+    Create your first agent
+  </Card>
+  <Card title="SDK Reference" icon="code" href="/sdk-reference/overview">
+    Use the TypeScript SDK instead
+  </Card>
+  <Card title="Quickstart" icon="bolt" href="/quickstart">
+    Complete integration guide
+  </Card>
+</CardGroup>

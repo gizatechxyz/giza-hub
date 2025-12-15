@@ -1,0 +1,97 @@
+---
+title: Get Wallet APR
+api: GET /api/v1/{chain_id}/wallets/{wallet}/apr
+description: 'Get the APR for a wallet'
+---
+
+<Note>
+**SDK Alternative**: Use `giza.agent.getAPR()` for a simpler TypeScript interface. [See SDK docs](/sdk-reference/agent/get-apr)
+</Note>
+
+## Description
+
+Retrieves the Annual Percentage Rate (APR) for a wallet based on its historical performance.
+
+## Path Parameters
+
+<ParamField path="chain_id" type="integer" required>
+  The blockchain chain ID
+</ParamField>
+
+<ParamField path="wallet" type="string" required>
+  The wallet address
+</ParamField>
+
+## Query Parameters
+
+<ParamField query="start_date" type="string">
+  ISO datetime to start APR calculation (e.g., `2025-05-06T01:00:00+02:00`)
+</ParamField>
+
+<ParamField query="end_date" type="string">
+  Optional end date for APR calculation
+</ParamField>
+
+<ParamField query="use_exact_end_date" type="boolean">
+  If `true`, use end_date as the exact last performance point
+</ParamField>
+
+## Response
+
+<ResponseField name="apr" type="number">
+  Annual Percentage Rate as a decimal (e.g., 5.5 = 5.5%)
+</ResponseField>
+
+<ResponseField name="sub_periods" type="array">
+  Optional breakdown by sub-periods
+  
+  <Expandable>
+    <ResponseField name="start_date" type="string">
+      Period start date
+    </ResponseField>
+    <ResponseField name="end_date" type="string">
+      Period end date
+    </ResponseField>
+    <ResponseField name="return_" type="number">
+      Return for the period
+    </ResponseField>
+    <ResponseField name="initial_value" type="number">
+      Initial value at period start
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl "https://partners-backend-1038109371738.europe-west1.run.app/api/v1/8453/wallets/0x.../apr?start_date=2024-01-01T00:00:00Z"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://partners-backend-1038109371738.europe-west1.run.app/api/v1/8453/wallets/0x.../apr?start_date=2024-01-01T00:00:00Z'
+);
+const data = await response.json();
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200 OK
+{
+  "apr": 5.5,
+  "sub_periods": [
+    {
+      "start_date": "2024-01-01T00:00:00Z",
+      "end_date": "2024-01-15T00:00:00Z",
+      "return_": 0.02,
+      "initial_value": 1000.0
+    }
+  ]
+}
+```
+
+```json 400 Bad Request
+{
+  "detail": "Not enough historical data for APR calculation"
+}
+```
+</ResponseExample>

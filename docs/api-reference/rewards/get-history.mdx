@@ -1,0 +1,100 @@
+---
+title: Get Reward History
+api: GET /api/v1/{chain_id}/rewards/{wallet}/history
+description: 'Get token reward history'
+---
+
+## Description
+
+Retrieves the paginated token reward history for a wallet.
+
+## Path Parameters
+
+<ParamField path="chain_id" type="integer" required>
+  The blockchain chain ID
+</ParamField>
+
+<ParamField path="wallet" type="string" required>
+  The smart account wallet address
+</ParamField>
+
+## Query Parameters
+
+<ParamField query="page" type="integer" default="1">
+  Page number (starts at 1)
+</ParamField>
+
+<ParamField query="limit" type="integer" default="20">
+  Items per page (max 100)
+</ParamField>
+
+<ParamField query="sort" type="string" default="date_desc">
+  Sort order: `date_desc` or `date_asc`
+</ParamField>
+
+## Response
+
+<ResponseField name="rewards" type="array">
+  List of reward entries
+  
+  <Expandable>
+    <ResponseField name="date" type="string">
+      Reward date
+    </ResponseField>
+    <ResponseField name="token_symbol" type="string">
+      Token symbol
+    </ResponseField>
+    <ResponseField name="amount" type="number">
+      Reward amount
+    </ResponseField>
+    <ResponseField name="dollar_value" type="number">
+      USD value
+    </ResponseField>
+    <ResponseField name="transaction_hash" type="string">
+      Transaction hash
+    </ResponseField>
+    <ResponseField name="is_staked" type="boolean">
+      Whether this reward is staked
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="pagination" type="object">
+  Pagination info
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl "https://partners-backend-1038109371738.europe-west1.run.app/api/v1/8453/rewards/0x.../history?page=1&limit=20"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://partners-backend-1038109371738.europe-west1.run.app/api/v1/8453/rewards/0x.../history?page=1&limit=20'
+);
+const data = await response.json();
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200 OK
+{
+  "rewards": [
+    {
+      "date": "2024-01-20T12:00:00Z",
+      "token_symbol": "AAVE",
+      "amount": 1.5,
+      "dollar_value": 150.0,
+      "transaction_hash": "0xabc...",
+      "is_staked": false
+    }
+  ],
+  "pagination": {
+    "total_items": 10,
+    "total_pages": 1,
+    "current_page": 1,
+    "items_per_page": 20
+  }
+}
+```
+</ResponseExample>

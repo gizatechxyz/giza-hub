@@ -1,0 +1,56 @@
+---
+title: Get Limit
+api: GET /api/v1/{chain_id}/wallets/{wallet}/limit
+description: 'Get deposit limit for a wallet'
+---
+
+<Note>
+**SDK Alternative**: Use `giza.agent.getLimit()` for a simpler TypeScript interface. [See SDK docs](/sdk-reference/agent/get-limit)
+</Note>
+
+## Description
+
+Retrieves the deposit limit and current balance for a wallet.
+
+## Path Parameters
+
+<ParamField path="chain_id" type="integer" required>
+  The blockchain chain ID
+</ParamField>
+
+<ParamField path="wallet" type="string" required>
+  The wallet address
+</ParamField>
+
+## Query Parameters
+
+<ParamField query="eoa" type="string" required>
+  The origin wallet (EOA) address
+</ParamField>
+
+## Response
+
+<ResponseField name="limit" type="number">
+  Maximum deposit limit
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl "https://partners-backend-1038109371738.europe-west1.run.app/api/v1/8453/wallets/0x.../limit?eoa=0xabc..."
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://partners-backend-1038109371738.europe-west1.run.app/api/v1/8453/wallets/0x.../limit?eoa=0xabc...'
+);
+const data = await response.json();
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200 OK
+{
+  "limit": 100000
+}
+```
+</ResponseExample>

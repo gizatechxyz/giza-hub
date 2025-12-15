@@ -1,74 +1,249 @@
 ---
-title: optimize
+title: Optimize Allocations
+api: POST /api/v1/optimizer/{chain_id}/optimize
 description: 'Calculate optimal capital allocation across protocols'
 ---
 
-## Method Signature
-
-```typescript
-optimizer.optimize(params: OptimizeParams): Promise<OptimizeResponse>
-```
+<Note>
+**SDK Alternative**: Use `giza.optimizer.optimize()` for a simpler TypeScript interface. [See SDK docs](/sdk-reference/optimizer/optimize)
+</Note>
 
 ## Description
 
-Calculates the optimal allocation of capital across DeFi lending protocols to maximize APR while respecting constraints.
+Calculates the optimal capital allocation across DeFi lending protocols. Returns the optimal allocation, an action plan to achieve it, and execution-ready calldata.
 
-## Parameters
+This endpoint is the core of the **IaaS (Intelligence as a Service)** integration.
 
-<ParamField path="chainId" type="Chain" required>
-  Chain to optimize for (Base or Arbitrum).
+## Path Parameters
+
+<ParamField path="chain_id" type="integer" required>
+  The blockchain chain ID
 </ParamField>
 
-<ParamField path="total_capital" type="string" required>
-  Total capital to allocate (bigint as string, in token's smallest unit).
+## Request Body
+
+<ParamField body="total_capital" type="string" required>
+  Total capital to allocate (as bigint string, e.g., "1000000000" for 1000 USDC)
 </ParamField>
 
-<ParamField path="token_address" type="Address" required>
-  Token to optimize (e.g., USDC address).
+<ParamField body="token_address" type="string" required>
+  Token address to optimize for
 </ParamField>
 
-<ParamField path="current_allocations" type="Record<string, string>" required>
-  Current distribution across protocols.
+<ParamField body="current_allocations" type="object" required>
+  Current allocations by protocol (protocol name → amount as bigint string)
+  
+  Example: `{"aave": "500000000", "compound": "500000000"}`
 </ParamField>
 
-<ParamField path="protocols" type="string[]" required>
-  Protocols to consider.
+<ParamField body="protocols" type="array" required>
+  List of protocol names to consider for optimization
 </ParamField>
 
-<ParamField path="constraints" type="ConstraintConfig[]">
-  Optional constraints.
+<ParamField body="constraints" type="array">
+  Optional constraints for optimization
+  
+  **Constraint types:**
+  - `min_protocols` - Minimum protocols to use
+  - `max_allocation_amount_per_protocol` - Max per protocol
+  - `exclude_protocol` - Exclude specific protocols
 </ParamField>
 
-## Return Value
+## Response
 
-<ResponseField name="optimization_result" type="OptimizationResult">
-  Optimal allocations, APR improvement, and gas costs.
+<ResponseField name="optimization_result" type="object">
+  Optimization results
+  
+  <Expandable>
+    <ResponseField name="allocations" type="array">
+      List of protocol allocations with `protocol`, `allocation`, and `apr`
+    </ResponseField>
+    <ResponseField name="total_costs" type="number">
+      Estimated gas costs
+    </ResponseField>
+    <ResponseField name="weighted_apr_initial" type="number">
+      Initial weighted APR before optimization
+    </ResponseField>
+    <ResponseField name="weighted_apr_final" type="number">
+      Final weighted APR after optimization
+    </ResponseField>
+    <ResponseField name="apr_improvement" type="number">
+      APR improvement percentage
+    </ResponseField>
+  </Expandable>
 </ResponseField>
 
-<ResponseField name="action_plan" type="ActionDetail[]">
-  Step-by-step rebalancing actions.
+<ResponseField name="action_plan" type="array">
+  Ordered list of actions to execute
+  
+  <Expandable>
+    <ResponseField name="action_type" type="string">
+      `deposit` or `withdraw`
+    </ResponseField>
+    <ResponseField name="protocol" type="string">
+      Target protocol
+    </ResponseField>
+    <ResponseField name="amount" type="string">
+      Amount (bigint string)
+    </ResponseField>
+  </Expandable>
 </ResponseField>
 
-<ResponseField name="calldata" type="CalldataInfo[]">
-  Execution-ready transaction data.
+<ResponseField name="calldata" type="array">
+  Execution-ready transaction data
+  
+  <Expandable>
+    <ResponseField name="contract_address" type="string">
+      Target contract
+    </ResponseField>
+    <ResponseField name="function_name" type="string">
+      Function to call
+    </ResponseField>
+    <ResponseField name="parameters" type="array">
+      ABI-encoded parameters
+    </ResponseField>
+    <ResponseField name="value" type="string">
+      Native token value
+    </ResponseField>
+    <ResponseField name="protocol" type="string">
+      Protocol reference
+    </ResponseField>
+    <ResponseField name="description" type="string">
+      Human-readable description
+    </ResponseField>
+  </Expandable>
 </ResponseField>
 
-## Example
-
-```typescript
-const result = await giza.optimizer.optimize({
-  chainId: Chain.BASE,
-  total_capital: "1000000000",
-  token_address: USDC_ADDRESS,
-  current_allocations: {
-    aave: "500000000",
-    compound: "500000000"
-  },
-  protocols: ["aave", "compound", "moonwell"],
-});
-
-console.log(`APR improvement: +${result.optimization_result.apr_improvement}%`);
-console.log('Optimal allocation:', result.optimization_result.allocations);
+<RequestExample>
+```bash cURL
+curl -X POST "https://partners-backend-1038109371738.europe-west1.run.app/api/v1/optimizer/8453/optimize" \
+  -H "Content-Type: application/json" \
+  -H "X-Partner-API-Key: your-api-key" \
+  -H "X-Partner-Name: your-partner-name" \
+  -d '{
+    "total_capital": "1000000000",
+    "token_address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "current_allocations": {
+      "aave": "500000000",
+      "compound": "500000000"
+    },
+    "protocols": ["aave", "compound", "moonwell", "fluid"]
+  }'
 ```
 
-See [Optimizer Concept](/concepts/optimizer) for detailed information.
+```javascript JavaScript
+const response = await fetch(
+  'https://partners-backend-1038109371738.europe-west1.run.app/api/v1/optimizer/8453/optimize',
+  {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Partner-API-Key': 'your-api-key',
+      'X-Partner-Name': 'your-partner-name',
+    },
+    body: JSON.stringify({
+      total_capital: '1000000000',
+      token_address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+      current_allocations: {
+        aave: '500000000',
+        compound: '500000000',
+      },
+      protocols: ['aave', 'compound', 'moonwell', 'fluid'],
+    }),
+  }
+);
+const data = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://partners-backend-1038109371738.europe-west1.run.app/api/v1/optimizer/8453/optimize',
+    headers={
+        'X-Partner-API-Key': 'your-api-key',
+        'X-Partner-Name': 'your-partner-name',
+    },
+    json={
+        'total_capital': '1000000000',
+        'token_address': '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+        'current_allocations': {
+            'aave': '500000000',
+            'compound': '500000000',
+        },
+        'protocols': ['aave', 'compound', 'moonwell', 'fluid'],
+    }
+)
+data = response.json()
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200 OK
+{
+  "optimization_result": {
+    "allocations": [
+      {
+        "protocol": "aave",
+        "allocation": "700000000",
+        "apr": 5.5
+      },
+      {
+        "protocol": "compound",
+        "allocation": "300000000",
+        "apr": 4.8
+      }
+    ],
+    "total_costs": 0.05,
+    "weighted_apr_initial": 5.0,
+    "weighted_apr_final": 5.29,
+    "apr_improvement": 5.8
+  },
+  "action_plan": [
+    {
+      "action_type": "withdraw",
+      "protocol": "compound",
+      "amount": "200000000",
+      "underlying_amount": "200000000"
+    },
+    {
+      "action_type": "deposit",
+      "protocol": "aave",
+      "amount": "200000000"
+    }
+  ],
+  "calldata": [
+    {
+      "contract_address": "0xA88594D404727625A9437C3f886C7643872296AE",
+      "function_name": "withdraw",
+      "parameters": ["200000000"],
+      "value": "0",
+      "protocol": "compound",
+      "description": "Withdraw 200000000 from Compound"
+    },
+    {
+      "contract_address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "function_name": "approve",
+      "parameters": ["0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf", "200000000"],
+      "value": "0",
+      "protocol": "aave",
+      "description": "Approve USDC for Aave"
+    },
+    {
+      "contract_address": "0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf",
+      "function_name": "supply",
+      "parameters": ["0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "200000000", "0x0000000000000000000000000000000000000000", "0"],
+      "value": "0",
+      "protocol": "aave",
+      "description": "Deposit 200000000 to Aave"
+    }
+  ]
+}
+```
+
+```json 400 Bad Request
+{
+  "detail": "Invalid input parameters"
+}
+```
+</ResponseExample>

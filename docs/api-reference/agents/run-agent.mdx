@@ -1,0 +1,69 @@
+---
+title: Run Agent
+api: POST /api/v1/{chain_id}/wallets/{wallet}:run
+description: 'Manually trigger an agent run'
+---
+
+<Note>
+**SDK Alternative**: Use `giza.agent.run()` for a simpler TypeScript interface. [See SDK docs](/sdk-reference/agent/run)
+</Note>
+
+## Description
+
+Manually triggers an optimization run for a specific wallet. The agent will analyze current APRs and rebalance if beneficial.
+
+<Info>
+Agents automatically run periodically. Use this endpoint only when you need to force an immediate optimization.
+</Info>
+
+## Path Parameters
+
+<ParamField path="chain_id" type="integer" required>
+  The blockchain chain ID
+</ParamField>
+
+<ParamField path="wallet" type="string" required>
+  The wallet address
+</ParamField>
+
+## Response
+
+<ResponseField name="status" type="string">
+  Run status: `completed`, `no_action`, `failed`
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl -X POST "https://partners-backend-1038109371738.europe-west1.run.app/api/v1/8453/wallets/0x...:run" \
+  -H "X-Partner-API-Key: your-api-key" \
+  -H "X-Partner-Name: your-partner-name"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://partners-backend-1038109371738.europe-west1.run.app/api/v1/8453/wallets/0x...:run',
+  {
+    method: 'POST',
+    headers: {
+      'X-Partner-API-Key': 'your-api-key',
+      'X-Partner-Name': 'your-partner-name',
+    },
+  }
+);
+const data = await response.json();
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200 OK
+{
+  "status": "completed"
+}
+```
+
+```json 200 OK (No Action Needed)
+{
+  "status": "no_action"
+}
+```
+</ResponseExample>
