@@ -60,6 +60,7 @@ describe('OptimizerModule', () => {
           current_allocations: SAMPLE_OPTIMIZE_PARAMS.current_allocations,
           protocols: SAMPLE_OPTIMIZE_PARAMS.protocols,
           constraints: SAMPLE_OPTIMIZE_PARAMS.constraints,
+          wallet_address: undefined,
         }
       );
 
@@ -305,6 +306,63 @@ describe('OptimizerModule', () => {
       });
 
       expect(mockHttpClient.post).toHaveBeenCalled();
+    });
+
+    // ============================================================================
+    // Validation Tests - Wallet Address
+    // ============================================================================
+
+    it('should include wallet_address in request body when provided', async () => {
+      mockHttpClient.post.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
+
+      const walletAddress = VALID_ADDRESSES.EOA_1;
+      await module.optimize({
+        ...SAMPLE_OPTIMIZE_PARAMS,
+        wallet_address: walletAddress,
+      });
+
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          wallet_address: walletAddress,
+        })
+      );
+    });
+
+    it('should throw ValidationError for invalid wallet_address', async () => {
+      await expect(
+        module.optimize({
+          ...SAMPLE_OPTIMIZE_PARAMS,
+          wallet_address: INVALID_ADDRESSES.INVALID_CHARS as any,
+        })
+      ).rejects.toThrow(ValidationError);
+    });
+
+    it('should throw ValidationError for wallet_address with wrong format', async () => {
+      await expect(
+        module.optimize({
+          ...SAMPLE_OPTIMIZE_PARAMS,
+          wallet_address: INVALID_ADDRESSES.TOO_SHORT as any,
+        })
+      ).rejects.toThrow('wallet_address must be a valid Ethereum address');
+    });
+
+    it('should work without wallet_address', async () => {
+      mockHttpClient.post.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
+
+      const paramsWithoutWallet = {
+        ...SAMPLE_OPTIMIZE_PARAMS,
+        wallet_address: undefined,
+      };
+
+      await module.optimize(paramsWithoutWallet);
+
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          wallet_address: undefined,
+        })
+      );
     });
 
     // ============================================================================

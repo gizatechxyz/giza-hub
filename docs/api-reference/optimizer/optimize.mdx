@@ -49,6 +49,11 @@ This endpoint is the core of the **IaaS (Intelligence as a Service)** integratio
   - `exclude_protocol` - Exclude specific protocols
 </ParamField>
 
+<ParamField body="wallet_address" type="string">
+  Optional wallet address that will execute the transactions.
+  Example: `"0x1234567890123456789012345678901234567890"`
+</ParamField>
+
 ## Response
 
 <ResponseField name="optimization_result" type="object">
@@ -127,7 +132,8 @@ curl -X POST "https://partners-backend-1038109371738.europe-west1.run.app/api/v1
       "aave": "500000000",
       "compound": "500000000"
     },
-    "protocols": ["aave", "compound", "moonwell", "fluid"]
+    "protocols": ["aave", "compound", "moonwell", "fluid"],
+    "wallet_address": "0x1234567890123456789012345678901234567890"
   }'
 ```
 
@@ -149,6 +155,7 @@ const response = await fetch(
         compound: '500000000',
       },
       protocols: ['aave', 'compound', 'moonwell', 'fluid'],
+      wallet_address: '0x1234567890123456789012345678901234567890',
     }),
   }
 );
@@ -172,6 +179,7 @@ response = requests.post(
             'compound': '500000000',
         },
         'protocols': ['aave', 'compound', 'moonwell', 'fluid'],
+        'wallet_address': '0x1234567890123456789012345678901234567890',
     }
 )
 data = response.json()

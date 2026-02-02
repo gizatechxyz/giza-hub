@@ -74,6 +74,12 @@ export interface OptimizeRequest {
    * Optional list of constraint specifications
    */
   constraints?: ConstraintConfig[];
+
+  /**
+   * Optional wallet address that will execute the transactions.
+   * Example: "0x1234567890123456789012345678901234567890"
+   */
+  wallet_address?: Address;
 }
 
 /**

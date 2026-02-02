@@ -118,3 +118,11 @@ export const SAMPLE_OPTIMIZE_PARAMS = {
   ],
 };
 
+/**
+ * Sample optimization request parameters with wallet_address
+ */
+export const SAMPLE_OPTIMIZE_PARAMS_WITH_WALLET = {
+  ...SAMPLE_OPTIMIZE_PARAMS,
+  wallet_address: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e' as const,
+};
+

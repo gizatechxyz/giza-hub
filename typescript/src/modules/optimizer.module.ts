@@ -139,7 +139,8 @@ export class OptimizerModule {
    *       kind: WalletConstraints.MIN_PROTOCOLS,
    *       params: { min_protocols: 2 }
    *     }
-   *   ]
+   *   ],
+   *   wallet_address: "0x1234567890123456789012345678901234567890" // Optional wallet address
    * });
    * 
    * console.log(`APR improvement: ${result.optimization_result.apr_improvement}%`);
@@ -174,12 +175,18 @@ export class OptimizerModule {
       );
     }
 
+    // Validate wallet_address if provided
+    if (params.wallet_address) {
+      this.validateAddress(params.wallet_address, 'wallet_address');
+    }
+
     const requestBody: OptimizeRequest = {
       total_capital: params.total_capital,
       token_address: params.token_address,
       current_allocations: params.current_allocations,
       protocols: params.protocols,
       constraints: params.constraints,
+      wallet_address: params.wallet_address,
     };
 
     const response = await this.httpClient.post<OptimizeResponse>(
