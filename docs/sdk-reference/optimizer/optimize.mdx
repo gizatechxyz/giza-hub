@@ -36,7 +36,22 @@ Calculates the optimal allocation of capital across DeFi lending protocols to ma
 </ParamField>
 
 <ParamField path="constraints" type="ConstraintConfig[]">
-  Optional constraints.
+  Optional constraints to apply during optimization.
+  
+  **Available constraint types:**
+  
+  | Kind | Required Params | Description |
+  |------|-----------------|-------------|
+  | `MIN_PROTOCOLS` | `min_protocols` (int) | Minimum number of protocols to use |
+  | `MAX_AMOUNT_PER_PROTOCOL` | `protocol` (string), `max_ratio` (0-1) | Cap a specific protocol at a percentage of total |
+  | `MAX_ALLOCATION_AMOUNT_PER_PROTOCOL` | `protocol` (string), `max_amount` (int) | Cap a specific protocol at an absolute amount |
+  | `MIN_AMOUNT` | `min_amount` (int) | Minimum amount for any used protocol |
+  | `MIN_ALLOCATION_AMOUNT_PER_PROTOCOL` | `protocol` (string), `min_amount` (int) | Minimum amount for a specific protocol |
+  | `EXCLUDE_PROTOCOL` | `protocol` (string) | Exclude a protocol entirely |
+</ParamField>
+
+<ParamField path="wallet_address" type="Address">
+  Optional wallet address that will execute the transactions.
 </ParamField>
 
 ## Return Value
@@ -55,6 +70,8 @@ Calculates the optimal allocation of capital across DeFi lending protocols to ma
 
 ## Example
 
+### Basic Usage
+
 ```typescript
 const result = await giza.optimizer.optimize({
   chainId: Chain.BASE,
@@ -70,5 +87,51 @@ const result = await giza.optimizer.optimize({
 console.log(`APR improvement: +${result.optimization_result.apr_improvement}%`);
 console.log('Optimal allocation:', result.optimization_result.allocations);
 ```
+
+### With Constraints
+
+```typescript
+import { WalletConstraints } from '@gizatech/agent-sdk';
+
+const result = await giza.optimizer.optimize({
+  chainId: Chain.BASE,
+  total_capital: "1000000000",
+  token_address: USDC_ADDRESS,
+  current_allocations: {
+    aave: "500000000",
+    compound: "500000000"
+  },
+  protocols: ["aave", "compound", "moonwell", "fluid"],
+  constraints: [
+    // Require at least 2 protocols
+    {
+      kind: WalletConstraints.MIN_PROTOCOLS,
+      params: { min_protocols: 2 }
+    },
+    // Cap each protocol at 50% of total capital
+    {
+      kind: WalletConstraints.MAX_AMOUNT_PER_PROTOCOL,
+      params: { protocol: "aave", max_ratio: 0.5 }
+    },
+    {
+      kind: WalletConstraints.MAX_AMOUNT_PER_PROTOCOL,
+      params: { protocol: "compound", max_ratio: 0.5 }
+    },
+    {
+      kind: WalletConstraints.MAX_AMOUNT_PER_PROTOCOL,
+      params: { protocol: "moonwell", max_ratio: 0.5 }
+    },
+    {
+      kind: WalletConstraints.MAX_AMOUNT_PER_PROTOCOL,
+      params: { protocol: "fluid", max_ratio: 0.5 }
+    }
+  ]
+});
+```
+
+<Warning>
+**Common Mistake**: `MAX_AMOUNT_PER_PROTOCOL` uses `max_ratio` (0-1), not `max_amount`. 
+For absolute amounts, use `MAX_ALLOCATION_AMOUNT_PER_PROTOCOL` instead.
+</Warning>
 
 See [Optimizer Concept](/concepts/optimizer) for detailed information.

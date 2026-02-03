@@ -30,11 +30,53 @@ export interface ConstraintConfig {
   kind: WalletConstraints;
 
   /**
-   * Constraint-specific parameters
-   * Examples:
-   * - MIN_PROTOCOLS: { min_protocols: 2 }
-   * - EXCLUDE_PROTOCOL: { protocol: "compound" }
-   * - MAX_AMOUNT_PER_PROTOCOL: { protocol: "aave", max_amount: "1000000" }
+   * Constraint-specific parameters (varies by constraint kind)
+   *
+   * Parameter requirements by constraint type:
+   *
+   * - MIN_PROTOCOLS:
+   *   { min_protocols: number, min_fraction_per_protocol?: number }
+   *   - min_protocols: Minimum number of protocols to use (required)
+   *   - min_fraction_per_protocol: Minimum fraction per protocol (optional, default 0.05, range 0.01-1.0)
+   *
+   * - MAX_AMOUNT_PER_PROTOCOL:
+   *   { protocol: string, max_ratio: number }
+   *   - protocol: Protocol name to constrain (required)
+   *   - max_ratio: Maximum ratio of total capital (required, range 0-1, e.g., 0.5 for 50%)
+   *
+   * - MAX_ALLOCATION_AMOUNT_PER_PROTOCOL:
+   *   { protocol: string, max_amount: number }
+   *   - protocol: Protocol name to constrain (required)
+   *   - max_amount: Maximum absolute amount in token units (required)
+   *
+   * - MIN_AMOUNT:
+   *   { min_amount: number }
+   *   - min_amount: Minimum amount to allocate to any used protocol (required)
+   *
+   * - MIN_ALLOCATION_AMOUNT_PER_PROTOCOL:
+   *   { protocol: string, min_amount: number }
+   *   - protocol: Protocol name to constrain (required)
+   *   - min_amount: Minimum amount to allocate to this protocol (required)
+   *
+   * - EXCLUDE_PROTOCOL:
+   *   { protocol: string }
+   *   - protocol: Protocol name to exclude (required)
+   *
+   * @example
+   * // Require at least 2 protocols
+   * { kind: WalletConstraints.MIN_PROTOCOLS, params: { min_protocols: 2 } }
+   *
+   * @example
+   * // Cap aave at 50% of total capital
+   * { kind: WalletConstraints.MAX_AMOUNT_PER_PROTOCOL, params: { protocol: "aave", max_ratio: 0.5 } }
+   *
+   * @example
+   * // Cap compound at absolute 500 USDC (500000000 in 6 decimals)
+   * { kind: WalletConstraints.MAX_ALLOCATION_AMOUNT_PER_PROTOCOL, params: { protocol: "compound", max_amount: 500000000 } }
+   *
+   * @example
+   * // Exclude moonwell from optimization
+   * { kind: WalletConstraints.EXCLUDE_PROTOCOL, params: { protocol: "moonwell" } }
    */
   params: Record<string, unknown>;
 }

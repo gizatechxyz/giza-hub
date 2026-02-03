@@ -135,7 +135,7 @@ This stateless design enables:
 ### Optional Parameters
 
 <ParamField path="constraints" type="ConstraintConfig[]">
-  Constraints to respect during optimization
+  Constraints to respect during optimization. See [Constraints](#constraints) section below for details.
   
   Example:
   ```typescript
@@ -146,7 +146,7 @@ This stateless design enables:
     },
     {
       kind: WalletConstraints.MAX_AMOUNT_PER_PROTOCOL,
-      params: { max_amount: "5000000000" }
+      params: { protocol: "aave", max_ratio: 0.5 }  // Cap aave at 50%
     }
   ]
   ```
@@ -345,28 +345,35 @@ enum WalletConstraints {
 ```typescript Min Protocols
 {
   kind: WalletConstraints.MIN_PROTOCOLS,
-  params: { min_protocols: 2 }
+  params: { 
+    min_protocols: 2,
+    min_fraction_per_protocol: 0.1  // Optional, default 0.05 (5%)
+  }
 }
-// Always diversify across at least 2 protocols
+// Always diversify across at least 2 protocols, each with at least 10%
 ```
 
-```typescript Max Per Protocol
+```typescript Max Ratio Per Protocol
 {
   kind: WalletConstraints.MAX_AMOUNT_PER_PROTOCOL,
-  params: { max_amount: "5000000000" }
+  params: { 
+    protocol: "aave",
+    max_ratio: 0.5  // 50% of total capital
+  }
 }
-// Cap any single protocol at 5000 USDC
+// Cap aave at 50% of total capital
+// NOTE: Requires both 'protocol' and 'max_ratio' (0-1)
 ```
 
-```typescript Max Specific Protocol
+```typescript Max Absolute Amount Per Protocol
 {
   kind: WalletConstraints.MAX_ALLOCATION_AMOUNT_PER_PROTOCOL,
   params: {
     protocol: "moonwell",
-    max_amount: "2000000000"
+    max_amount: 2000000000  // 2000 USDC (6 decimals)
   }
 }
-// Cap Moonwell specifically at 2000 USDC
+// Cap Moonwell at absolute 2000 USDC regardless of total capital
 ```
 
 ```typescript Exclude Protocol
@@ -374,18 +381,38 @@ enum WalletConstraints {
   kind: WalletConstraints.EXCLUDE_PROTOCOL,
   params: { protocol: "compound" }
 }
-// Never use Compound
+// Never allocate to Compound
 ```
 
-```typescript Min Amount
+```typescript Min Amount Per Used Protocol
 {
   kind: WalletConstraints.MIN_AMOUNT,
-  params: { min_amount: "100000000" }
+  params: { min_amount: 100000000 }  // 100 USDC
 }
-// Don't allocate less than 100 USDC to any protocol
+// Any protocol that receives allocation must get at least 100 USDC
+```
+
+```typescript Min Allocation For Specific Protocol
+{
+  kind: WalletConstraints.MIN_ALLOCATION_AMOUNT_PER_PROTOCOL,
+  params: { 
+    protocol: "aave",
+    min_amount: 500000000  // 500 USDC
+  }
+}
+// Ensure aave gets at least 500 USDC if it's used
 ```
 
 </CodeGroup>
+
+### Key Differences: MAX_AMOUNT_PER_PROTOCOL vs MAX_ALLOCATION_AMOUNT_PER_PROTOCOL
+
+| Constraint | Parameter | Description |
+|------------|-----------|-------------|
+| `MAX_AMOUNT_PER_PROTOCOL` | `max_ratio` (0-1) | Limits a protocol to a **percentage** of total capital |
+| `MAX_ALLOCATION_AMOUNT_PER_PROTOCOL` | `max_amount` (integer) | Limits a protocol to an **absolute amount** |
+
+Both require the `protocol` parameter to specify which protocol to constrain.
 
 ### Combining Constraints
 
@@ -397,24 +424,46 @@ await giza.optimizer.optimize({
   current_allocations: { aave: "10000000000" },
   protocols: ["aave", "compound", "moonwell", "seamless"],
   constraints: [
-    // Diversify
+    // Diversify across at least 3 protocols
     {
       kind: WalletConstraints.MIN_PROTOCOLS,
       params: { min_protocols: 3 }
     },
-    // Cap newer protocols
+    // Cap each protocol at 40% of total (apply to each protocol you want to limit)
+    {
+      kind: WalletConstraints.MAX_AMOUNT_PER_PROTOCOL,
+      params: { protocol: "aave", max_ratio: 0.4 }
+    },
+    {
+      kind: WalletConstraints.MAX_AMOUNT_PER_PROTOCOL,
+      params: { protocol: "compound", max_ratio: 0.4 }
+    },
+    {
+      kind: WalletConstraints.MAX_AMOUNT_PER_PROTOCOL,
+      params: { protocol: "moonwell", max_ratio: 0.4 }
+    },
+    {
+      kind: WalletConstraints.MAX_AMOUNT_PER_PROTOCOL,
+      params: { protocol: "seamless", max_ratio: 0.4 }
+    },
+    // Additionally cap newer protocol at absolute 2000 USDC
     {
       kind: WalletConstraints.MAX_ALLOCATION_AMOUNT_PER_PROTOCOL,
-      params: { protocol: "seamless", max_amount: "2000000000" }
+      params: { protocol: "seamless", max_amount: 2000000000 }
     },
-    // Avoid dust allocations
+    // Avoid dust allocations - any used protocol must have at least 500 USDC
     {
       kind: WalletConstraints.MIN_AMOUNT,
-      params: { min_amount: "500000000" }
+      params: { min_amount: 500000000 }
     }
   ]
 });
 ```
+
+<Note>
+**Important**: `MAX_AMOUNT_PER_PROTOCOL` requires a constraint for **each protocol** you want to limit. 
+It uses `max_ratio` (0-1), not `max_amount`. For absolute amounts, use `MAX_ALLOCATION_AMOUNT_PER_PROTOCOL`.
+</Note>
 
 ## Using the Optimizer
 
