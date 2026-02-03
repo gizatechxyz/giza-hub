@@ -54,10 +54,6 @@ This endpoint is the core of the **IaaS (Intelligence as a Service)** integratio
   | `min_allocation_amount_per_protocol` | `protocol` (string), `min_amount` (int) | Minimum amount for a specific protocol |
   | `exclude_protocol` | `protocol` (string) | Exclude a protocol from optimization |
   
-  <Warning>
-  **Important**: `max_amount_per_protocol` uses `max_ratio` (0-1), NOT `max_amount`. For absolute amounts, use `max_allocation_amount_per_protocol`.
-  </Warning>
-  
   **Example:**
   ```json
   [
