@@ -32,6 +32,8 @@ export const MOCK_OPTIMIZATION_RESULT: OptimizationResult = {
   weighted_apr_initial: 5.0,
   weighted_apr_final: 5.29,
   apr_improvement: 5.8,
+  gas_estimate_usd: 2.50,
+  break_even_days: 15.3,
 };
 
 /**

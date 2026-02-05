@@ -58,6 +58,30 @@ Calculates the optimal allocation of capital across DeFi lending protocols to ma
 
 <ResponseField name="optimization_result" type="OptimizationResult">
   Optimal allocations, APR improvement, and gas costs.
+  
+  <Expandable>
+    <ResponseField name="allocations" type="ProtocolAllocation[]">
+      List of protocol allocations with `protocol`, `allocation`, and `apr`
+    </ResponseField>
+    <ResponseField name="total_costs" type="number">
+      Total gas costs for executing the rebalancing
+    </ResponseField>
+    <ResponseField name="weighted_apr_initial" type="number">
+      Initial weighted APR before optimization
+    </ResponseField>
+    <ResponseField name="weighted_apr_final" type="number">
+      Final weighted APR after optimization
+    </ResponseField>
+    <ResponseField name="apr_improvement" type="number">
+      APR improvement percentage
+    </ResponseField>
+    <ResponseField name="gas_estimate_usd" type="number">
+      Estimated total gas cost in USD for executing the rebalancing (optional)
+    </ResponseField>
+    <ResponseField name="break_even_days" type="number">
+      Number of days until APR improvement exceeds gas cost (optional)
+    </ResponseField>
+  </Expandable>
 </ResponseField>
 
 <ResponseField name="action_plan" type="ActionDetail[]">
@@ -86,6 +110,14 @@ const result = await giza.optimizer.optimize({
 
 console.log(`APR improvement: +${result.optimization_result.apr_improvement}%`);
 console.log('Optimal allocation:', result.optimization_result.allocations);
+
+// Gas cost awareness
+if (result.optimization_result.gas_estimate_usd) {
+  console.log(`Estimated gas cost: $${result.optimization_result.gas_estimate_usd}`);
+}
+if (result.optimization_result.break_even_days) {
+  console.log(`Break-even in ${result.optimization_result.break_even_days} days`);
+}
 ```
 
 ### With Constraints

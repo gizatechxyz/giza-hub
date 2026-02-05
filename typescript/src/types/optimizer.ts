@@ -186,6 +186,16 @@ export interface OptimizationResult {
    * APR improvement percentage
    */
   apr_improvement: number;
+
+  /**
+   * Estimated total gas cost in USD for executing the rebalancing
+   */
+  gas_estimate_usd?: number;
+
+  /**
+   * Number of days until APR improvement exceeds gas cost
+   */
+  break_even_days?: number;
 }
 
 /**

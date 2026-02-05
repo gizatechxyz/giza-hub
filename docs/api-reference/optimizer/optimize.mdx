@@ -90,6 +90,12 @@ This endpoint is the core of the **IaaS (Intelligence as a Service)** integratio
     <ResponseField name="apr_improvement" type="number">
       APR improvement percentage
     </ResponseField>
+    <ResponseField name="gas_estimate_usd" type="number">
+      Estimated total gas cost in USD for executing the rebalancing (optional)
+    </ResponseField>
+    <ResponseField name="break_even_days" type="number">
+      Number of days until APR improvement exceeds gas cost (optional)
+    </ResponseField>
   </Expandable>
 </ResponseField>
 
@@ -252,7 +258,9 @@ data = response.json()
     "total_costs": 0.05,
     "weighted_apr_initial": 5.0,
     "weighted_apr_final": 5.29,
-    "apr_improvement": 5.8
+    "apr_improvement": 5.8,
+    "gas_estimate_usd": 2.50,
+    "break_even_days": 15.3
   },
   "action_plan": [
     {

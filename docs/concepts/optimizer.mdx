@@ -177,6 +177,12 @@ interface OptimizationResult {
   
   // Improvement in APR (percentage points)
   apr_improvement: number;
+  
+  // Estimated total gas cost in USD (optional)
+  gas_estimate_usd?: number;
+  
+  // Number of days until APR improvement exceeds gas cost (optional)
+  break_even_days?: number;
 }
 ```
 
@@ -204,7 +210,9 @@ Example:
   total_costs: 0.45, // USD
   weighted_apr_initial: 7.1,
   weighted_apr_final: 7.8,
-  apr_improvement: 0.7 // +0.7% APR
+  apr_improvement: 0.7, // +0.7% APR
+  gas_estimate_usd: 2.50, // Estimated gas in USD
+  break_even_days: 12.5 // Days until APR gain exceeds gas cost
 }
 ```
 
