@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "WebSearch",
+      "WebFetch(domain:docs.openclaw.ai)",
+      "WebFetch(domain:zenvanriel.nl)",
+      "WebFetch(domain:eastondev.com)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm build:*)",
+      "Bash(node -e \":*)",
+      "Bash(node:*)",
+      "Bash(npx tsc:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npx tsc:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" npx tsc:*)",
+      "Bash(npm view:*)",
+      "Bash(npm pack:*)",
+      "Bash(python3:*)",
+      "Bash(pnpm typecheck:*)",
+      "Bash(pnpm test)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "context7",
+    "exa"
+  ]
+}
