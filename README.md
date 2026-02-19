@@ -1,49 +1,45 @@
 # Giza Agent SDK
 
-TypeScript SDK for integrating [Giza Agents](https://www.gizatech.xyz/) - autonomous DeFi yield optimization agents that automatically manage and optimize capital allocation across lending protocols.
+TypeScript SDK and tooling for [Giza Agents](https://www.gizatech.xyz/) — autonomous DeFi yield optimization agents that manage and optimize capital allocation across lending protocols.
 
-## What is Giza Agent SDK?
+## Packages
 
-Giza Agent SDK enables partners to integrate self-driving capital management into their applications. Create smart accounts for users, activate autonomous agents, and let Giza optimize yield across DeFi protocols like Aave, Compound, and Moonwell.
-
-## Features
-
-- 🤖 **Autonomous Yield Optimization** - Agents automatically rebalance capital for maximum APR
-- 🔐 **Smart Account Management** - ZeroDev-powered smart accounts with secure session keys
-- 📊 **Performance Monitoring** - Real-time APR tracking and portfolio analytics
-- 🔄 **Multi-Protocol Support** - Seamless integration with leading DeFi protocols
-- 💰 **Flexible Withdrawals** - Partial or full withdrawals with automatic deactivation
-- ⚡ **Intelligence as a Service (IaaS)** - Stateless Optimizer for partners with existing execution infrastructure
-
-## Installation
-
-```bash
-npm install @gizatech/agent-sdk
-# or
-pnpm add @gizatech/agent-sdk
-# or
-yarn add @gizatech/agent-sdk
-```
+| Package | Description |
+|---------|-------------|
+| [`@gizatech/agent-sdk`](./packages/sdk) | SDK for smart account creation, agent lifecycle, portfolio monitoring, and stateless optimization |
+| [`@gizatech/mcp-server`](./packages/mcp-server) | MCP server exposing Giza agents as conversational tools |
 
 ## Quick Start
+
+### Install the SDK
+
+```bash
+bun add @gizatech/agent-sdk
+```
+
+### Environment variables
+
+```bash
+GIZA_API_KEY=your-partner-api-key
+GIZA_API_URL=your-api-url
+GIZA_PARTNER_NAME=your-partner-name
+```
+
+Contact Giza at [gizatech.xyz](https://www.gizatech.xyz/) to obtain partner credentials.
+
+### Usage
 
 ```typescript
 import { GizaAgent, Chain } from '@gizatech/agent-sdk';
 
-// Initialize the SDK
-const giza = new GizaAgent({
-  chainId: Chain.BASE,
-});
+const giza = new GizaAgent({ chainId: Chain.BASE });
 
-// Create smart account for user
+// Create a smart account for a user
 const account = await giza.agent.createSmartAccount({
-  origin_wallet: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+  origin_wallet: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
 });
 
-// Get available protocols
-const { protocols } = await giza.agent.getProtocols(USDC_ADDRESS);
-
-// Activate agent after user deposits
+// Activate the agent after the user deposits funds
 await giza.agent.activate({
   wallet: account.smartAccountAddress,
   origin_wallet: userWallet,
@@ -53,71 +49,54 @@ await giza.agent.activate({
 });
 
 // Monitor performance
-const performance = await giza.agent.getPerformance({ 
-  wallet: account.smartAccountAddress 
+const { apr } = await giza.agent.getAPR({
+  wallet: account.smartAccountAddress,
 });
-const apr = await giza.agent.getAPR({ 
-  wallet: account.smartAccountAddress 
-});
-```
-
-## Environment Setup
-
-Set these environment variables:
-
-```bash
-GIZA_API_KEY=your-partner-api-key
-GIZA_API_URL=your-api-url
-GIZA_PARTNER_NAME=your-partner-name
-```
-
-**Get API Keys**: Contact Giza at [gizatech.xyz](https://www.gizatech.xyz/) to obtain your partner credentials.
-
-## Documentation
-
-📚 **[Full Documentation](./docs)** - Complete guides, API reference, and examples
-
-- [Quickstart Guide](./docs/quickstart.mdx) - Get up and running in minutes
-- [Integration Methods](./docs/integration-methods.mdx) - Choose between Agentic vs IaaS approaches
-- [Core Concepts](./docs/concepts/overview.mdx) - Understand smart accounts, agents, and protocols
-- [API Reference](./docs/api-reference/client.mdx) - Complete method documentation
-- [Examples](./docs/examples/basic-usage.mdx) - Practical code examples
-
-## Examples
-
-Run the included examples:
-
-```bash
-# Complete agent workflow
-pnpm run example:agent
-
-# Optimizer usage
-pnpm run example:optimizer
 ```
 
 ## Development
 
+Requires [Bun](https://bun.sh/) and Node.js >= 18.
+
 ```bash
-# Install dependencies
-pnpm install
+# Install all workspace dependencies
+bun install
 
-# Build the SDK
-pnpm build
+# Build everything
+bun run --filter '*' build
 
-# Run tests
-pnpm test
-
-# Watch mode for development
-pnpm dev
+# Run all tests
+bun run --filter '*' test
 ```
 
-## Support
+### Per-package commands
 
-- **Documentation**: [Full Documentation](./docs)
-- **Website**: [gizatech.xyz](https://www.gizatech.xyz/)
-- **Issues**: [GitHub Issues](https://github.com/gizatech/agent-sdk/issues)
-- **Email**: support@gizatech.xyz
+```bash
+# SDK
+bun run --filter @gizatech/agent-sdk build
+bun run --filter @gizatech/agent-sdk test
+
+# MCP Server
+bun run --filter @gizatech/mcp-server build
+bun run --filter @gizatech/mcp-server test
+```
+
+### Examples
+
+```bash
+bun run --filter @gizatech/agent-sdk example:agent
+bun run --filter @gizatech/agent-sdk example:optimizer
+```
+
+## Documentation
+
+- [Quickstart](./docs/quickstart.mdx)
+- [Integration Methods](./docs/integration-methods.mdx)
+- [Core Concepts](./docs/concepts/overview.mdx)
+- [SDK Reference](./docs/sdk-reference/overview.mdx)
+- [API Reference](./docs/api-reference/client.mdx)
+- [Examples](./docs/examples/basic-usage.mdx)
 
 ## License
 
-MIT © Giza
+MIT

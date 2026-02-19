@@ -9,7 +9,7 @@ End User (wallet) <-> Frontend <-> Builder's LLM <-> MCP Server <-> Giza Backend
 ## Prerequisites
 
 - Node.js >= 22
-- pnpm
+- bun
 - A Giza partner API key
 - An RPC URL for the target chain (required for smart wallet authentication)
 
@@ -17,10 +17,10 @@ End User (wallet) <-> Frontend <-> Builder's LLM <-> MCP Server <-> Giza Backend
 
 ```bash
 # From the repo root
-pnpm install
+bun install
 
 # Configure environment
-cd mcp-server
+cd packages/mcp-server
 cp .env.example .env
 # Edit .env with your credentials
 ```
@@ -54,11 +54,11 @@ cp .env.example .env
 
 ```bash
 # Development
-pnpm dev
+bun run dev
 
 # Production
-pnpm build
-pnpm start
+bun run build
+bun run start
 ```
 
 The server listens at `http://localhost:3000/mcp` and accepts MCP Streamable HTTP requests (POST, GET for SSE, DELETE for session cleanup).
@@ -66,7 +66,7 @@ The server listens at `http://localhost:3000/mcp` and accepts MCP Streamable HTT
 ### stdio transport (for Claude Desktop / local dev)
 
 ```bash
-TRANSPORT=stdio pnpm dev
+TRANSPORT=stdio bun run dev
 ```
 
 #### Claude Desktop configuration
@@ -152,8 +152,8 @@ See [`SYSTEM_PROMPT.md`](./SYSTEM_PROMPT.md) for a reference system prompt to co
 ## Development
 
 ```bash
-pnpm typecheck    # Type check
-pnpm test         # Run tests
-pnpm test:watch   # Run tests in watch mode
-pnpm build        # Build for production
+bun run typecheck    # Type check
+bun test             # Run tests
+bun run test:watch   # Run tests in watch mode
+bun run build        # Build for production
 ```

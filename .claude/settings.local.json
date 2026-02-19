@@ -11,8 +11,10 @@
       "WebFetch(domain:docs.anthropic.com)",
       "mcp__context7__resolve-library-id",
       "mcp__context7__query-docs",
-      "Bash(pnpm install:*)",
-      "Bash(pnpm build:*)",
+      "Bash(bun install:*)",
+      "Bash(bun run build:*)",
+      "Bash(bun run:*)",
+      "Bash(bun test:*)",
       "Bash(node -e \":*)",
       "Bash(node:*)",
       "Bash(npx tsc:*)",
@@ -21,8 +23,9 @@
       "Bash(npm view:*)",
       "Bash(npm pack:*)",
       "Bash(python3:*)",
-      "Bash(pnpm typecheck:*)",
-      "Bash(pnpm test)"
+      "Bash(git mv:*)",
+      "Bash(git rm:*)",
+      "Bash(ls:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
