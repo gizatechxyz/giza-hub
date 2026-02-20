@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:lucumr.pocoo.org)",
+      "WebFetch(domain:claude.com)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "Bash(bun install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(./node_modules/.bin/tsc:*)",
+      "Bash(./node_modules/.bin/tsup:*)",
+      "Bash(./node_modules/.bin/vitest:*)"
+    ]
+  }
+}
