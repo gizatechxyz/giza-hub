@@ -8,34 +8,47 @@ import { Address, Chain } from './common';
  * Agent status enum
  */
 export enum AgentStatus {
-  ACTIVE = 'active',
-  DEACTIVATED = 'deactivated',
-  DEACTIVATING = 'deactivating',
+  UNKNOWN = 'unknown',
   ACTIVATING = 'activating',
   ACTIVATION_FAILED = 'activation_failed',
+  ACTIVATED = 'activated',
+  RUNNING = 'running',
+  RUN_FAILED = 'run_failed',
+  BLOCKED = 'blocked',
+  DEACTIVATING = 'deactivating',
+  DEACTIVATION_FAILED = 'deactivation_failed',
+  DEACTIVATED = 'deactivated',
+  EMERGENCY = 'emergency',
   DEACTIVATED_FEE_NOT_PAID = 'deactivated_fee_not_paid',
+  BRIDGING = 'bridging',
 }
 
 /**
  * Transaction action types
  */
 export enum TxAction {
-  DEPOSIT = 'DEPOSIT',
-  WITHDRAW = 'WITHDRAW',
-  SUPPLY = 'SUPPLY',
-  WITHDRAW_SUPPLY = 'WITHDRAW_SUPPLY',
-  SWAP = 'SWAP',
-  CLAIM = 'CLAIM',
+  UNKNOWN = 'unknown',
+  APPROVE = 'approve',
+  DEPOSIT = 'deposit',
+  TRANSFER = 'transfer',
+  BRIDGE = 'bridge',
+  WITHDRAW = 'withdraw',
+  SWAP = 'swap',
+  REFILL_GAS_TANK = 'refill_gas_tank',
+  WRAP = 'wrap',
+  UNWRAP = 'unwrap',
+  FEE_TRANSFER = 'fee_transfer',
 }
 
 /**
  * Transaction status types
  */
 export enum TxStatus {
-  PENDING = 'PENDING',
-  SUCCESS = 'SUCCESS',
-  FAILED = 'FAILED',
-  REVERTED = 'REVERTED',
+  UNKNOWN = 'unknown',
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  CANCELLED = 'cancelled',
+  FAILED = 'failed',
 }
 
 /**
@@ -44,6 +57,31 @@ export enum TxStatus {
 export enum SortOrder {
   DATE_ASC = 'date_asc',
   DATE_DESC = 'date_desc',
+}
+
+/**
+ * Sort order for transactions
+ */
+export enum Order {
+  ASC = 'asc',
+  DESC = 'desc',
+}
+
+/**
+ * Time period for data queries
+ */
+export enum Period {
+  ALL = 'all',
+  DAY = 'day',
+}
+
+/**
+ * Execution status
+ */
+export enum ExecutionStatus {
+  RUNNING = 'running',
+  FAILED = 'failed',
+  SUCCESS = 'success',
 }
 
 // ============================================================================
@@ -125,13 +163,19 @@ export interface ProtocolPool {
  */
 export interface Protocol {
   name: string;
-  available: boolean;
+  is_active: boolean;
   description: string;
   tvl: number;
-  apy: number;
-  pools: ProtocolPool[];
+  apr: number | null;
+  pools: ProtocolPool[] | null;
   created_at: string;
-  updated_at: string;
+  updated_at: string | null;
+  chain_id: number;
+  parent_protocol: string;
+  link: string;
+  address: string | null;
+  agent_token: string | null;
+  title: string | null;
 }
 
 /**
@@ -201,9 +245,9 @@ export interface ActivateParams {
   selected_protocols: string[];
 
   /**
-   * Transaction hash of the initial deposit (optional)
+   * Transaction hash of the initial deposit
    */
-  tx_hash?: string;
+  tx_hash: string;
 
   /**
    * Constraints for agent behavior (optional)
@@ -296,6 +340,8 @@ export interface Deposit {
   date?: string;
   /** Transaction hash */
   tx_hash?: string;
+  /** Block number */
+  block_number?: number;
 }
 
 /**
@@ -304,12 +350,22 @@ export interface Deposit {
 export interface WithdrawDetail {
   /** Token address */
   token: string;
-  /** Amount withdrawn */
-  amount: number;
+  /** Amount withdrawn (string from API) */
+  amount: string;
   /** Value in token */
   value: number;
   /** Value in USD */
   value_in_usd: number;
+  /** Principal amount */
+  principal_amount?: number;
+  /** Yield amount */
+  yield_amount?: number;
+  /** Fee amount */
+  fee_amount?: number;
+  /** Transaction hash */
+  tx_hash?: string;
+  /** Block number */
+  block_number?: number;
 }
 
 /**
@@ -318,10 +374,10 @@ export interface WithdrawDetail {
 export interface Withdraw {
   /** Withdraw date */
   date: string;
-  /** Total value of withdrawal */
-  total_value: number;
-  /** Total value in USD */
-  total_value_in_usd: number;
+  /** Total amount */
+  amount: number;
+  /** Total value */
+  value: number;
   /** Details for each token withdrawn */
   withdraw_details: WithdrawDetail[];
 }
@@ -370,6 +426,12 @@ export interface AccruedRewardsWithValue {
   unlocked_value: number;
   /** Unlocked reward value in USD */
   unlocked_value_usd: number;
+  /** Claimed amount */
+  claimed?: number;
+  /** Claimed value */
+  claimed_value?: number;
+  /** Claimed value in USD */
+  claimed_value_usd?: number;
 }
 
 /**
@@ -380,6 +442,10 @@ export interface AllocatedValue {
   value: number;
   /** Value in USD */
   value_in_usd: number;
+  /** Base APR */
+  base_apr?: number;
+  /** Total APR */
+  total_apr?: number;
 }
 
 /**
@@ -393,9 +459,9 @@ export type Portfolio = Record<string, AllocatedValue>;
 export type AccruedRewardsBySymbol = Record<string, AccruedRewardsWithValue>;
 
 /**
- * Token distribution by symbol
+ * APR by token response
  */
-export type TokenDistribution = Record<string, number>;
+export type AprByTokenResponse = AllocatedValue[];
 
 /**
  * Performance data point
@@ -407,12 +473,12 @@ export interface PerformanceData {
   value: number;
   /** Total value in USD */
   value_in_usd?: number;
-  /** Distribution of tokens */
-  token_distribution?: TokenDistribution;
   /** Accrued rewards by token */
   accrued_rewards?: AccruedRewardsBySymbol;
   /** Portfolio allocation */
   portfolio?: Portfolio;
+  /** Agent token amount */
+  agent_token_amount?: number;
 }
 
 /**
@@ -457,6 +523,8 @@ export interface Transaction {
   date: string;
   /** Amount involved */
   amount: number;
+  /** Output amount (for swaps) */
+  amount_out?: number;
   /** Token type/address */
   token_type: string;
   /** Transaction status */
@@ -471,20 +539,22 @@ export interface Transaction {
   correlation_id?: string;
   /** APR at the time of transaction */
   apr?: number;
+  /** Block number */
+  block_number?: number;
 }
 
 /**
  * Pagination information
  */
 export interface PaginationInfo {
-  /** Total number of items */
-  total_items: number;
-  /** Total number of pages */
-  total_pages: number;
   /** Current page number */
-  current_page: number;
+  page: number;
   /** Number of items per page */
   items_per_page: number;
+  /** Total number of pages */
+  total_pages: number;
+  /** Total number of items */
+  total_items: number;
 }
 
 /**
@@ -508,7 +578,7 @@ export interface GetTransactionsParams {
   /** Number of items per page (max 100) */
   limit?: number;
   /** Sort order for results */
-  sort?: SortOrder;
+  sort?: Order;
 }
 
 // ============================================================================
@@ -597,10 +667,10 @@ export interface FullWithdrawResponse {
 export interface PartialWithdrawResponse {
   /** Withdraw date */
   date: string;
-  /** Total value of withdrawal */
-  total_value: number;
-  /** Total value in USD */
-  total_value_in_usd: number;
+  /** Total amount */
+  amount: number;
+  /** Total value */
+  value: number;
   /** Details for each token withdrawn */
   withdraw_details: WithdrawDetail[];
 }
@@ -710,5 +780,268 @@ export interface ClaimedRewardsResponse {
 export interface DepositListResponse {
   /** Array of deposits */
   deposits: Deposit[];
+}
+
+// ============================================================================
+// Execution Types
+// ============================================================================
+
+/**
+ * Execution with transactions
+ */
+export interface ExecutionWithTransactionsDTO {
+  id: string;
+  execution_plan: unknown;
+  execution_type: string;
+  status: ExecutionStatus;
+  created_at: string;
+  transactions: Transaction[];
+}
+
+/**
+ * Paginated execution response
+ */
+export interface PaginatedExecutionDTO {
+  items: ExecutionWithTransactionsDTO[];
+  total: number;
+}
+
+// ============================================================================
+// Log Types
+// ============================================================================
+
+/**
+ * Log entry
+ */
+export interface LogDTO {
+  type: string;
+  data: unknown;
+}
+
+/**
+ * Paginated log response
+ */
+export interface PaginatedLogDTO {
+  items: LogDTO[];
+  total: number;
+}
+
+// ============================================================================
+// Constraints Types
+// ============================================================================
+
+/**
+ * Request to update wallet constraints
+ */
+export interface UpdateConstraintsRequest {
+  constraints: ConstraintConfig[];
+}
+
+// ============================================================================
+// Stats Types
+// ============================================================================
+
+/**
+ * Token distribution item for stats
+ */
+export interface TokenDistributionItem {
+  token: string;
+  amount: number;
+  percentage: number;
+}
+
+/**
+ * Protocol distribution for stats
+ */
+export interface ProtocolDistribution {
+  protocol: string;
+  amount: number;
+  percentage: number;
+}
+
+/**
+ * Liquidity distribution breakdown
+ */
+export interface LiquidityDistribution {
+  initial_deposits: TokenDistributionItem[];
+  current_tokens: TokenDistributionItem[];
+  protocols: ProtocolDistribution[];
+}
+
+/**
+ * Chain statistics
+ */
+export interface Statistics {
+  total_balance: number;
+  total_deposits: number;
+  total_users: number;
+  total_transactions: number;
+  total_apr: number;
+  liquidity_distribution: LiquidityDistribution;
+}
+
+// ============================================================================
+// TVL Types
+// ============================================================================
+
+/**
+ * Total Value Locked response
+ */
+export interface TVLResponse {
+  tvl: number;
+}
+
+// ============================================================================
+// Token Types
+// ============================================================================
+
+/**
+ * Token information
+ */
+export interface TokenInfo {
+  address: string;
+  symbol: string;
+  decimals: number;
+  balance: number;
+  current_price: number;
+}
+
+/**
+ * Tokens response
+ */
+export interface TokensResponse {
+  tokens: TokenInfo[];
+}
+
+// ============================================================================
+// Reward History Types
+// ============================================================================
+
+/**
+ * Reward record
+ */
+export interface RewardDTO {
+  user_id: string;
+  base_apr: number;
+  extra_apr: number;
+  ticker: string;
+  reward_amount: number;
+  group: string;
+  transaction_hash: string;
+  start_date: string;
+  end_date: string;
+  id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Paginated reward response
+ */
+export interface PaginatedRewardDTO {
+  items: RewardDTO[];
+  total: number;
+}
+
+// ============================================================================
+// Config Types
+// ============================================================================
+
+/**
+ * Constraint config defaults from API
+ */
+export interface ConstraintConfigResponse {
+  [key: string]: unknown;
+}
+
+/**
+ * Per-chain configuration
+ */
+export interface ChainConfigResponse {
+  [key: string]: unknown;
+}
+
+/**
+ * Global configuration response
+ */
+export interface GlobalConfigResponse {
+  min_withdraw_usd: number;
+  optimizer_threshold_usd: number;
+  max_protocol_liquidity_percentage: number;
+  constraints: ConstraintConfigResponse;
+  chains: Record<string, ChainConfigResponse>;
+}
+
+// ============================================================================
+// Health & Chains Types
+// ============================================================================
+
+/**
+ * Healthcheck response
+ */
+export interface HealthcheckResponse {
+  message: string;
+  version: string;
+  time: string;
+}
+
+/**
+ * Chains response
+ */
+export interface ChainsResponse {
+  chain_ids: number[];
+}
+
+// ============================================================================
+// Pagination Params Types
+// ============================================================================
+
+/**
+ * Parameters for getExecutions method
+ */
+export interface GetExecutionsParams {
+  wallet: Address;
+  page?: number;
+  limit?: number;
+  sort?: SortOrder;
+}
+
+/**
+ * Parameters for getExecutionLogs method
+ */
+export interface GetExecutionLogsParams {
+  wallet: Address;
+  executionId: string;
+  page?: number;
+  limit?: number;
+}
+
+/**
+ * Parameters for getLogs method
+ */
+export interface GetLogsParams {
+  wallet: Address;
+  page?: number;
+  limit?: number;
+}
+
+/**
+ * Parameters for getRewards method
+ */
+export interface GetRewardsParams {
+  wallet: Address;
+  page?: number;
+  limit?: number;
+  sort?: SortOrder;
+}
+
+/**
+ * Parameters for getRewardHistory method
+ */
+export interface GetRewardHistoryParams {
+  wallet: Address;
+  page?: number;
+  limit?: number;
+  sort?: SortOrder;
 }
 

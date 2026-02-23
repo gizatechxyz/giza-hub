@@ -10,6 +10,8 @@ import {
   ZerodevSmartWalletResponse,
   ProtocolsResponse,
   ProtocolsRawResponse,
+  Protocol,
+  ProtocolsSupplyResponse,
   ActivateParams,
   ActivateResponse,
   DeactivateParams,
@@ -37,6 +39,21 @@ import {
   LimitResponse,
   ClaimedRewardsResponse,
   DepositListResponse,
+  TokensResponse,
+  ConstraintConfig,
+  UpdateConstraintsRequest,
+  GetExecutionsParams,
+  PaginatedExecutionDTO,
+  GetExecutionLogsParams,
+  PaginatedLogDTO,
+  GetLogsParams,
+  AprByTokenResponse,
+  Period,
+  GetRewardsParams,
+  PaginatedRewardDTO,
+  GetRewardHistoryParams,
+  Statistics,
+  TVLResponse,
 } from '../types/agent';
 
 /**
@@ -185,9 +202,9 @@ export class AgentModule {
       `/api/v1/${this.config.chainId}/${tokenAddress}/protocols`
     );
 
-    // Transform to extract just available protocol names
+    // Transform to extract just active protocol names
     const availableProtocols = response.protocols
-      .filter(p => p.available)
+      .filter(p => p.is_active)
       .map(p => p.name);
 
     return { protocols: availableProtocols };
@@ -817,6 +834,309 @@ export class AgentModule {
       `/api/v1/${this.config.chainId}/wallets/${wallet}:claim-rewards`
     );
 
+    return response;
+  }
+
+  // ============================================================================
+  // Token Operations
+  // ============================================================================
+
+  /**
+   * Get available tokens for the configured chain
+   */
+  public async getTokens(): Promise<TokensResponse> {
+    const response = await this.httpClient.get<TokensResponse>(
+      `/api/v1/${this.config.chainId}/tokens`
+    );
+    return response;
+  }
+
+  // ============================================================================
+  // Protocol Supply Operations
+  // ============================================================================
+
+  /**
+   * Get protocol supply data for a token
+   */
+  public async getProtocolsSupply(
+    tokenAddress: Address
+  ): Promise<ProtocolsSupplyResponse> {
+    this.validateAddress(tokenAddress, 'token address');
+
+    const response = await this.httpClient.get<ProtocolsSupplyResponse>(
+      `/api/v1/${this.config.chainId}/${tokenAddress}/protocols/supply`
+    );
+    return response;
+  }
+
+  // ============================================================================
+  // Wallet Protocol Operations
+  // ============================================================================
+
+  /**
+   * Get protocols assigned to a wallet
+   */
+  public async getWalletProtocols(
+    wallet: Address
+  ): Promise<Protocol[]> {
+    this.validateAddress(wallet, 'wallet address');
+
+    const response = await this.httpClient.get<Protocol[]>(
+      `/api/v1/${this.config.chainId}/wallets/${wallet}/protocols`
+    );
+    return response;
+  }
+
+  // ============================================================================
+  // Constraint Operations
+  // ============================================================================
+
+  /**
+   * Get constraints for a wallet
+   */
+  public async getConstraints(
+    wallet: Address
+  ): Promise<ConstraintConfig[]> {
+    this.validateAddress(wallet, 'wallet address');
+
+    const response = await this.httpClient.get<ConstraintConfig[]>(
+      `/api/v1/${this.config.chainId}/wallets/${wallet}/constraints`
+    );
+    return response;
+  }
+
+  /**
+   * Update constraints for a wallet
+   */
+  public async updateConstraints(
+    wallet: Address,
+    constraints: ConstraintConfig[]
+  ): Promise<void> {
+    this.validateAddress(wallet, 'wallet address');
+
+    const body: UpdateConstraintsRequest = { constraints };
+    await this.httpClient.put<void>(
+      `/api/v1/${this.config.chainId}/wallets/${wallet}/constraints`,
+      body
+    );
+  }
+
+  // ============================================================================
+  // Whitelist Operations
+  // ============================================================================
+
+  /**
+   * Get whitelist for a wallet
+   */
+  public async getWhitelist(
+    wallet: Address
+  ): Promise<unknown> {
+    this.validateAddress(wallet, 'wallet address');
+
+    const response = await this.httpClient.get<unknown>(
+      `/api/v1/${this.config.chainId}/wallets/${wallet}/whitelist`
+    );
+    return response;
+  }
+
+  // ============================================================================
+  // Execution Operations
+  // ============================================================================
+
+  /**
+   * Get executions for a wallet
+   */
+  public async getExecutions(
+    params: GetExecutionsParams
+  ): Promise<PaginatedExecutionDTO> {
+    this.validateAddress(params.wallet, 'wallet address');
+
+    const queryParams = new URLSearchParams();
+    if (params.page) {
+      queryParams.append('page', params.page.toString());
+    }
+    if (params.limit) {
+      queryParams.append('limit', params.limit.toString());
+    }
+    if (params.sort) {
+      queryParams.append('sort', params.sort);
+    }
+
+    const queryString = queryParams.toString();
+    const url = `/api/v1/${this.config.chainId}/wallets/${params.wallet}/executions${
+      queryString ? `?${queryString}` : ''
+    }`;
+
+    const response = await this.httpClient.get<PaginatedExecutionDTO>(url);
+    return response;
+  }
+
+  /**
+   * Get logs for a specific execution
+   */
+  public async getExecutionLogs(
+    params: GetExecutionLogsParams
+  ): Promise<PaginatedLogDTO> {
+    this.validateAddress(params.wallet, 'wallet address');
+
+    const queryParams = new URLSearchParams();
+    if (params.page) {
+      queryParams.append('page', params.page.toString());
+    }
+    if (params.limit) {
+      queryParams.append('limit', params.limit.toString());
+    }
+
+    const queryString = queryParams.toString();
+    const url = `/api/v1/${this.config.chainId}/wallets/${params.wallet}/executions/${params.executionId}/logs${
+      queryString ? `?${queryString}` : ''
+    }`;
+
+    const response = await this.httpClient.get<PaginatedLogDTO>(url);
+    return response;
+  }
+
+  // ============================================================================
+  // Log Operations
+  // ============================================================================
+
+  /**
+   * Get logs for a wallet
+   */
+  public async getLogs(
+    params: GetLogsParams
+  ): Promise<PaginatedLogDTO> {
+    this.validateAddress(params.wallet, 'wallet address');
+
+    const queryParams = new URLSearchParams();
+    if (params.page) {
+      queryParams.append('page', params.page.toString());
+    }
+    if (params.limit) {
+      queryParams.append('limit', params.limit.toString());
+    }
+
+    const queryString = queryParams.toString();
+    const url = `/api/v1/${this.config.chainId}/wallets/${params.wallet}/logs${
+      queryString ? `?${queryString}` : ''
+    }`;
+
+    const response = await this.httpClient.get<PaginatedLogDTO>(url);
+    return response;
+  }
+
+  // ============================================================================
+  // APR By Token Operations
+  // ============================================================================
+
+  /**
+   * Get APR breakdown by token for a wallet
+   */
+  public async getAprByTokens(
+    wallet: Address,
+    period?: Period
+  ): Promise<AprByTokenResponse> {
+    this.validateAddress(wallet, 'wallet address');
+
+    const queryParams = new URLSearchParams();
+    if (period) {
+      queryParams.append('period', period);
+    }
+
+    const queryString = queryParams.toString();
+    const url = `/api/v1/${this.config.chainId}/wallets/${wallet}/apr/tokens${
+      queryString ? `?${queryString}` : ''
+    }`;
+
+    const response = await this.httpClient.get<AprByTokenResponse>(url);
+    return response;
+  }
+
+  // ============================================================================
+  // Reward History Operations
+  // ============================================================================
+
+  /**
+   * Get rewards for a wallet
+   */
+  public async getRewards(
+    params: GetRewardsParams
+  ): Promise<PaginatedRewardDTO> {
+    this.validateAddress(params.wallet, 'wallet address');
+
+    const queryParams = new URLSearchParams();
+    if (params.page) {
+      queryParams.append('page', params.page.toString());
+    }
+    if (params.limit) {
+      queryParams.append('limit', params.limit.toString());
+    }
+    if (params.sort) {
+      queryParams.append('sort', params.sort);
+    }
+
+    const queryString = queryParams.toString();
+    const url = `/api/v1/${this.config.chainId}/rewards/${params.wallet}${
+      queryString ? `?${queryString}` : ''
+    }`;
+
+    const response = await this.httpClient.get<PaginatedRewardDTO>(url);
+    return response;
+  }
+
+  /**
+   * Get reward history for a wallet
+   */
+  public async getRewardHistory(
+    params: GetRewardHistoryParams
+  ): Promise<PaginatedRewardDTO> {
+    this.validateAddress(params.wallet, 'wallet address');
+
+    const queryParams = new URLSearchParams();
+    if (params.page) {
+      queryParams.append('page', params.page.toString());
+    }
+    if (params.limit) {
+      queryParams.append('limit', params.limit.toString());
+    }
+    if (params.sort) {
+      queryParams.append('sort', params.sort);
+    }
+
+    const queryString = queryParams.toString();
+    const url = `/api/v1/${this.config.chainId}/rewards/${params.wallet}/history${
+      queryString ? `?${queryString}` : ''
+    }`;
+
+    const response = await this.httpClient.get<PaginatedRewardDTO>(url);
+    return response;
+  }
+
+  // ============================================================================
+  // Stats Operations
+  // ============================================================================
+
+  /**
+   * Get chain statistics
+   */
+  public async getStats(): Promise<Statistics> {
+    const response = await this.httpClient.get<Statistics>(
+      `/api/v1/${this.config.chainId}/stats`
+    );
+    return response;
+  }
+
+  // ============================================================================
+  // TVL Operations
+  // ============================================================================
+
+  /**
+   * Get total value locked for the configured chain
+   */
+  public async getTVL(): Promise<TVLResponse> {
+    const response = await this.httpClient.get<TVLResponse>(
+      `/api/v1/${this.config.chainId}/tvl`
+    );
     return response;
   }
 }

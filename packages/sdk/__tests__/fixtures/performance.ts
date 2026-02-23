@@ -16,9 +16,6 @@ export const MOCK_PERFORMANCE_DATA_1: PerformanceData = {
   date: '2024-01-01T00:00:00Z',
   value: 1000.5,
   value_in_usd: 1000.5,
-  token_distribution: {
-    USDC: 1000.5,
-  },
   accrued_rewards: {
     USDC: {
       locked: 0,
@@ -45,10 +42,6 @@ export const MOCK_PERFORMANCE_DATA_2: PerformanceData = {
   date: '2024-01-02T00:00:00Z',
   value: 1050.75,
   value_in_usd: 1050.75,
-  token_distribution: {
-    USDC: 1045.75,
-    COMP: 5.0,
-  },
   accrued_rewards: {
     COMP: {
       locked: 2.5,
@@ -91,7 +84,7 @@ export const MOCK_AGENT_INFO: AgentInfo = {
     },
   ],
   withdraws: [],
-  status: AgentStatus.ACTIVE,
+  status: AgentStatus.ACTIVATED,
   activation_date: '2024-01-01T00:00:00Z',
   selected_protocols: ['aave-v3', 'compound-v3', 'morpho'],
   current_protocols: ['aave-v3', 'compound-v3'],
@@ -104,12 +97,12 @@ export const MOCK_AGENT_INFO_WITH_WITHDRAWS: AgentInfo = {
   withdraws: [
     {
       date: '2024-02-01T00:00:00Z',
-      total_value: 500.0,
-      total_value_in_usd: 500.0,
+      amount: 500.0,
+      value: 500.0,
       withdraw_details: [
         {
           token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-          amount: 500000000,
+          amount: '500000000',
           value: 500.0,
           value_in_usd: 500.0,
         },
@@ -130,18 +123,18 @@ export const MOCK_TRANSACTION_1: Transaction = {
   date: '2024-01-01T00:00:00Z',
   amount: 1000.0,
   token_type: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-  status: TxStatus.SUCCESS,
+  status: TxStatus.APPROVED,
   transaction_hash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
   correlation_id: 'corr-001',
   apr: 0.0,
 };
 
 export const MOCK_TRANSACTION_2: Transaction = {
-  action: TxAction.SUPPLY,
+  action: TxAction.DEPOSIT,
   date: '2024-01-01T01:00:00Z',
   amount: 500.0,
   token_type: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-  status: TxStatus.SUCCESS,
+  status: TxStatus.APPROVED,
   transaction_hash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
   protocol: 'aave-v3',
   correlation_id: 'corr-002',
@@ -153,7 +146,7 @@ export const MOCK_TRANSACTION_3: Transaction = {
   date: '2024-01-02T00:00:00Z',
   amount: 100.0,
   token_type: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-  status: TxStatus.SUCCESS,
+  status: TxStatus.APPROVED,
   transaction_hash: '0xfedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321',
   protocol: 'uniswap-v3',
   new_token: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
@@ -177,7 +170,7 @@ export const MOCK_TRANSACTION_HISTORY_PAGE_1: TransactionHistoryResponse = {
   pagination: {
     total_items: 25,
     total_pages: 2,
-    current_page: 1,
+    page: 1,
     items_per_page: 20,
   },
 };
@@ -187,7 +180,7 @@ export const MOCK_TRANSACTION_HISTORY_PAGE_2: TransactionHistoryResponse = {
   pagination: {
     total_items: 25,
     total_pages: 2,
-    current_page: 2,
+    page: 2,
     items_per_page: 20,
   },
 };
@@ -197,7 +190,7 @@ export const MOCK_TRANSACTION_HISTORY_EMPTY: TransactionHistoryResponse = {
   pagination: {
     total_items: 0,
     total_pages: 0,
-    current_page: 1,
+    page: 1,
     items_per_page: 20,
   },
 };

@@ -5,6 +5,11 @@ import { OptimizerModule } from './modules/optimizer.module';
 import { GizaAgentConfig, ResolvedGizaAgentConfig } from './types/config';
 import { Chain, ValidationError } from './types/common';
 import { DEFAULT_AGENT_ID, DEFAULT_TIMEOUT } from './constants';
+import {
+  HealthcheckResponse,
+  GlobalConfigResponse,
+  ChainsResponse,
+} from './types/agent';
 
 /**
  * Main Giza Agent SDK client
@@ -203,5 +208,30 @@ export class GizaAgent {
    */
   public getAgentId(): string {
     return this.config.agentId;
+  }
+
+  // ============================================================================
+  // Top-Level API Methods
+  // ============================================================================
+
+  /**
+   * Check API health
+   */
+  public async healthcheck(): Promise<HealthcheckResponse> {
+    return this.httpClient.get<HealthcheckResponse>('/healthcheck');
+  }
+
+  /**
+   * Get global API configuration
+   */
+  public async getApiConfig(): Promise<GlobalConfigResponse> {
+    return this.httpClient.get<GlobalConfigResponse>('/config');
+  }
+
+  /**
+   * Get supported chain IDs
+   */
+  public async getChains(): Promise<ChainsResponse> {
+    return this.httpClient.get<ChainsResponse>('/chains');
   }
 }

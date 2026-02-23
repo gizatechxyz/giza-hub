@@ -128,9 +128,9 @@ describe('Agent Module Integration', () => {
     it('should get available protocols', async () => {
       const mockProtocols = {
         protocols: [
-          { name: 'aave', available: true, description: 'Aave protocol', tvl: 1000, apy: 5.0 },
-          { name: 'compound', available: true, description: 'Compound protocol', tvl: 2000, apy: 4.5 },
-          { name: 'morpho', available: true, description: 'Morpho protocol', tvl: 500, apy: 6.0 },
+          { name: 'aave', is_active: true, description: 'Aave protocol', tvl: 1000, apr: 5.0 },
+          { name: 'compound', is_active: true, description: 'Compound protocol', tvl: 2000, apr: 4.5 },
+          { name: 'morpho', is_active: true, description: 'Morpho protocol', tvl: 500, apr: 6.0 },
         ],
       };
       mockAxios
@@ -270,7 +270,7 @@ describe('Agent Module Integration', () => {
         wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
       });
 
-      expect(result.status).toBe('active');
+      expect(result.status).toBe('activated');
       expect(result.deposits).toHaveLength(1);
     });
   });
@@ -329,10 +329,10 @@ describe('Agent Module Integration', () => {
     it('should initiate partial withdrawal when amount is specified', async () => {
       const mockPartialResponse = {
         date: '2024-03-01T00:00:00Z',
-        total_value: 1000,
-        total_value_in_usd: 1000,
+        amount: 1000,
+        value: 1000,
         withdraw_details: [
-          { token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', amount: 1000000000, value: 1000, value_in_usd: 1000 }
+          { token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', amount: '1000000000', value: 1000, value_in_usd: 1000 }
         ],
       };
       mockAxios
@@ -344,7 +344,7 @@ describe('Agent Module Integration', () => {
         amount: '1000000000',
       });
 
-      expect((result as any).total_value).toBe(1000);
+      expect((result as any).amount).toBe(1000);
       expect((result as any).withdraw_details).toHaveLength(1);
     });
   });

@@ -7,7 +7,6 @@ TypeScript SDK and tooling for [Giza Agents](https://www.gizatech.xyz/) — auto
 | Package | Description |
 |---------|-------------|
 | [`@gizatech/agent-sdk`](./packages/sdk) | SDK for smart account creation, agent lifecycle, portfolio monitoring, and stateless optimization |
-| [`@gizatech/mcp-server`](./packages/mcp-server) | MCP server exposing Giza agents as conversational tools |
 
 ## Quick Start
 
@@ -75,10 +74,6 @@ bun run --filter '*' test
 # SDK
 bun run --filter @gizatech/agent-sdk build
 bun run --filter @gizatech/agent-sdk test
-
-# MCP Server
-bun run --filter @gizatech/mcp-server build
-bun run --filter @gizatech/mcp-server test
 ```
 
 ### Examples

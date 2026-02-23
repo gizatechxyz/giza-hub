@@ -14,7 +14,13 @@
  * 3. Run this example: pnpm run example
  */
 
-import "dotenv/config";
+import path from "path";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
+
 import { GizaAgent, Chain, AgentStatus } from "../src";
 
 // Example token addresses (Base chain)
@@ -26,7 +32,7 @@ async function main() {
 
     // Replace with actual user wallet address
     const userOriginWallet =
-      "0xabcdef1234567890abcdef1234567890abcdef1234567890" as `0x${string}`;
+      "0x28a928CF7F96A944F2ed83432D3A03dDe2101420" as `0x${string}`;
 
     // =========================================================================
     // Step 1: Initialize the SDK
@@ -34,6 +40,7 @@ async function main() {
     console.log("1️⃣  Initializing SDK...");
     const giza = new GizaAgent({
       chainId: Chain.BASE,
+      timeout: 120000, // 2 minutes
     });
 
     console.log(`   Chain: ${giza.getChainId()}`);
@@ -80,6 +87,7 @@ async function main() {
         origin_wallet: userOriginWallet,
         initial_token: USDC_BASE,
         selected_protocols: ["aave", "compound"],
+        tx_hash: "0x0000000000000000000000000000000000000000000000000000000000000000",
       });
       console.log(`   ✅ ${activation.message}\n`);
     } catch (error: any) {
@@ -151,7 +159,7 @@ async function main() {
         wallet: account.smartAccountAddress,
         transfer: true, // Transfer funds to origin wallet
       });
-      console.log(`   ✅ ${withdrawal.message}`);
+      console.log(`   ✅ ${withdrawal}`);
 
       // Poll for completion
       console.log("   ⏳ Waiting for withdrawal to complete...");

@@ -6,6 +6,9 @@ import {
   OptimizeParams,
   OptimizeRequest,
   OptimizeResponse,
+  SimulateParams,
+  SimulationRequest,
+  SimulationResponse,
 } from '../types/optimizer';
 
 /**
@@ -191,6 +194,36 @@ export class OptimizerModule {
 
     const response = await this.httpClient.post<OptimizeResponse>(
       `/api/v1/optimizer/${params.chainId}/optimize`,
+      requestBody
+    );
+
+    return response;
+  }
+
+  // ============================================================================
+  // Simulation Operations
+  // ============================================================================
+
+  /**
+   * Run a simulation for capital allocation
+   *
+   * @param params - Simulation parameters including chainId, token, and balance
+   * @returns Simulation response with allocations and APR projections
+   */
+  public async simulate(
+    params: SimulateParams
+  ): Promise<SimulationResponse> {
+    this.validateChainId(params.chainId);
+
+    const requestBody: SimulationRequest = {
+      token_address: params.token_address,
+      balance: params.balance,
+      protocol_names: params.protocol_names,
+      constraints: params.constraints,
+    };
+
+    const response = await this.httpClient.post<SimulationResponse>(
+      `/api/v1/${params.chainId}/simulation`,
       requestBody
     );
 

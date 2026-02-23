@@ -1,8 +1,8 @@
 /**
  * Giza Agent SDK
- * 
+ *
  * TypeScript SDK for integrating Giza's agents.
- * 
+ *
  * @packageDocumentation
  */
 
@@ -25,6 +25,9 @@ export type {
 
 // Agent types - Protocols
 export type {
+  ProtocolPool,
+  Protocol,
+  ProtocolsRawResponse,
   ProtocolsResponse,
   ProtocolSupply,
   ProtocolsSupplyResponse,
@@ -53,7 +56,7 @@ export type {
   AllocatedValue,
   Portfolio,
   AccruedRewardsBySymbol,
-  TokenDistribution,
+  AprByTokenResponse,
   PerformanceData,
   PerformanceChartResponse,
   GetPerformanceParams,
@@ -103,6 +106,66 @@ export type {
   DepositListResponse,
 } from './types/agent';
 
+// Agent types - Executions
+export type {
+  ExecutionWithTransactionsDTO,
+  PaginatedExecutionDTO,
+  GetExecutionsParams,
+  GetExecutionLogsParams,
+} from './types/agent';
+
+// Agent types - Logs
+export type {
+  LogDTO,
+  PaginatedLogDTO,
+  GetLogsParams,
+} from './types/agent';
+
+// Agent types - Constraints
+export type {
+  UpdateConstraintsRequest,
+} from './types/agent';
+
+// Agent types - Stats
+export type {
+  TokenDistributionItem,
+  ProtocolDistribution,
+  LiquidityDistribution,
+  Statistics,
+} from './types/agent';
+
+// Agent types - TVL
+export type {
+  TVLResponse,
+} from './types/agent';
+
+// Agent types - Tokens
+export type {
+  TokenInfo,
+  TokensResponse,
+} from './types/agent';
+
+// Agent types - Reward History
+export type {
+  RewardDTO,
+  PaginatedRewardDTO,
+  GetRewardsParams,
+  GetRewardHistoryParams,
+} from './types/agent';
+
+// Agent types - Config
+export type {
+  ConstraintConfigResponse,
+  ChainConfigResponse,
+  GlobalConfigResponse,
+} from './types/agent';
+
+// Agent types - Health & Chains
+export type {
+  HealthcheckResponse,
+  ChainsResponse,
+} from './types/agent';
+
 // Optimizer types - Request & Response
 export type {
   OptimizeRequest,
@@ -113,6 +176,10 @@ export type {
   ActionDetail,
   CalldataInfo,
   ConstraintConfig as OptimizerConstraintConfig,
+  SimulationRequest,
+  SimulateParams,
+  SimulationAllocation,
+  SimulationResponse,
 } from './types/optimizer';
 
 // Optimizer module
@@ -124,6 +191,9 @@ export {
   TxAction,
   TxStatus,
   SortOrder,
+  Order,
+  Period,
+  ExecutionStatus,
 } from './types/agent';
 
 // Optimizer enums

@@ -2,8 +2,15 @@
  * Supported blockchain networks
  */
 export enum Chain {
+  DEVNET = -1,
+  ETHEREUM = 1,
+  POLYGON = 137,
+  CHAIN_999 = 999,
   BASE = 8453,
+  CHAIN_9745 = 9745,
+  SEPOLIA = 11155111,
   ARBITRUM = 42161,
+  BASE_SEPOLIA = 84532,
 }
 
 /**

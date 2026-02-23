@@ -10,7 +10,11 @@
       "Bash(npx tsc:*)",
       "Bash(./node_modules/.bin/tsc:*)",
       "Bash(./node_modules/.bin/tsup:*)",
-      "Bash(./node_modules/.bin/vitest:*)"
+      "Bash(./node_modules/.bin/vitest:*)",
+      "Bash(cd \"/Users/raphaeldoukhan/Desktop/Giza/Infra/Giza Backend/agent-sdk\" && bun run tsc --noEmit 2>&1)",
+      "Bash(cd \"/Users/raphaeldoukhan/Desktop/Giza/Infra/Giza Backend/agent-sdk/packages/sdk\" && ./node_modules/.bin/tsc --noEmit 2>&1 || bunx tsc --noEmit 2>&1)",
+      "Bash(cd \"/Users/raphaeldoukhan/Desktop/Giza/Infra/Giza Backend/agent-sdk/packages/sdk\" && bun test 2>&1)",
+      "Bash(cd \"/Users/raphaeldoukhan/Desktop/Giza/Infra/Giza Backend/agent-sdk/packages/sdk\" && ./node_modules/.bin/tsc --noEmit 2>&1 && bun test 2>&1)"
     ]
   }
 }

@@ -13,7 +13,13 @@
  * 3. Run this example: pnpm run example:optimizer
  */
 
-import "dotenv/config";
+import path from "path";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
+
 import { GizaAgent, Chain, WalletConstraints } from "../src";
 
 // Example token addresses (Base chain)
@@ -238,7 +244,7 @@ async function main() {
       console.error("   - token_address must be a valid Ethereum address");
       console.error("   - current_allocations values must be non-negative integer strings");
       console.error("   - protocols array must not be empty");
-      console.error("   - chainId must be a supported chain (BASE, ARBITRUM)");
+      console.error("   - chainId must be a supported chain (e.g., BASE, ARBITRUM, ETHEREUM)");
     }
 
     process.exit(1);

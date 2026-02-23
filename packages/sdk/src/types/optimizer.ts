@@ -279,3 +279,43 @@ export interface OptimizeResponse {
   calldata: CalldataInfo[];
 }
 
+// ============================================================================
+// Simulation Types
+// ============================================================================
+
+/**
+ * Parameters for simulation request
+ */
+export interface SimulationRequest {
+  token_address: string;
+  balance: string | number;
+  protocol_names?: string[];
+  constraints?: ConstraintConfig[];
+}
+
+/**
+ * Simulation parameters including chainId
+ */
+export interface SimulateParams extends SimulationRequest {
+  chainId: Chain;
+}
+
+/**
+ * Individual simulation allocation result
+ */
+export interface SimulationAllocation {
+  protocol: string;
+  allocation: number;
+  apr: number;
+}
+
+/**
+ * Simulation response
+ */
+export interface SimulationResponse {
+  allocations: SimulationAllocation[];
+  weighted_apr_initial: number;
+  weighted_apr_final: number;
+  data_timestamp?: string;
+}
+
