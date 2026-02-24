@@ -1,6 +1,6 @@
 {
   "name": "@gizatech/mcp-server",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "MCP server for Giza DeFi yield optimization - library-first with CLI convenience",
   "type": "module",
   "main": "./dist/index.js",
