@@ -148,7 +148,23 @@ bun run --filter @gizatech/agent-sdk test
 # MCP Server
 bun run --filter @gizatech/mcp-server build
 bun run --filter @gizatech/mcp-server test
+bun run --filter @gizatech/mcp-server test:integration
+bun run --filter @gizatech/mcp-server test:e2e
 ```
+
+### MCP Server test layers
+
+The MCP server has three test layers:
+
+| Command | Layer | What it tests |
+|---------|-------|---------------|
+| `test` | Unit | Tool handlers, formatters, config resolution |
+| `test:integration` | Integration | MCP protocol via `InMemoryTransport` with mocked SDK |
+| `test:e2e` | E2E | Spawned CLI process via stdio and HTTP transports |
+
+Integration tests exercise tool registration, Zod schema wiring, wallet session state, error propagation, and prompt registration through a real MCP client/server handshake -- all in-process with no network calls.
+
+E2E tests spawn `dist/cli.js` and connect via `StdioClientTransport` and `StreamableHTTPClientTransport`, verifying the full process boundary. The `test:e2e` script builds automatically before running.
 
 ### Examples
 
@@ -164,6 +180,7 @@ bun run --filter @gizatech/agent-sdk example:optimizer
 - [Core Concepts](./docs/concepts/overview.mdx)
 - [SDK Reference](./docs/sdk-reference/overview.mdx)
 - [MCP Server](./docs/mcp-server/overview.mdx)
+- [MCP Server Testing](./docs/mcp-server/testing.mdx)
 - [Examples](./docs/examples/basic-usage.mdx)
 
 ## License

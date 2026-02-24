@@ -101,7 +101,8 @@
       "pages": [
         "mcp-server/tools",
         "mcp-server/programmatic-usage",
-        "mcp-server/transport"
+        "mcp-server/transport",
+        "mcp-server/testing"
       ]
     },
     {
