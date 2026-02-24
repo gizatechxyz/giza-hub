@@ -1,27 +1,23 @@
-import { AgentModule } from '../../../src/modules/agent.module';
+import { Agent } from '../../../src/agent';
 import { HttpClient } from '../../../src/http/client';
-import { Chain, ValidationError, NotImplementedError } from '../../../src/types/common';
-import { ResolvedGizaAgentConfig } from '../../../src/types/config';
+import { Chain, ValidationError } from '../../../src/types/common';
+import { ResolvedGizaConfig } from '../../../src/types/config';
 import { AgentStatus } from '../../../src/types/agent';
 import { VALID_ADDRESSES, INVALID_ADDRESSES } from '../../fixtures/addresses';
-import { MOCK_SMART_ACCOUNT_RESPONSE_1 } from '../../fixtures/accounts';
 import {
   MOCK_PERFORMANCE_CHART_RESPONSE,
   MOCK_AGENT_INFO,
-  MOCK_TRANSACTION_HISTORY_PAGE_1,
   MOCK_APR_RESPONSE,
 } from '../../fixtures/performance';
 import {
   MOCK_WITHDRAWAL_REQUEST_RESPONSE,
-  MOCK_WITHDRAWAL_STATUS_DEACTIVATED,
   MOCK_FEE_RESPONSE,
-  MOCK_TRANSACTION_HISTORY_WITH_WITHDRAWALS,
 } from '../../fixtures/withdrawal';
 
-describe('AgentModule', () => {
-  let module: AgentModule;
+describe('Agent', () => {
+  let agent: Agent;
   let mockHttpClient: jest.Mocked<HttpClient>;
-  let mockConfig: ResolvedGizaAgentConfig;
+  let mockConfig: ResolvedGizaConfig;
 
   beforeEach(() => {
     mockHttpClient = {
@@ -35,16 +31,16 @@ describe('AgentModule', () => {
     } as any;
 
     mockConfig = {
-      partnerApiKey: 'test-api-key',
-      partnerName: 'test-partner',
-      backendUrl: 'https://api.test.giza.example',
-      chainId: Chain.BASE,
+      apiKey: 'test-api-key',
+      partner: 'test-partner',
+      apiUrl: 'https://api.test.giza.example',
+      chain: Chain.BASE,
       agentId: 'giza-app',
       timeout: 45000,
       enableRetry: false,
     };
 
-    module = new AgentModule(mockHttpClient, mockConfig);
+    agent = new Agent(mockHttpClient, mockConfig, VALID_ADDRESSES.SMART_ACCOUNT_1);
   });
 
   afterEach(() => {
@@ -52,127 +48,24 @@ describe('AgentModule', () => {
   });
 
   // ============================================================================
-  // Smart Account Tests
+  // Constructor
   // ============================================================================
 
-  describe('createSmartAccount', () => {
-    it('should create smart account with valid address', async () => {
-      mockHttpClient.post.mockResolvedValue(MOCK_SMART_ACCOUNT_RESPONSE_1);
-
-      const result = await module.createSmartAccount({
-        origin_wallet: VALID_ADDRESSES.EOA_1,
-      });
-
-      expect(mockHttpClient.post).toHaveBeenCalledWith(
-        '/api/v1/proxy/zerodev/smart-accounts',
-        {
-          eoa: VALID_ADDRESSES.EOA_1,
-          chain: Chain.BASE,
-          agent_id: 'giza-app',
-        }
-      );
-
-      expect(result).toEqual({
-        smartAccountAddress: MOCK_SMART_ACCOUNT_RESPONSE_1.smartAccount,
-        backendWallet: MOCK_SMART_ACCOUNT_RESPONSE_1.backendWallet,
-        origin_wallet: VALID_ADDRESSES.EOA_1,
-        chain: Chain.BASE,
-      });
+  describe('constructor', () => {
+    it('should create agent with valid wallet', () => {
+      expect(agent.wallet).toBe(VALID_ADDRESSES.SMART_ACCOUNT_1);
     });
 
-    it('should throw ValidationError for invalid address', async () => {
-      await expect(
-        module.createSmartAccount({
-          origin_wallet: INVALID_ADDRESSES.INVALID_CHARS as any,
-        })
-      ).rejects.toThrow(ValidationError);
+    it('should throw ValidationError for invalid wallet', () => {
+      expect(() => new Agent(
+        mockHttpClient, mockConfig, INVALID_ADDRESSES.INVALID_CHARS as any
+      )).toThrow(ValidationError);
     });
 
-    it('should throw ValidationError for empty address', async () => {
-      await expect(
-        module.createSmartAccount({
-          origin_wallet: INVALID_ADDRESSES.EMPTY as any,
-        })
-      ).rejects.toThrow('origin wallet address is required');
-    });
-  });
-
-  describe('getSmartAccount', () => {
-    it('should get smart account with origin wallet', async () => {
-      mockHttpClient.get.mockResolvedValue(MOCK_SMART_ACCOUNT_RESPONSE_1);
-
-      const result = await module.getSmartAccount({
-        origin_wallet: VALID_ADDRESSES.EOA_1,
-      });
-
-      expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/proxy/zerodev/smart-accounts')
-      );
-      expect(result.origin_wallet).toBe(VALID_ADDRESSES.EOA_1);
-    });
-
-    it('should throw NotImplementedError with only smartAccount', async () => {
-      await expect(
-        module.getSmartAccount({
-          smartAccount: VALID_ADDRESSES.SMART_ACCOUNT_1,
-        })
-      ).rejects.toThrow(NotImplementedError);
-    });
-
-    it('should throw ValidationError with no parameters', async () => {
-      await expect(module.getSmartAccount({})).rejects.toThrow(ValidationError);
-    });
-  });
-
-  // ============================================================================
-  // Protocol Tests
-  // ============================================================================
-
-  describe('getProtocols', () => {
-    it('should get protocols for token', async () => {
-      const mockResponse = {
-        protocols: [
-          { name: 'aave', is_active: true, description: 'Aave protocol', tvl: 1000, apr: 5.0 },
-          { name: 'compound', is_active: true, description: 'Compound protocol', tvl: 2000, apr: 4.5 },
-          { name: 'morpho', is_active: true, description: 'Morpho protocol', tvl: 500, apr: 6.0 },
-        ],
-      };
-      mockHttpClient.get.mockResolvedValue(mockResponse);
-
-      const result = await module.getProtocols(VALID_ADDRESSES.EOA_1);
-
-      expect(mockHttpClient.get).toHaveBeenCalledWith(
-        `/api/v1/${Chain.BASE}/${VALID_ADDRESSES.EOA_1}/protocols`
-      );
-      expect(result.protocols).toEqual(['aave', 'compound', 'morpho']);
-    });
-
-    it('should throw ValidationError for invalid token address', async () => {
-      await expect(
-        module.getProtocols(INVALID_ADDRESSES.INVALID_CHARS as any)
-      ).rejects.toThrow(ValidationError);
-    });
-  });
-
-  describe('updateProtocols', () => {
-    it('should update protocols', async () => {
-      mockHttpClient.put.mockResolvedValue(undefined);
-
-      await module.updateProtocols(
-        VALID_ADDRESSES.SMART_ACCOUNT_1,
-        ['aave', 'compound']
-      );
-
-      expect(mockHttpClient.put).toHaveBeenCalledWith(
-        `/api/v1/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}/protocols`,
-        ['aave', 'compound']
-      );
-    });
-
-    it('should throw ValidationError for empty protocols', async () => {
-      await expect(
-        module.updateProtocols(VALID_ADDRESSES.SMART_ACCOUNT_1, [])
-      ).rejects.toThrow('At least one protocol must be provided');
+    it('should throw ValidationError for empty wallet', () => {
+      expect(() => new Agent(
+        mockHttpClient, mockConfig, INVALID_ADDRESSES.EMPTY as any
+      )).toThrow('wallet address is required');
     });
   });
 
@@ -181,16 +74,15 @@ describe('AgentModule', () => {
   // ============================================================================
 
   describe('activate', () => {
-    it('should activate agent with valid params', async () => {
+    it('should activate agent with valid options', async () => {
       const mockResponse = { message: 'Agent starting activation', wallet: VALID_ADDRESSES.SMART_ACCOUNT_1 };
       mockHttpClient.post.mockResolvedValue(mockResponse);
 
-      const result = await module.activate({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-        origin_wallet: VALID_ADDRESSES.EOA_1,
-        initial_token: VALID_ADDRESSES.EOA_2,
-        selected_protocols: ['aave', 'compound'],
-        tx_hash: '0x1234',
+      const result = await agent.activate({
+        owner: VALID_ADDRESSES.EOA_1,
+        token: VALID_ADDRESSES.EOA_2,
+        protocols: ['aave', 'compound'],
+        txHash: '0x1234',
       });
 
       expect(mockHttpClient.post).toHaveBeenCalledWith(
@@ -200,54 +92,49 @@ describe('AgentModule', () => {
           eoa: VALID_ADDRESSES.EOA_1,
           initial_token: VALID_ADDRESSES.EOA_2,
           selected_protocols: ['aave', 'compound'],
-        })
+        }),
       );
       expect(result.message).toBe('Agent starting activation');
     });
 
     it('should throw ValidationError for empty protocols', async () => {
       await expect(
-        module.activate({
-          wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-          origin_wallet: VALID_ADDRESSES.EOA_1,
-          initial_token: VALID_ADDRESSES.EOA_2,
-          selected_protocols: [],
+        agent.activate({
+          owner: VALID_ADDRESSES.EOA_1,
+          token: VALID_ADDRESSES.EOA_2,
+          protocols: [],
+          txHash: '0x1234',
         })
       ).rejects.toThrow('At least one protocol must be selected');
     });
 
-    it('should throw ValidationError for invalid wallet', async () => {
+    it('should throw ValidationError for invalid owner', async () => {
       await expect(
-        module.activate({
-          wallet: INVALID_ADDRESSES.INVALID_CHARS as any,
-          origin_wallet: VALID_ADDRESSES.EOA_1,
-          initial_token: VALID_ADDRESSES.EOA_2,
-          selected_protocols: ['aave'],
+        agent.activate({
+          owner: INVALID_ADDRESSES.INVALID_CHARS as any,
+          token: VALID_ADDRESSES.EOA_2,
+          protocols: ['aave'],
+          txHash: '0x1234',
         })
       ).rejects.toThrow(ValidationError);
     });
   });
 
   describe('deactivate', () => {
-    it('should deactivate agent with transfer=true by default', async () => {
+    it('should deactivate with transfer=true by default', async () => {
       mockHttpClient.post.mockResolvedValue({ message: 'Wallet deactivation initiated' });
 
-      await module.deactivate({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-      });
+      await agent.deactivate();
 
       expect(mockHttpClient.post).toHaveBeenCalledWith(
         expect.stringContaining(':deactivate?transfer=true')
       );
     });
 
-    it('should deactivate agent with transfer=false', async () => {
+    it('should deactivate with transfer=false', async () => {
       mockHttpClient.post.mockResolvedValue({ message: 'Wallet deactivation initiated' });
 
-      await module.deactivate({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-        transfer: false,
-      });
+      await agent.deactivate({ transfer: false });
 
       expect(mockHttpClient.post).toHaveBeenCalledWith(
         expect.stringContaining(':deactivate?transfer=false')
@@ -259,10 +146,7 @@ describe('AgentModule', () => {
     it('should top up agent', async () => {
       mockHttpClient.post.mockResolvedValue({ message: 'Top-up process started' });
 
-      await module.topUp({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-        tx_hash: '0x1234567890',
-      });
+      await agent.topUp('0x1234567890');
 
       expect(mockHttpClient.post).toHaveBeenCalledWith(
         expect.stringContaining(':top-up?tx_hash=0x1234567890')
@@ -270,12 +154,7 @@ describe('AgentModule', () => {
     });
 
     it('should throw ValidationError for missing tx_hash', async () => {
-      await expect(
-        module.topUp({
-          wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-          tx_hash: '',
-        })
-      ).rejects.toThrow('Transaction hash is required');
+      await expect(agent.topUp('')).rejects.toThrow('Transaction hash is required');
     });
   });
 
@@ -283,9 +162,7 @@ describe('AgentModule', () => {
     it('should run agent', async () => {
       mockHttpClient.post.mockResolvedValue({ status: 'success' });
 
-      const result = await module.run({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-      });
+      const result = await agent.run();
 
       expect(mockHttpClient.post).toHaveBeenCalledWith(
         `/api/v1/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}:run`
@@ -298,13 +175,11 @@ describe('AgentModule', () => {
   // Performance Tests
   // ============================================================================
 
-  describe('getPerformance', () => {
+  describe('performance', () => {
     it('should get performance data', async () => {
       mockHttpClient.get.mockResolvedValue(MOCK_PERFORMANCE_CHART_RESPONSE);
 
-      const result = await module.getPerformance({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-      });
+      const result = await agent.performance();
 
       expect(mockHttpClient.get).toHaveBeenCalledWith(
         `/api/v1/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}/performance`
@@ -315,10 +190,7 @@ describe('AgentModule', () => {
     it('should include from_date in query', async () => {
       mockHttpClient.get.mockResolvedValue(MOCK_PERFORMANCE_CHART_RESPONSE);
 
-      await module.getPerformance({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-        from_date: '2024-01-01',
-      });
+      await agent.performance({ from: '2024-01-01' });
 
       expect(mockHttpClient.get).toHaveBeenCalledWith(
         expect.stringContaining('from_date=2024-01-01')
@@ -326,13 +198,11 @@ describe('AgentModule', () => {
     });
   });
 
-  describe('getPortfolio', () => {
+  describe('portfolio', () => {
     it('should get portfolio data', async () => {
       mockHttpClient.get.mockResolvedValue(MOCK_AGENT_INFO);
 
-      const result = await module.getPortfolio({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-      });
+      const result = await agent.portfolio();
 
       expect(mockHttpClient.get).toHaveBeenCalledWith(
         `/api/v1/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}`
@@ -341,13 +211,11 @@ describe('AgentModule', () => {
     });
   });
 
-  describe('getAPR', () => {
+  describe('apr', () => {
     it('should get APR data', async () => {
       mockHttpClient.get.mockResolvedValue(MOCK_APR_RESPONSE);
 
-      const result = await module.getAPR({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-      });
+      const result = await agent.apr();
 
       expect(mockHttpClient.get).toHaveBeenCalledWith(
         `/api/v1/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}/apr`
@@ -358,11 +226,10 @@ describe('AgentModule', () => {
     it('should include date params in query', async () => {
       mockHttpClient.get.mockResolvedValue(MOCK_APR_RESPONSE);
 
-      await module.getAPR({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-        start_date: '2024-01-01',
-        end_date: '2024-12-31',
-        use_exact_end_date: true,
+      await agent.apr({
+        startDate: '2024-01-01',
+        endDate: '2024-12-31',
+        useExactEndDate: true,
       });
 
       expect(mockHttpClient.get).toHaveBeenCalledWith(
@@ -378,63 +245,31 @@ describe('AgentModule', () => {
   });
 
   // ============================================================================
-  // Transaction History Tests
+  // Paginated Collection Tests
   // ============================================================================
 
-  describe('getTransactions', () => {
-    it('should get transaction history', async () => {
-      mockHttpClient.get.mockResolvedValue(MOCK_TRANSACTION_HISTORY_PAGE_1);
+  describe('transactions', () => {
+    it('should return a Paginator', () => {
+      const paginator = agent.transactions();
+      expect(paginator).toBeDefined();
+      expect(typeof paginator.first).toBe('function');
+      expect(typeof paginator.page).toBe('function');
+    });
 
-      const result = await module.getTransactions({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
+    it('should fetch first page via .first()', async () => {
+      mockHttpClient.get.mockResolvedValue({
+        transactions: [
+          { action: 'deposit', date: '2024-01-01', amount: 100, token_type: 'USDC', status: 'approved' },
+        ],
+        pagination: { page: 1, items_per_page: 20, total_pages: 1, total_items: 1 },
       });
+
+      const txs = await agent.transactions().first();
 
       expect(mockHttpClient.get).toHaveBeenCalledWith(
         expect.stringContaining('/transactions')
       );
-      expect(result.transactions).toHaveLength(3);
-    });
-
-    it('should respect pagination params', async () => {
-      mockHttpClient.get.mockResolvedValue(MOCK_TRANSACTION_HISTORY_PAGE_1);
-
-      await module.getTransactions({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-        page: 2,
-        limit: 50,
-      });
-
-      expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('page=2')
-      );
-      expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('limit=50')
-      );
-    });
-
-    it('should cap limit at 100', async () => {
-      mockHttpClient.get.mockResolvedValue(MOCK_TRANSACTION_HISTORY_PAGE_1);
-
-      await module.getTransactions({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-        limit: 200,
-      });
-
-      expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('limit=100')
-      );
-    });
-  });
-
-  describe('getWithdrawalHistory', () => {
-    it('should filter for withdrawal transactions only', async () => {
-      mockHttpClient.get.mockResolvedValue(MOCK_TRANSACTION_HISTORY_WITH_WITHDRAWALS);
-
-      const result = await module.getWithdrawalHistory(VALID_ADDRESSES.SMART_ACCOUNT_1);
-
-      // Original has 4 transactions, but only 2 are withdrawals
-      expect(result.transactions).toHaveLength(2);
-      expect(result.transactions.every(tx => tx.action === 'withdraw')).toBe(true);
+      expect(txs).toHaveLength(1);
     });
   });
 
@@ -443,90 +278,38 @@ describe('AgentModule', () => {
   // ============================================================================
 
   describe('withdraw', () => {
-    describe('full withdrawal (no amount specified)', () => {
-      it('should call deactivate endpoint with transfer=true by default', async () => {
-        mockHttpClient.post.mockResolvedValue(MOCK_WITHDRAWAL_REQUEST_RESPONSE);
+    it('should call deactivate endpoint when no amount given', async () => {
+      mockHttpClient.post.mockResolvedValue(MOCK_WITHDRAWAL_REQUEST_RESPONSE);
 
-        const result = await module.withdraw({
-          wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-        });
+      await agent.withdraw();
 
-        expect(mockHttpClient.post).toHaveBeenCalledWith(
-          expect.stringContaining(':deactivate?transfer=true')
-        );
-        expect((result as any).message).toBe('Wallet deactivation initiated');
-      });
-
-      it('should call deactivate endpoint with transfer=false when specified', async () => {
-        mockHttpClient.post.mockResolvedValue(MOCK_WITHDRAWAL_REQUEST_RESPONSE);
-
-        await module.withdraw({
-          wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-          transfer: false,
-        });
-
-        expect(mockHttpClient.post).toHaveBeenCalledWith(
-          expect.stringContaining(':deactivate?transfer=false')
-        );
-      });
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        expect.stringContaining(':deactivate?transfer=true')
+      );
     });
 
-    describe('partial withdrawal (amount specified)', () => {
-      it('should call withdraw endpoint with amount in body', async () => {
-        const mockPartialResponse = {
-          date: '2024-03-01T00:00:00Z',
-          amount: 1000,
-          value: 1000,
-          withdraw_details: [
-            { token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', amount: '1000000000', value: 1000, value_in_usd: 1000 }
-          ],
-        };
-        mockHttpClient.post.mockResolvedValue(mockPartialResponse);
+    it('should call withdraw endpoint with amount', async () => {
+      const mockPartialResponse = {
+        date: '2024-03-01T00:00:00Z',
+        amount: 1000,
+        value: 1000,
+        withdraw_details: [
+          { token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', amount: '1000000000', value: 1000, value_in_usd: 1000 },
+        ],
+      };
+      mockHttpClient.post.mockResolvedValue(mockPartialResponse);
 
-        const result = await module.withdraw({
-          wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-          amount: '1000000000',
-        });
+      const result = await agent.withdraw('1000000000');
 
-        expect(mockHttpClient.post).toHaveBeenCalledWith(
-          expect.stringContaining(':withdraw'),
-          { amount: 1000000000 }
-        );
-        expect((result as any).amount).toBe(1000);
-        expect((result as any).withdraw_details).toHaveLength(1);
-      });
-
-      it('should convert string amount to integer', async () => {
-        const mockPartialResponse = {
-          date: '2024-03-01T00:00:00Z',
-          amount: 500,
-          value: 500,
-          withdraw_details: [],
-        };
-        mockHttpClient.post.mockResolvedValue(mockPartialResponse);
-
-        await module.withdraw({
-          wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-          amount: '500000000',
-        });
-
-        expect(mockHttpClient.post).toHaveBeenCalledWith(
-          expect.stringContaining(':withdraw'),
-          { amount: 500000000 }
-        );
-      });
-    });
-
-    it('should throw ValidationError for invalid wallet address', async () => {
-      await expect(
-        module.withdraw({
-          wallet: 'invalid-address' as any,
-        })
-      ).rejects.toThrow(ValidationError);
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        expect.stringContaining(':withdraw'),
+        { amount: 1000000000 }
+      );
+      expect((result as any).amount).toBe(1000);
     });
   });
 
-  describe('getWithdrawalStatus', () => {
+  describe('status', () => {
     it('should get withdrawal status', async () => {
       mockHttpClient.get.mockResolvedValue({
         wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
@@ -535,17 +318,21 @@ describe('AgentModule', () => {
         last_deactivation_date: '2024-03-01T00:00:00Z',
       });
 
-      const result = await module.getWithdrawalStatus(VALID_ADDRESSES.SMART_ACCOUNT_1);
+      const result = await agent.status();
 
       expect(result.status).toBe(AgentStatus.DEACTIVATED);
     });
   });
 
-  describe('getFees', () => {
+  // ============================================================================
+  // Fee & Limit Tests
+  // ============================================================================
+
+  describe('fees', () => {
     it('should get fee information', async () => {
       mockHttpClient.get.mockResolvedValue(MOCK_FEE_RESPONSE);
 
-      const result = await module.getFees(VALID_ADDRESSES.SMART_ACCOUNT_1);
+      const result = await agent.fees();
 
       expect(mockHttpClient.get).toHaveBeenCalledWith(
         `/api/v1/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}/fee`
@@ -555,18 +342,11 @@ describe('AgentModule', () => {
     });
   });
 
-  // ============================================================================
-  // Limit Tests
-  // ============================================================================
-
-  describe('getLimit', () => {
+  describe('limit', () => {
     it('should get deposit limit', async () => {
       mockHttpClient.get.mockResolvedValue({ limit: 10000 });
 
-      const result = await module.getLimit({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-        origin_wallet: VALID_ADDRESSES.EOA_1,
-      });
+      const result = await agent.limit(VALID_ADDRESSES.EOA_1);
 
       expect(mockHttpClient.get).toHaveBeenCalledWith(
         expect.stringContaining(`eoa=${VALID_ADDRESSES.EOA_1}`)
@@ -583,12 +363,12 @@ describe('AgentModule', () => {
     it('should claim rewards', async () => {
       const mockRewards = {
         rewards: [
-          { token: '0x1234', amount: 1000, amount_float: 0.001, current_price_in_underlying: 1.5 }
-        ]
+          { token: '0x1234', amount: 1000, amount_float: 0.001, current_price_in_underlying: 1.5 },
+        ],
       };
       mockHttpClient.post.mockResolvedValue(mockRewards);
 
-      const result = await module.claimRewards(VALID_ADDRESSES.SMART_ACCOUNT_1);
+      const result = await agent.claimRewards();
 
       expect(mockHttpClient.post).toHaveBeenCalledWith(
         `/api/v1/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}:claim-rewards`
@@ -598,35 +378,25 @@ describe('AgentModule', () => {
   });
 
   // ============================================================================
-  // Address Validation Tests
+  // Protocol Tests (wallet-scoped)
   // ============================================================================
 
-  describe('address validation', () => {
-    it('should accept lowercase addresses', async () => {
-      mockHttpClient.post.mockResolvedValue(MOCK_SMART_ACCOUNT_RESPONSE_1);
+  describe('updateProtocols', () => {
+    it('should update protocols', async () => {
+      mockHttpClient.put.mockResolvedValue(undefined);
 
-      const lowerCaseAddress = VALID_ADDRESSES.EOA_1.toLowerCase() as any;
-      await expect(
-        module.createSmartAccount({ origin_wallet: lowerCaseAddress })
-      ).resolves.toBeDefined();
+      await agent.updateProtocols(['aave', 'compound']);
+
+      expect(mockHttpClient.put).toHaveBeenCalledWith(
+        `/api/v1/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}/protocols`,
+        ['aave', 'compound']
+      );
     });
 
-    it('should accept mixed case addresses', async () => {
-      mockHttpClient.post.mockResolvedValue(MOCK_SMART_ACCOUNT_RESPONSE_1);
-
-      await expect(
-        module.createSmartAccount({ origin_wallet: VALID_ADDRESSES.EOA_1 })
-      ).resolves.toBeDefined();
-    });
-
-    it('should reject all invalid addresses', async () => {
-      for (const address of Object.values(INVALID_ADDRESSES)) {
-        if (address !== INVALID_ADDRESSES.EMPTY) {
-          await expect(
-            module.createSmartAccount({ origin_wallet: address as any })
-          ).rejects.toThrow(ValidationError);
-        }
-      }
+    it('should throw ValidationError for empty protocols', async () => {
+      await expect(agent.updateProtocols([])).rejects.toThrow(
+        'At least one protocol must be provided'
+      );
     });
   });
 
@@ -636,30 +406,35 @@ describe('AgentModule', () => {
 
   describe('HTTP error propagation', () => {
     it('should propagate HTTP errors from POST requests', async () => {
-      const error = new Error('Network error');
-      mockHttpClient.post.mockRejectedValue(error);
+      mockHttpClient.post.mockRejectedValue(new Error('Network error'));
 
       await expect(
-        module.createSmartAccount({ origin_wallet: VALID_ADDRESSES.EOA_1 })
+        agent.activate({
+          owner: VALID_ADDRESSES.EOA_1,
+          token: VALID_ADDRESSES.EOA_2,
+          protocols: ['aave'],
+          txHash: '0x1234',
+        })
       ).rejects.toThrow('Network error');
     });
 
     it('should propagate HTTP errors from GET requests', async () => {
-      const error = new Error('API error');
-      mockHttpClient.get.mockRejectedValue(error);
+      mockHttpClient.get.mockRejectedValue(new Error('API error'));
 
-      await expect(
-        module.getPerformance({ wallet: VALID_ADDRESSES.SMART_ACCOUNT_1 })
-      ).rejects.toThrow('API error');
+      await expect(agent.performance()).rejects.toThrow('API error');
     });
 
     it('should not call HTTP client if validation fails', async () => {
       await expect(
-        module.createSmartAccount({ origin_wallet: INVALID_ADDRESSES.INVALID_CHARS as any })
+        agent.activate({
+          owner: INVALID_ADDRESSES.INVALID_CHARS as any,
+          token: VALID_ADDRESSES.EOA_2,
+          protocols: ['aave'],
+          txHash: '0x1234',
+        })
       ).rejects.toThrow();
 
       expect(mockHttpClient.post).not.toHaveBeenCalled();
     });
   });
 });
-

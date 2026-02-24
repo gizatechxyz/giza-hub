@@ -1,12 +1,12 @@
 import MockAdapter from 'axios-mock-adapter';
-import { GizaAgent } from '../../src/client';
+import { Giza } from '../../src/giza';
+import { Agent } from '../../src/agent';
 import { Chain } from '../../src/types/common';
 import { GizaAPIError, NetworkError } from '../../src/http/errors';
 import { setupTestEnv, restoreEnv } from '../helpers/test-env';
 import { VALID_ADDRESSES } from '../fixtures/addresses';
 import {
   MOCK_SMART_ACCOUNT_RESPONSE_1,
-  MOCK_SMART_ACCOUNT_RESPONSE_2,
 } from '../fixtures/accounts';
 import {
   MOCK_PERFORMANCE_CHART_RESPONSE,
@@ -16,18 +16,21 @@ import {
 } from '../fixtures/performance';
 import { API_ERROR_RESPONSES } from '../helpers/mock-responses';
 
-describe('Agent Module Integration', () => {
-  let giza: GizaAgent;
+describe('Agent Integration', () => {
+  let giza: Giza;
+  let agent: Agent;
   let mockAxios: MockAdapter;
 
   beforeEach(() => {
     setupTestEnv();
-    giza = new GizaAgent({ chainId: Chain.BASE });
+    giza = new Giza({ chain: Chain.BASE });
 
-    // Mock the underlying axios instance
-    const httpClient = (giza.agent as any).httpClient;
+    const httpClient = (giza as any).httpClient;
     const axiosInstance = (httpClient as any).axiosInstance;
     mockAxios = new MockAdapter(axiosInstance);
+
+    // Create an agent handle for testing wallet-scoped operations
+    agent = giza.agent(VALID_ADDRESSES.SMART_ACCOUNT_1);
   });
 
   afterEach(() => {
@@ -36,27 +39,20 @@ describe('Agent Module Integration', () => {
   });
 
   // ============================================================================
-  // Smart Account Operations
+  // Smart Account Operations (on Giza)
   // ============================================================================
 
-  describe('createSmartAccount', () => {
+  describe('createAgent', () => {
     it('should create smart account with full flow', async () => {
       mockAxios
         .onPost('/api/v1/proxy/zerodev/smart-accounts')
         .reply(200, MOCK_SMART_ACCOUNT_RESPONSE_1);
 
-      const result = await giza.agent.createSmartAccount({
-        origin_wallet: VALID_ADDRESSES.EOA_1,
-      });
+      const created = await giza.createAgent(VALID_ADDRESSES.EOA_1);
 
-      expect(result).toEqual({
-        smartAccountAddress: MOCK_SMART_ACCOUNT_RESPONSE_1.smartAccount,
-        backendWallet: MOCK_SMART_ACCOUNT_RESPONSE_1.backendWallet,
-        origin_wallet: VALID_ADDRESSES.EOA_1,
-        chain: Chain.BASE,
-      });
-
+      expect(created.wallet).toBe(MOCK_SMART_ACCOUNT_RESPONSE_1.smartAccount);
       expect(mockAxios.history.post).toHaveLength(1);
+
       const requestData = JSON.parse(mockAxios.history.post[0].data);
       expect(requestData).toEqual({
         eoa: VALID_ADDRESSES.EOA_1,
@@ -73,9 +69,7 @@ describe('Agent Module Integration', () => {
           return [200, MOCK_SMART_ACCOUNT_RESPONSE_1];
         });
 
-      await giza.agent.createSmartAccount({
-        origin_wallet: VALID_ADDRESSES.EOA_1,
-      });
+      await giza.createAgent(VALID_ADDRESSES.EOA_1);
     });
 
     it('should handle 401 Unauthorized error', async () => {
@@ -83,85 +77,53 @@ describe('Agent Module Integration', () => {
         .onPost('/api/v1/proxy/zerodev/smart-accounts')
         .reply(401, API_ERROR_RESPONSES.UNAUTHORIZED);
 
-      await expect(
-        giza.agent.createSmartAccount({
-          origin_wallet: VALID_ADDRESSES.EOA_1,
-        })
-      ).rejects.toThrow(GizaAPIError);
+      await expect(giza.createAgent(VALID_ADDRESSES.EOA_1)).rejects.toThrow(GizaAPIError);
     });
 
     it('should handle network errors', async () => {
       mockAxios.onPost('/api/v1/proxy/zerodev/smart-accounts').networkError();
 
-      await expect(
-        giza.agent.createSmartAccount({
-          origin_wallet: VALID_ADDRESSES.EOA_1,
-        })
-      ).rejects.toThrow(NetworkError);
+      await expect(giza.createAgent(VALID_ADDRESSES.EOA_1)).rejects.toThrow(NetworkError);
     });
   });
 
-  describe('getSmartAccount', () => {
+  describe('getAgent', () => {
     it('should get account info with full flow', async () => {
       mockAxios
         .onGet(/\/api\/v1\/proxy\/zerodev\/smart-accounts\?.*/)
         .reply(200, MOCK_SMART_ACCOUNT_RESPONSE_1);
 
-      const result = await giza.agent.getSmartAccount({
-        origin_wallet: VALID_ADDRESSES.EOA_1,
-      });
+      const found = await giza.getAgent(VALID_ADDRESSES.EOA_1);
 
-      expect(result).toEqual({
-        smartAccountAddress: MOCK_SMART_ACCOUNT_RESPONSE_1.smartAccount,
-        backendWallet: MOCK_SMART_ACCOUNT_RESPONSE_1.backendWallet,
-        origin_wallet: VALID_ADDRESSES.EOA_1,
-        chain: Chain.BASE,
-      });
+      expect(found.wallet).toBe(MOCK_SMART_ACCOUNT_RESPONSE_1.smartAccount);
     });
   });
 
   // ============================================================================
-  // Protocol Operations
+  // Protocol Operations (on Giza)
   // ============================================================================
 
-  describe('getProtocols', () => {
+  describe('protocols', () => {
     it('should get available protocols', async () => {
       const mockProtocols = {
         protocols: [
-          { name: 'aave', is_active: true, description: 'Aave protocol', tvl: 1000, apr: 5.0 },
-          { name: 'compound', is_active: true, description: 'Compound protocol', tvl: 2000, apr: 4.5 },
-          { name: 'morpho', is_active: true, description: 'Morpho protocol', tvl: 500, apr: 6.0 },
+          { name: 'aave', is_active: true, description: 'Aave', tvl: 1000, apr: 5.0 },
+          { name: 'compound', is_active: true, description: 'Compound', tvl: 2000, apr: 4.5 },
+          { name: 'morpho', is_active: true, description: 'Morpho', tvl: 500, apr: 6.0 },
         ],
       };
       mockAxios
         .onGet(new RegExp(`/api/v1/${Chain.BASE}/.*/protocols`))
         .reply(200, mockProtocols);
 
-      const result = await giza.agent.getProtocols(VALID_ADDRESSES.EOA_1);
+      const result = await giza.protocols(VALID_ADDRESSES.EOA_1);
 
       expect(result.protocols).toEqual(['aave', 'compound', 'morpho']);
     });
   });
 
-  describe('updateProtocols', () => {
-    it('should update selected protocols', async () => {
-      mockAxios
-        .onPut(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*/protocols`))
-        .reply(204);
-
-      await giza.agent.updateProtocols(
-        VALID_ADDRESSES.SMART_ACCOUNT_1,
-        ['aave', 'compound']
-      );
-
-      expect(mockAxios.history.put).toHaveLength(1);
-      const requestData = JSON.parse(mockAxios.history.put[0].data);
-      expect(requestData).toEqual(['aave', 'compound']);
-    });
-  });
-
   // ============================================================================
-  // Activation Operations
+  // Agent Wallet-Scoped Operations
   // ============================================================================
 
   describe('activate', () => {
@@ -171,12 +133,11 @@ describe('Agent Module Integration', () => {
         .onPost(`/api/v1/${Chain.BASE}/wallets`)
         .reply(201, mockResponse);
 
-      const result = await giza.agent.activate({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-        origin_wallet: VALID_ADDRESSES.EOA_1,
-        initial_token: VALID_ADDRESSES.EOA_2,
-        selected_protocols: ['aave', 'compound'],
-        tx_hash: '0x1234567890',
+      const result = await agent.activate({
+        owner: VALID_ADDRESSES.EOA_1,
+        token: VALID_ADDRESSES.EOA_2,
+        protocols: ['aave', 'compound'],
+        txHash: '0x1234567890',
       });
 
       expect(result.message).toBe('Agent starting activation');
@@ -190,10 +151,7 @@ describe('Agent Module Integration', () => {
         .onPost(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*:deactivate`))
         .reply(201, { message: 'Wallet deactivation initiated' });
 
-      const result = await giza.agent.deactivate({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-        transfer: true,
-      });
+      const result = await agent.deactivate({ transfer: true });
 
       expect(result.message).toBe('Wallet deactivation initiated');
     });
@@ -205,10 +163,7 @@ describe('Agent Module Integration', () => {
         .onPost(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*:top-up`))
         .reply(201, { message: 'Top-up process started' });
 
-      const result = await giza.agent.topUp({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-        tx_hash: '0x1234567890',
-      });
+      const result = await agent.topUp('0x1234567890');
 
       expect(result.message).toBe('Top-up process started');
     });
@@ -220,9 +175,7 @@ describe('Agent Module Integration', () => {
         .onPost(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*:run`))
         .reply(200, { status: 'success' });
 
-      const result = await giza.agent.run({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-      });
+      const result = await agent.run();
 
       expect(result.status).toBe('success');
     });
@@ -232,15 +185,13 @@ describe('Agent Module Integration', () => {
   // Performance Operations
   // ============================================================================
 
-  describe('getPerformance', () => {
+  describe('performance', () => {
     it('should get performance data', async () => {
       mockAxios
         .onGet(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*/performance`))
         .reply(200, MOCK_PERFORMANCE_CHART_RESPONSE);
 
-      const result = await giza.agent.getPerformance({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-      });
+      const result = await agent.performance();
 
       expect(result.performance).toHaveLength(2);
     });
@@ -253,37 +204,30 @@ describe('Agent Module Integration', () => {
           return [200, MOCK_PERFORMANCE_CHART_RESPONSE];
         });
 
-      await giza.agent.getPerformance({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-        from_date: '2024-01-01',
-      });
+      await agent.performance({ from: '2024-01-01' });
     });
   });
 
-  describe('getPortfolio', () => {
+  describe('portfolio', () => {
     it('should get portfolio data', async () => {
       mockAxios
         .onGet(new RegExp(`/api/v1/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}$`))
         .reply(200, MOCK_AGENT_INFO);
 
-      const result = await giza.agent.getPortfolio({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-      });
+      const result = await agent.portfolio();
 
       expect(result.status).toBe('activated');
       expect(result.deposits).toHaveLength(1);
     });
   });
 
-  describe('getAPR', () => {
+  describe('apr', () => {
     it('should get APR data', async () => {
       mockAxios
         .onGet(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*/apr`))
         .reply(200, MOCK_APR_RESPONSE);
 
-      const result = await giza.agent.getAPR({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-      });
+      const result = await agent.apr();
 
       expect(result.apr).toBe(12.5);
     });
@@ -293,18 +237,15 @@ describe('Agent Module Integration', () => {
   // Transaction Operations
   // ============================================================================
 
-  describe('getTransactions', () => {
-    it('should get transaction history', async () => {
+  describe('transactions', () => {
+    it('should get transaction history via paginator', async () => {
       mockAxios
         .onGet(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*/transactions`))
         .reply(200, MOCK_TRANSACTION_HISTORY_PAGE_1);
 
-      const result = await giza.agent.getTransactions({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-      });
+      const txs = await agent.transactions().first();
 
-      expect(result.transactions).toHaveLength(3);
-      expect(result.pagination.total_items).toBe(25);
+      expect(txs).toHaveLength(3);
     });
   });
 
@@ -313,15 +254,12 @@ describe('Agent Module Integration', () => {
   // ============================================================================
 
   describe('withdraw', () => {
-    it('should initiate full withdrawal (deactivate) when no amount specified', async () => {
+    it('should initiate full withdrawal when no amount specified', async () => {
       mockAxios
         .onPost(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*:deactivate`))
         .reply(201, { message: 'Wallet deactivation initiated' });
 
-      const result = await giza.agent.withdraw({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-        transfer: true,
-      });
+      const result = await agent.withdraw();
 
       expect((result as any).message).toBe('Wallet deactivation initiated');
     });
@@ -332,31 +270,28 @@ describe('Agent Module Integration', () => {
         amount: 1000,
         value: 1000,
         withdraw_details: [
-          { token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', amount: '1000000000', value: 1000, value_in_usd: 1000 }
+          { token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', amount: '1000000000', value: 1000, value_in_usd: 1000 },
         ],
       };
       mockAxios
         .onPost(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*:withdraw`))
         .reply(200, mockPartialResponse);
 
-      const result = await giza.agent.withdraw({
-        wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-        amount: '1000000000',
-      });
+      const result = await agent.withdraw('1000000000');
 
       expect((result as any).amount).toBe(1000);
       expect((result as any).withdraw_details).toHaveLength(1);
     });
   });
 
-  describe('getFees', () => {
+  describe('fees', () => {
     it('should get fee information', async () => {
       const mockFees = { percentage_fee: 0.1, fee: 100.5 };
       mockAxios
         .onGet(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*/fee`))
         .reply(200, mockFees);
 
-      const result = await giza.agent.getFees(VALID_ADDRESSES.SMART_ACCOUNT_1);
+      const result = await agent.fees();
 
       expect(result.percentage_fee).toBe(0.1);
       expect(result.fee).toBe(100.5);
@@ -371,14 +306,14 @@ describe('Agent Module Integration', () => {
     it('should claim rewards', async () => {
       const mockRewards = {
         rewards: [
-          { token: '0x1234', amount: 1000, amount_float: 0.001, current_price_in_underlying: 1.5 }
-        ]
+          { token: '0x1234', amount: 1000, amount_float: 0.001, current_price_in_underlying: 1.5 },
+        ],
       };
       mockAxios
         .onPost(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*:claim-rewards`))
         .reply(200, mockRewards);
 
-      const result = await giza.agent.claimRewards(VALID_ADDRESSES.SMART_ACCOUNT_1);
+      const result = await agent.claimRewards();
 
       expect(result.rewards).toHaveLength(1);
     });
@@ -395,9 +330,7 @@ describe('Agent Module Integration', () => {
         .reply(500, API_ERROR_RESPONSES.SERVER_ERROR);
 
       try {
-        await giza.agent.createSmartAccount({
-          origin_wallet: VALID_ADDRESSES.EOA_1,
-        });
+        await giza.createAgent(VALID_ADDRESSES.EOA_1);
       } catch (error) {
         expect((error as GizaAPIError).statusCode).toBe(500);
         expect((error as GizaAPIError).message).toContain('Server Error');
@@ -409,11 +342,7 @@ describe('Agent Module Integration', () => {
         .onGet(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*/performance`))
         .reply(404, API_ERROR_RESPONSES.WALLET_NOT_FOUND);
 
-      await expect(
-        giza.agent.getPerformance({
-          wallet: VALID_ADDRESSES.SMART_ACCOUNT_1,
-        })
-      ).rejects.toThrow(GizaAPIError);
+      await expect(agent.performance()).rejects.toThrow(GizaAPIError);
     });
   });
 
@@ -423,12 +352,9 @@ describe('Agent Module Integration', () => {
 
   describe('retry behavior', () => {
     it('should retry on 5xx errors when enabled', async () => {
-      const retryAgent = new GizaAgent({
-        chainId: Chain.BASE,
-        enableRetry: true,
-      });
+      const retryGiza = new Giza({ chain: Chain.BASE, enableRetry: true });
       const retryMock = new MockAdapter(
-        ((retryAgent.agent as any).httpClient as any).axiosInstance
+        ((retryGiza as any).httpClient as any).axiosInstance
       );
 
       let callCount = 0;
@@ -440,9 +366,7 @@ describe('Agent Module Integration', () => {
         return [200, MOCK_SMART_ACCOUNT_RESPONSE_1];
       });
 
-      const result = await retryAgent.agent.createSmartAccount({
-        origin_wallet: VALID_ADDRESSES.EOA_1,
-      });
+      const result = await retryGiza.createAgent(VALID_ADDRESSES.EOA_1);
 
       expect(result).toBeDefined();
       expect(callCount).toBe(2);
@@ -451,4 +375,3 @@ describe('Agent Module Integration', () => {
     });
   });
 });
-

@@ -4,28 +4,16 @@ import type {
   ProtocolAllocation,
   ActionDetail,
   CalldataInfo,
+  OptimizeOptions,
 } from '../../src/types/optimizer';
 import { WalletConstraints } from '../../src/types/optimizer';
+import { Chain } from '../../src/types/common';
 
-/**
- * Mock protocol allocations for testing
- */
 export const MOCK_PROTOCOL_ALLOCATIONS: ProtocolAllocation[] = [
-  {
-    protocol: 'aave',
-    allocation: '700000000',
-    apr: 5.5,
-  },
-  {
-    protocol: 'compound',
-    allocation: '300000000',
-    apr: 4.8,
-  },
+  { protocol: 'aave', allocation: '700000000', apr: 5.5 },
+  { protocol: 'compound', allocation: '300000000', apr: 4.8 },
 ];
 
-/**
- * Mock optimization result
- */
 export const MOCK_OPTIMIZATION_RESULT: OptimizationResult = {
   allocations: MOCK_PROTOCOL_ALLOCATIONS,
   total_costs: 0.05,
@@ -36,9 +24,6 @@ export const MOCK_OPTIMIZATION_RESULT: OptimizationResult = {
   break_even_days: 15.3,
 };
 
-/**
- * Mock action plan
- */
 export const MOCK_ACTION_PLAN: ActionDetail[] = [
   {
     action_type: 'withdraw',
@@ -53,9 +38,6 @@ export const MOCK_ACTION_PLAN: ActionDetail[] = [
   },
 ];
 
-/**
- * Mock calldata
- */
 export const MOCK_CALLDATA: CalldataInfo[] = [
   {
     contract_address: '0xA88594D404727625A9437C3f886C7643872296AE',
@@ -91,23 +73,18 @@ export const MOCK_CALLDATA: CalldataInfo[] = [
   },
 ];
 
-/**
- * Complete mock optimize response
- */
 export const MOCK_OPTIMIZE_RESPONSE: OptimizeResponse = {
   optimization_result: MOCK_OPTIMIZATION_RESULT,
   action_plan: MOCK_ACTION_PLAN,
   calldata: MOCK_CALLDATA,
 };
 
-/**
- * Sample optimization request parameters
- */
-export const SAMPLE_OPTIMIZE_PARAMS = {
-  chainId: 8453, // Base
-  total_capital: '1000000000',
-  token_address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as const,
-  current_allocations: {
+/** New-API-shaped fixture for Giza.optimize() */
+export const SAMPLE_OPTIMIZE_OPTIONS: OptimizeOptions = {
+  chain: Chain.BASE,
+  capital: '1000000000',
+  token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as `0x${string}`,
+  currentAllocations: {
     aave: '500000000',
     compound: '500000000',
   },
@@ -120,11 +97,7 @@ export const SAMPLE_OPTIMIZE_PARAMS = {
   ],
 };
 
-/**
- * Sample optimization request parameters with wallet_address
- */
-export const SAMPLE_OPTIMIZE_PARAMS_WITH_WALLET = {
-  ...SAMPLE_OPTIMIZE_PARAMS,
-  wallet_address: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e' as const,
+export const SAMPLE_OPTIMIZE_OPTIONS_WITH_WALLET: OptimizeOptions = {
+  ...SAMPLE_OPTIMIZE_OPTIONS,
+  wallet: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e' as `0x${string}`,
 };
-

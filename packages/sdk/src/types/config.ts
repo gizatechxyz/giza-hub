@@ -1,49 +1,36 @@
 import { Chain } from './common';
 
 /**
- * Configuration options for the Giza SDK
+ * Configuration options for the Giza SDK.
+ *
+ * Constructor credentials override environment variables.
+ * Env vars (`GIZA_API_KEY`, `GIZA_PARTNER_NAME`, `GIZA_API_URL`)
+ * are used as fallback when options are omitted.
  */
-export interface GizaAgentConfig {
-  /**
-   * Blockchain network to use (required)
-   */
-  chainId: Chain;
-
-  /**
-   * Agent identifier (optional, defaults to "giza-app")
-   * Used to identify which agent manages the smart accounts
-   */
-  agentId?: string;
-
-  /**
-   * HTTP request timeout in milliseconds (optional, defaults to 45000)
-   */
+export interface GizaConfig {
+  /** Blockchain network to use (required). */
+  chain: Chain;
+  /** Partner API key. Falls back to GIZA_API_KEY env var. */
+  apiKey?: string;
+  /** Partner name. Falls back to GIZA_PARTNER_NAME env var. */
+  partner?: string;
+  /** Backend API URL. Falls back to GIZA_API_URL env var. */
+  apiUrl?: string;
+  /** HTTP request timeout in ms (default 45 000). */
   timeout?: number;
-
-  /**
-   * Enable automatic retry on failed requests (optional, defaults to false)
-   */
+  /** Auto-retry on 5xx / network errors (default false). */
   enableRetry?: boolean;
 }
 
 /**
- * Internal configuration after defaults are applied
- * Includes credentials loaded from environment variables
+ * Internal configuration after defaults are resolved.
  */
-export interface ResolvedGizaAgentConfig extends Required<GizaAgentConfig> {
-  /**
-   * Partner API key loaded from GIZA_API_KEY environment variable
-   */
-  partnerApiKey: string;
-
-  /**
-   * Partner name loaded from GIZA_PARTNER_NAME environment variable
-   */
-  partnerName: string;
-
-  /**
-   * Backend URL loaded from GIZA_API_URL environment variable
-   */
-  backendUrl: string;
+export interface ResolvedGizaConfig {
+  chain: Chain;
+  apiKey: string;
+  partner: string;
+  apiUrl: string;
+  agentId: string;
+  timeout: number;
+  enableRetry: boolean;
 }
-

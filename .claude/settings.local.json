@@ -14,7 +14,10 @@
       "Bash(cd \"/Users/raphaeldoukhan/Desktop/Giza/Infra/Giza Backend/agent-sdk\" && bun run tsc --noEmit 2>&1)",
       "Bash(cd \"/Users/raphaeldoukhan/Desktop/Giza/Infra/Giza Backend/agent-sdk/packages/sdk\" && ./node_modules/.bin/tsc --noEmit 2>&1 || bunx tsc --noEmit 2>&1)",
       "Bash(cd \"/Users/raphaeldoukhan/Desktop/Giza/Infra/Giza Backend/agent-sdk/packages/sdk\" && bun test 2>&1)",
-      "Bash(cd \"/Users/raphaeldoukhan/Desktop/Giza/Infra/Giza Backend/agent-sdk/packages/sdk\" && ./node_modules/.bin/tsc --noEmit 2>&1 && bun test 2>&1)"
+      "Bash(cd \"/Users/raphaeldoukhan/Desktop/Giza/Infra/Giza Backend/agent-sdk/packages/sdk\" && ./node_modules/.bin/tsc --noEmit 2>&1 && bun test 2>&1)",
+      "Bash(python3:*)",
+      "Bash(cd \"/Users/raphaeldoukhan/Desktop/Giza/Infra/Giza Backend/agent-sdk/packages/sdk\" && bun run build 2>&1)",
+      "Bash(cd \"/Users/raphaeldoukhan/Desktop/Giza/Infra/Giza Backend/agent-sdk/packages/sdk\" && bun run test 2>&1)"
     ]
   }
 }

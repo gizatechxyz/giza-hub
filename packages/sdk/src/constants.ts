@@ -1,3 +1,5 @@
+import { Chain } from './types/common';
+
 /**
  * Default agent ID for Giza smart accounts
  */
@@ -14,21 +16,6 @@ export const DEFAULT_TIMEOUT = 45000;
 export const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
 /**
- * Supported blockchain networks
- */
-export enum Chain {
-  DEVNET = -1,
-  ETHEREUM = 1,
-  POLYGON = 137,
-  CHAIN_999 = 999,
-  BASE = 8453,
-  CHAIN_9745 = 9745,
-  SEPOLIA = 11155111,
-  ARBITRUM = 42161,
-  BASE_SEPOLIA = 84532,
-}
-
-/**
  * Human-readable chain names
  */
 export const CHAIN_NAMES: Record<Chain, string> = {
@@ -42,4 +29,3 @@ export const CHAIN_NAMES: Record<Chain, string> = {
   [Chain.ARBITRUM]: 'Arbitrum',
   [Chain.BASE_SEPOLIA]: 'Base Sepolia',
 };
-

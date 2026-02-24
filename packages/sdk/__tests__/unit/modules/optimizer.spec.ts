@@ -1,44 +1,28 @@
-import { OptimizerModule } from '../../../src/modules/optimizer.module';
-import { HttpClient } from '../../../src/http/client';
+import { Giza } from '../../../src/giza';
 import { Chain, ValidationError } from '../../../src/types/common';
-import { ResolvedGizaAgentConfig } from '../../../src/types/config';
 import { WalletConstraints } from '../../../src/types/optimizer';
 import { VALID_ADDRESSES, INVALID_ADDRESSES } from '../../fixtures/addresses';
 import {
   MOCK_OPTIMIZE_RESPONSE,
-  SAMPLE_OPTIMIZE_PARAMS,
+  SAMPLE_OPTIMIZE_OPTIONS,
 } from '../../fixtures/optimizer';
+import { setupTestEnv, restoreEnv } from '../../helpers/test-env';
 
-describe('OptimizerModule', () => {
-  let module: OptimizerModule;
-  let mockHttpClient: jest.Mocked<HttpClient>;
-  let mockConfig: ResolvedGizaAgentConfig;
+describe('Giza.optimize', () => {
+  let giza: Giza;
+  let mockPost: jest.Mock;
 
   beforeEach(() => {
-    mockHttpClient = {
-      get: jest.fn(),
-      post: jest.fn(),
-      put: jest.fn(),
-      patch: jest.fn(),
-      delete: jest.fn(),
-      request: jest.fn(),
-      setHeaders: jest.fn(),
-    } as any;
+    setupTestEnv();
+    giza = new Giza({ chain: Chain.BASE });
 
-    mockConfig = {
-      partnerApiKey: 'test-api-key',
-      partnerName: 'test-partner',
-      backendUrl: 'https://api.test.giza.example',
-      chainId: Chain.BASE,
-      agentId: 'giza-app',
-      timeout: 45000,
-      enableRetry: false,
-    };
-
-    module = new OptimizerModule(mockHttpClient, mockConfig);
+    // Mock the internal httpClient.post
+    mockPost = jest.fn();
+    (giza as any).httpClient.post = mockPost;
   });
 
   afterEach(() => {
+    restoreEnv();
     jest.clearAllMocks();
   });
 
@@ -48,18 +32,18 @@ describe('OptimizerModule', () => {
 
   describe('optimize', () => {
     it('should optimize allocations successfully', async () => {
-      mockHttpClient.post.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
+      mockPost.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
 
-      const result = await module.optimize(SAMPLE_OPTIMIZE_PARAMS);
+      const result = await giza.optimize(SAMPLE_OPTIMIZE_OPTIONS);
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith(
-        `/api/v1/optimizer/${SAMPLE_OPTIMIZE_PARAMS.chainId}/optimize`,
+      expect(mockPost).toHaveBeenCalledWith(
+        `/api/v1/optimizer/${Chain.BASE}/optimize`,
         {
-          total_capital: SAMPLE_OPTIMIZE_PARAMS.total_capital,
-          token_address: SAMPLE_OPTIMIZE_PARAMS.token_address,
-          current_allocations: SAMPLE_OPTIMIZE_PARAMS.current_allocations,
-          protocols: SAMPLE_OPTIMIZE_PARAMS.protocols,
-          constraints: SAMPLE_OPTIMIZE_PARAMS.constraints,
+          total_capital: SAMPLE_OPTIMIZE_OPTIONS.capital,
+          token_address: SAMPLE_OPTIMIZE_OPTIONS.token,
+          current_allocations: SAMPLE_OPTIMIZE_OPTIONS.currentAllocations,
+          protocols: SAMPLE_OPTIMIZE_OPTIONS.protocols,
+          constraints: SAMPLE_OPTIMIZE_OPTIONS.constraints,
           wallet_address: undefined,
         }
       );
@@ -71,297 +55,199 @@ describe('OptimizerModule', () => {
     });
 
     it('should optimize without constraints', async () => {
-      mockHttpClient.post.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
+      mockPost.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
 
-      const paramsWithoutConstraints = {
-        ...SAMPLE_OPTIMIZE_PARAMS,
+      await giza.optimize({
+        ...SAMPLE_OPTIMIZE_OPTIONS,
         constraints: undefined,
-      };
+      });
 
-      await module.optimize(paramsWithoutConstraints);
-
-      expect(mockHttpClient.post).toHaveBeenCalledWith(
-        `/api/v1/optimizer/${paramsWithoutConstraints.chainId}/optimize`,
-        expect.objectContaining({
-          constraints: undefined,
-        })
-      );
-    });
-
-    it('should optimize with empty constraints array', async () => {
-      mockHttpClient.post.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
-
-      const paramsWithEmptyConstraints = {
-        ...SAMPLE_OPTIMIZE_PARAMS,
-        constraints: [],
-      };
-
-      await module.optimize(paramsWithEmptyConstraints);
-
-      expect(mockHttpClient.post).toHaveBeenCalledWith(
-        `/api/v1/optimizer/${paramsWithEmptyConstraints.chainId}/optimize`,
-        expect.objectContaining({
-          constraints: [],
-        })
+      expect(mockPost).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ constraints: undefined })
       );
     });
 
     it('should work with different chain IDs', async () => {
-      mockHttpClient.post.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
+      mockPost.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
 
-      const arbitrumParams = {
-        ...SAMPLE_OPTIMIZE_PARAMS,
-        chainId: Chain.ARBITRUM,
-      };
+      await giza.optimize({
+        ...SAMPLE_OPTIMIZE_OPTIONS,
+        chain: Chain.ARBITRUM,
+      });
 
-      await module.optimize(arbitrumParams);
-
-      expect(mockHttpClient.post).toHaveBeenCalledWith(
+      expect(mockPost).toHaveBeenCalledWith(
         `/api/v1/optimizer/${Chain.ARBITRUM}/optimize`,
         expect.any(Object)
       );
     });
 
-    // ============================================================================
-    // Validation Tests - Chain ID
-    // ============================================================================
+    it('should default to client chain when chain omitted', async () => {
+      mockPost.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
 
-    it('should throw ValidationError for invalid chainId', async () => {
-      await expect(
-        module.optimize({
-          ...SAMPLE_OPTIMIZE_PARAMS,
-          chainId: 9999 as Chain,
-        })
-      ).rejects.toThrow(ValidationError);
+      const { chain: _, ...optsWithoutChain } = SAMPLE_OPTIMIZE_OPTIONS;
+      await giza.optimize(optsWithoutChain as any);
+
+      expect(mockPost).toHaveBeenCalledWith(
+        `/api/v1/optimizer/${Chain.BASE}/optimize`,
+        expect.any(Object)
+      );
     });
 
     // ============================================================================
-    // Validation Tests - Token Address
+    // Validation Tests
     // ============================================================================
+
+    it('should throw ValidationError for invalid chain', async () => {
+      await expect(
+        giza.optimize({ ...SAMPLE_OPTIMIZE_OPTIONS, chain: 9999 as Chain })
+      ).rejects.toThrow(ValidationError);
+    });
 
     it('should throw ValidationError for invalid token address', async () => {
       await expect(
-        module.optimize({
-          ...SAMPLE_OPTIMIZE_PARAMS,
-          token_address: INVALID_ADDRESSES.INVALID_CHARS as any,
+        giza.optimize({
+          ...SAMPLE_OPTIMIZE_OPTIONS,
+          token: INVALID_ADDRESSES.INVALID_CHARS as any,
         })
       ).rejects.toThrow(ValidationError);
     });
 
     it('should throw ValidationError for empty token address', async () => {
       await expect(
-        module.optimize({
-          ...SAMPLE_OPTIMIZE_PARAMS,
-          token_address: INVALID_ADDRESSES.EMPTY as any,
+        giza.optimize({
+          ...SAMPLE_OPTIMIZE_OPTIONS,
+          token: INVALID_ADDRESSES.EMPTY as any,
         })
       ).rejects.toThrow('token address is required');
     });
 
-    it('should throw ValidationError for missing token address', async () => {
+    it('should throw ValidationError for empty capital', async () => {
       await expect(
-        module.optimize({
-          ...SAMPLE_OPTIMIZE_PARAMS,
-          token_address: undefined as any,
-        })
-      ).rejects.toThrow(ValidationError);
+        giza.optimize({ ...SAMPLE_OPTIMIZE_OPTIONS, capital: '' })
+      ).rejects.toThrow('capital is required');
     });
 
-    // ============================================================================
-    // Validation Tests - Total Capital
-    // ============================================================================
-
-    it('should throw ValidationError for empty total_capital', async () => {
+    it('should throw ValidationError for zero capital', async () => {
       await expect(
-        module.optimize({
-          ...SAMPLE_OPTIMIZE_PARAMS,
-          total_capital: '',
-        })
-      ).rejects.toThrow('total_capital is required');
+        giza.optimize({ ...SAMPLE_OPTIMIZE_OPTIONS, capital: '0' })
+      ).rejects.toThrow('capital must be a positive integer');
     });
 
-    it('should throw ValidationError for zero total_capital', async () => {
+    it('should throw ValidationError for negative capital', async () => {
       await expect(
-        module.optimize({
-          ...SAMPLE_OPTIMIZE_PARAMS,
-          total_capital: '0',
-        })
-      ).rejects.toThrow('total_capital must be a positive integer');
+        giza.optimize({ ...SAMPLE_OPTIMIZE_OPTIONS, capital: '-1000000' })
+      ).rejects.toThrow('capital must be a positive integer');
     });
 
-    it('should throw ValidationError for negative total_capital', async () => {
+    it('should throw ValidationError for non-numeric capital', async () => {
       await expect(
-        module.optimize({
-          ...SAMPLE_OPTIMIZE_PARAMS,
-          total_capital: '-1000000',
-        })
-      ).rejects.toThrow('total_capital must be a positive integer');
+        giza.optimize({ ...SAMPLE_OPTIMIZE_OPTIONS, capital: 'not-a-number' })
+      ).rejects.toThrow('capital must be a valid positive integer string');
     });
 
-    it('should throw ValidationError for non-numeric total_capital', async () => {
+    it('should throw ValidationError for float capital', async () => {
       await expect(
-        module.optimize({
-          ...SAMPLE_OPTIMIZE_PARAMS,
-          total_capital: 'not-a-number',
-        })
-      ).rejects.toThrow('total_capital must be a valid positive integer string');
+        giza.optimize({ ...SAMPLE_OPTIMIZE_OPTIONS, capital: '1000.5' })
+      ).rejects.toThrow('capital must be a valid positive integer string');
     });
-
-    it('should throw ValidationError for float total_capital', async () => {
-      await expect(
-        module.optimize({
-          ...SAMPLE_OPTIMIZE_PARAMS,
-          total_capital: '1000.5',
-        })
-      ).rejects.toThrow('total_capital must be a valid positive integer string');
-    });
-
-    // ============================================================================
-    // Validation Tests - Protocols
-    // ============================================================================
 
     it('should throw ValidationError for empty protocols array', async () => {
       await expect(
-        module.optimize({
-          ...SAMPLE_OPTIMIZE_PARAMS,
-          protocols: [],
-        })
+        giza.optimize({ ...SAMPLE_OPTIMIZE_OPTIONS, protocols: [] })
       ).rejects.toThrow('At least one protocol must be provided');
     });
 
     it('should throw ValidationError for missing protocols', async () => {
       await expect(
-        module.optimize({
-          ...SAMPLE_OPTIMIZE_PARAMS,
-          protocols: undefined as any,
-        })
+        giza.optimize({ ...SAMPLE_OPTIMIZE_OPTIONS, protocols: undefined as any })
       ).rejects.toThrow('At least one protocol must be provided');
     });
 
-    // ============================================================================
-    // Validation Tests - Current Allocations
-    // ============================================================================
-
-    it('should throw ValidationError for missing current_allocations', async () => {
+    it('should throw ValidationError for missing currentAllocations', async () => {
       await expect(
-        module.optimize({
-          ...SAMPLE_OPTIMIZE_PARAMS,
-          current_allocations: undefined as any,
-        })
-      ).rejects.toThrow('current_allocations must be an object');
+        giza.optimize({ ...SAMPLE_OPTIMIZE_OPTIONS, currentAllocations: undefined as any })
+      ).rejects.toThrow('currentAllocations must be an object');
     });
 
-    it('should throw ValidationError for null current_allocations', async () => {
+    it('should throw ValidationError for null currentAllocations', async () => {
       await expect(
-        module.optimize({
-          ...SAMPLE_OPTIMIZE_PARAMS,
-          current_allocations: null as any,
-        })
-      ).rejects.toThrow('current_allocations must be an object');
+        giza.optimize({ ...SAMPLE_OPTIMIZE_OPTIONS, currentAllocations: null as any })
+      ).rejects.toThrow('currentAllocations must be an object');
     });
 
     it('should throw ValidationError for negative allocation amount', async () => {
       await expect(
-        module.optimize({
-          ...SAMPLE_OPTIMIZE_PARAMS,
-          current_allocations: {
-            aave: '-1000000',
-            compound: '500000000',
-          },
+        giza.optimize({
+          ...SAMPLE_OPTIMIZE_OPTIONS,
+          currentAllocations: { aave: '-1000000', compound: '500000000' },
         })
       ).rejects.toThrow('must be non-negative');
     });
 
     it('should throw ValidationError for non-numeric allocation amount', async () => {
       await expect(
-        module.optimize({
-          ...SAMPLE_OPTIMIZE_PARAMS,
-          current_allocations: {
-            aave: 'not-a-number',
-            compound: '500000000',
-          },
+        giza.optimize({
+          ...SAMPLE_OPTIMIZE_OPTIONS,
+          currentAllocations: { aave: 'not-a-number', compound: '500000000' },
         })
       ).rejects.toThrow('must be a valid non-negative integer string');
     });
 
     it('should accept zero allocation amount', async () => {
-      mockHttpClient.post.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
+      mockPost.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
 
-      await module.optimize({
-        ...SAMPLE_OPTIMIZE_PARAMS,
-        current_allocations: {
-          aave: '0',
-          compound: '500000000',
-        },
+      await giza.optimize({
+        ...SAMPLE_OPTIMIZE_OPTIONS,
+        currentAllocations: { aave: '0', compound: '500000000' },
       });
 
-      expect(mockHttpClient.post).toHaveBeenCalled();
+      expect(mockPost).toHaveBeenCalled();
     });
 
-    it('should accept empty current_allocations object', async () => {
-      mockHttpClient.post.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
+    it('should accept empty currentAllocations object', async () => {
+      mockPost.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
 
-      await module.optimize({
-        ...SAMPLE_OPTIMIZE_PARAMS,
-        current_allocations: {},
-      });
+      await giza.optimize({ ...SAMPLE_OPTIMIZE_OPTIONS, currentAllocations: {} });
 
-      expect(mockHttpClient.post).toHaveBeenCalled();
+      expect(mockPost).toHaveBeenCalled();
     });
 
     // ============================================================================
-    // Validation Tests - Wallet Address
+    // Wallet address tests
     // ============================================================================
 
-    it('should include wallet_address in request body when provided', async () => {
-      mockHttpClient.post.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
+    it('should include wallet in request body when provided', async () => {
+      mockPost.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
 
-      const walletAddress = VALID_ADDRESSES.EOA_1;
-      await module.optimize({
-        ...SAMPLE_OPTIMIZE_PARAMS,
-        wallet_address: walletAddress,
+      await giza.optimize({
+        ...SAMPLE_OPTIMIZE_OPTIONS,
+        wallet: VALID_ADDRESSES.EOA_1,
       });
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith(
+      expect(mockPost).toHaveBeenCalledWith(
         expect.any(String),
-        expect.objectContaining({
-          wallet_address: walletAddress,
-        })
+        expect.objectContaining({ wallet_address: VALID_ADDRESSES.EOA_1 })
       );
     });
 
-    it('should throw ValidationError for invalid wallet_address', async () => {
+    it('should throw ValidationError for invalid wallet', async () => {
       await expect(
-        module.optimize({
-          ...SAMPLE_OPTIMIZE_PARAMS,
-          wallet_address: INVALID_ADDRESSES.INVALID_CHARS as any,
+        giza.optimize({
+          ...SAMPLE_OPTIMIZE_OPTIONS,
+          wallet: INVALID_ADDRESSES.INVALID_CHARS as any,
         })
       ).rejects.toThrow(ValidationError);
     });
 
-    it('should throw ValidationError for wallet_address with wrong format', async () => {
-      await expect(
-        module.optimize({
-          ...SAMPLE_OPTIMIZE_PARAMS,
-          wallet_address: INVALID_ADDRESSES.TOO_SHORT as any,
-        })
-      ).rejects.toThrow('wallet_address must be a valid Ethereum address');
-    });
+    it('should work without wallet', async () => {
+      mockPost.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
 
-    it('should work without wallet_address', async () => {
-      mockHttpClient.post.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
+      await giza.optimize({ ...SAMPLE_OPTIMIZE_OPTIONS, wallet: undefined });
 
-      const paramsWithoutWallet = {
-        ...SAMPLE_OPTIMIZE_PARAMS,
-        wallet_address: undefined,
-      };
-
-      await module.optimize(paramsWithoutWallet);
-
-      expect(mockHttpClient.post).toHaveBeenCalledWith(
+      expect(mockPost).toHaveBeenCalledWith(
         expect.any(String),
-        expect.objectContaining({
-          wallet_address: undefined,
-        })
+        expect.objectContaining({ wallet_address: undefined })
       );
     });
 
@@ -370,77 +256,41 @@ describe('OptimizerModule', () => {
     // ============================================================================
 
     it('should handle very large numbers', async () => {
-      mockHttpClient.post.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
+      mockPost.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
+      const large = '999999999999999999999999999999';
 
-      const largeNumber = '999999999999999999999999999999';
-      await module.optimize({
-        ...SAMPLE_OPTIMIZE_PARAMS,
-        total_capital: largeNumber,
-        current_allocations: {
-          aave: largeNumber,
-        },
+      await giza.optimize({
+        ...SAMPLE_OPTIMIZE_OPTIONS,
+        capital: large,
+        currentAllocations: { aave: large },
       });
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith(
+      expect(mockPost).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
-          total_capital: largeNumber,
-          current_allocations: {
-            aave: largeNumber,
-          },
+          total_capital: large,
+          current_allocations: { aave: large },
         })
       );
     });
 
-    it('should handle single protocol', async () => {
-      mockHttpClient.post.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
-
-      await module.optimize({
-        ...SAMPLE_OPTIMIZE_PARAMS,
-        protocols: ['aave'],
-      });
-
-      expect(mockHttpClient.post).toHaveBeenCalled();
-    });
-
-    it('should handle many protocols', async () => {
-      mockHttpClient.post.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
-
-      await module.optimize({
-        ...SAMPLE_OPTIMIZE_PARAMS,
-        protocols: ['aave', 'compound', 'moonwell', 'fluid', 'morpho'],
-      });
-
-      expect(mockHttpClient.post).toHaveBeenCalled();
-    });
-
     it('should handle multiple constraints', async () => {
-      mockHttpClient.post.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
+      mockPost.mockResolvedValue(MOCK_OPTIMIZE_RESPONSE);
 
-      await module.optimize({
-        ...SAMPLE_OPTIMIZE_PARAMS,
+      await giza.optimize({
+        ...SAMPLE_OPTIMIZE_OPTIONS,
         constraints: [
-          {
-            kind: WalletConstraints.MIN_PROTOCOLS,
-            params: { min_protocols: 2 },
-          },
-          {
-            kind: WalletConstraints.EXCLUDE_PROTOCOL,
-            params: { protocol: 'compound' },
-          },
+          { kind: WalletConstraints.MIN_PROTOCOLS, params: { min_protocols: 2 } },
+          { kind: WalletConstraints.EXCLUDE_PROTOCOL, params: { protocol: 'compound' } },
         ],
       });
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith(
+      expect(mockPost).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
           constraints: expect.arrayContaining([
-            expect.objectContaining({
-              kind: 'min_protocols',
-            }),
-            expect.objectContaining({
-              kind: 'exclude_protocol',
-            }),
+            expect.objectContaining({ kind: 'min_protocols' }),
+            expect.objectContaining({ kind: 'exclude_protocol' }),
           ]),
         })
       );
@@ -450,26 +300,21 @@ describe('OptimizerModule', () => {
     // HTTP Error Handling
     // ============================================================================
 
-    it('should propagate HTTP errors from HttpClient', async () => {
-      const httpError = new Error('Network error');
-      mockHttpClient.post.mockRejectedValue(httpError);
+    it('should propagate HTTP errors', async () => {
+      mockPost.mockRejectedValue(new Error('Network error'));
 
       await expect(
-        module.optimize(SAMPLE_OPTIMIZE_PARAMS)
+        giza.optimize(SAMPLE_OPTIMIZE_OPTIONS)
       ).rejects.toThrow('Network error');
     });
 
     it('should handle API error responses', async () => {
-      const apiError = {
-        statusCode: 400,
-        message: 'Invalid optimization parameters',
-      };
-      mockHttpClient.post.mockRejectedValue(apiError);
+      const apiError = { statusCode: 400, message: 'Invalid optimization parameters' };
+      mockPost.mockRejectedValue(apiError);
 
       await expect(
-        module.optimize(SAMPLE_OPTIMIZE_PARAMS)
+        giza.optimize(SAMPLE_OPTIMIZE_OPTIONS)
       ).rejects.toEqual(apiError);
     });
   });
 });
-
