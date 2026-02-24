@@ -107,7 +107,6 @@ export {
 // Optimizer option types
 export type {
   OptimizeOptions,
-  SimulateOptions,
 } from './types/optimizer';
 
 // Optimizer domain / response types
@@ -118,9 +117,6 @@ export type {
   ProtocolAllocation,
   ActionDetail,
   CalldataInfo,
-  SimulationRequest,
-  SimulationAllocation,
-  SimulationResponse,
   ConstraintConfig as OptimizerConstraintConfig,
 } from './types/optimizer';
 

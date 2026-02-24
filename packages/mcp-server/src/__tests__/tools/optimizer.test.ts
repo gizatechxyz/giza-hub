@@ -14,7 +14,6 @@ function makeCtx(gizaMock: Record<string, unknown>): ToolContext {
 
 describe('optimizerTools', () => {
   const optimizeTool = optimizerTools.find((t) => t.name === 'optimize')!;
-  const simulateTool = optimizerTools.find((t) => t.name === 'simulate')!;
 
   it('optimize calls giza.optimize()', async () => {
     const response = {
@@ -38,25 +37,5 @@ describe('optimizerTools', () => {
       wallet: undefined,
     });
     expect(result.isError).toBeUndefined();
-  });
-
-  it('simulate calls giza.simulate()', async () => {
-    const response = {
-      allocations: [],
-      weighted_apr_initial: 3.0,
-      weighted_apr_final: 4.5,
-    };
-    const giza = { simulate: jest.fn().mockResolvedValue(response) };
-    const result = await simulateTool.handler(makeCtx(giza), {
-      token: TOKEN,
-      balance: '1000000',
-    });
-    expect(giza.simulate).toHaveBeenCalledWith({
-      token: TOKEN,
-      balance: '1000000',
-      protocols: undefined,
-      constraints: undefined,
-    });
-    expect(JSON.parse(result.content[0]!.text)).toEqual(response);
   });
 });

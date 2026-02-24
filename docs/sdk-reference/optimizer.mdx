@@ -1,6 +1,6 @@
 ---
 title: Optimizer
-description: 'Stateless capital allocation optimization and simulation'
+description: 'Stateless capital allocation optimization'
 ---
 
 ## Overview
@@ -16,7 +16,6 @@ const giza = new Giza({ chain: Chain.BASE });
 
 // Optimizer methods are called on the Giza client
 const result = await giza.optimize({ ... });
-const simulation = await giza.simulate({ ... });
 ```
 
 ---
@@ -210,94 +209,9 @@ for (const call of result.calldata) {
 
 ---
 
-## simulate()
-
-Run a simulation to preview how capital would be allocated across protocols without generating calldata. This is lighter than `optimize()` and useful for displaying projected allocations to users before committing.
-
-### Signature
-
-```typescript
-giza.simulate(options: SimulateOptions): Promise<SimulationResponse>
-```
-
-### Parameters
-
-<ParamField path="options" type="SimulateOptions" required>
-  Simulation input parameters.
-
-  <ParamField path="options.token" type="string" required>
-    Token address to simulate for.
-  </ParamField>
-
-  <ParamField path="options.balance" type="string | number" required>
-    Total balance to allocate.
-  </ParamField>
-
-  <ParamField path="options.chain" type="Chain">
-    Target chain. Defaults to the chain configured on the `Giza` client.
-  </ParamField>
-
-  <ParamField path="options.protocols" type="string[]">
-    List of protocol names to consider. When omitted, all available protocols are used.
-  </ParamField>
-
-  <ParamField path="options.constraints" type="ConstraintConfig[]">
-    Allocation constraints to apply. See [Constraints](#constraints) below.
-  </ParamField>
-</ParamField>
-
-### Returns
-
-`Promise<SimulationResponse>`
-
-### Response Types
-
-```typescript
-interface SimulationResponse {
-  allocations: SimulationAllocation[];
-  weighted_apr_initial: number;
-  weighted_apr_final: number;
-  data_timestamp?: string;
-}
-
-interface SimulationAllocation {
-  protocol: string;
-  allocation: number;
-  apr: number;
-}
-```
-
-### Examples
-
-```typescript
-import { Giza, Chain } from '@gizatech/agent-sdk';
-
-const giza = new Giza({ chain: Chain.BASE });
-const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
-
-const sim = await giza.simulate({
-  token: USDC,
-  balance: '1000000000', // 1000 USDC
-  protocols: ['aave', 'morpho', 'moonwell'],
-});
-
-console.log(`Projected APR: ${sim.weighted_apr_final}%`);
-
-for (const alloc of sim.allocations) {
-  const pct = (alloc.allocation * 100).toFixed(1);
-  console.log(`  ${alloc.protocol}: ${pct}% at ${alloc.apr}% APR`);
-}
-
-if (sim.data_timestamp) {
-  console.log(`Data as of: ${sim.data_timestamp}`);
-}
-```
-
----
-
 ## Constraints
 
-Constraints control how the optimizer distributes capital. Pass them in the `constraints` array of `OptimizeOptions` or `SimulateOptions`.
+Constraints control how the optimizer distributes capital. Pass them in the `constraints` array of `OptimizeOptions`.
 
 ### WalletConstraints Enum
 
@@ -365,40 +279,3 @@ const result = await giza.optimize({
 });
 ```
 
----
-
-## Comparing Scenarios
-
-Use `simulate()` to compare allocation strategies before committing with `optimize()`.
-
-```typescript
-import { Giza, Chain, WalletConstraints } from '@gizatech/agent-sdk';
-
-const giza = new Giza({ chain: Chain.BASE });
-const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
-const balance = '5000000000'; // 5000 USDC
-
-// Scenario 1: No constraints
-const unconstrained = await giza.simulate({
-  token: USDC,
-  balance,
-  protocols: ['aave', 'morpho', 'moonwell'],
-});
-
-// Scenario 2: Diversified (max 40% per protocol)
-const diversified = await giza.simulate({
-  token: USDC,
-  balance,
-  protocols: ['aave', 'morpho', 'moonwell'],
-  constraints: [
-    {
-      kind: WalletConstraints.MAX_ALLOCATION_AMOUNT_PER_PROTOCOL,
-      params: { max_allocation: 40 },
-    },
-  ],
-});
-
-console.log(`Unconstrained APR: ${unconstrained.weighted_apr_final}%`);
-console.log(`Diversified APR:   ${diversified.weighted_apr_final}%`);
-console.log(`APR difference:    ${(unconstrained.weighted_apr_final - diversified.weighted_apr_final).toFixed(2)}%`);
-```

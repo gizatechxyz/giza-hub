@@ -134,9 +134,6 @@ giza.tvl(): Promise<TVLResponse>
 ```typescript
 // Get optimal allocation for given capital and constraints
 giza.optimize(opts: OptimizeOptions): Promise<OptimizeResponse>
-
-// Simulate allocation without executing
-giza.simulate(opts: SimulateOptions): Promise<SimulationResponse>
 ```
 
 ### System
@@ -398,32 +395,6 @@ interface OptimizeResponse {
   };
   action_plan: ActionDetail[];
   calldata: CalldataInfo[];
-}
-```
-
-### simulate()
-
-Simulate allocation without executing.
-
-```typescript
-const sim = await giza.simulate({
-  token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-  balance: '1000000000',
-  protocols: ['aave', 'compound'],
-  constraints: [],
-  chain: Chain.BASE,
-});
-```
-
-#### SimulateOptions
-
-```typescript
-interface SimulateOptions {
-  chain?: Chain;
-  token: Address;
-  balance: string;
-  protocols?: string[];
-  constraints?: ConstraintConfig[];
 }
 ```
 
@@ -886,7 +857,7 @@ interface ServerConfig {
   apiKey?: string;                // Falls back to GIZA_API_KEY
   partner?: string;               // Falls back to GIZA_PARTNER_NAME
   apiUrl?: string;                // Falls back to GIZA_API_URL
-  tools?: ToolDefinition[];       // Tool subset. Default: allTools (23 tools)
+  tools?: ToolDefinition[];       // Tool subset. Default: allTools (22 tools)
   systemPrompt?: string;          // Custom MCP prompt. Default: built-in DeFi assistant
   name?: string;                  // Server name. Default: 'giza-yield-server'
   version?: string;               // Server version. Default: '0.0.1'
@@ -907,7 +878,7 @@ LLM calls: connect_wallet({ wallet: "0x742d...f44e" })
 LLM calls: get_portfolio()  ← wallet resolved from session
 ```
 
-## Tools Reference (23 tools)
+## Tools Reference (22 tools)
 
 ### Wallet Tools
 
@@ -970,7 +941,6 @@ LLM calls: get_portfolio()  ← wallet resolved from session
 | Tool | Parameters | Description |
 |------|-----------|-------------|
 | optimize | token, capital, currentAllocations, protocols, constraints?, wallet? | Find optimal allocation. Returns APR improvement, gas, action plan. |
-| simulate | token, balance, protocols?, constraints? | Simulate allocation. Returns projected allocations and weighted APR. |
 
 ## Cherry-Picking Tools
 
@@ -985,8 +955,8 @@ import {
   portfolioTools,    // get_portfolio, get_performance, get_apr, get_deposits
   financialTools,    // withdraw, get_withdrawal_status, get_transactions, get_fees
   rewardsTools,      // claim_rewards
-  optimizerTools,    // optimize, simulate
-  allTools,          // all 23 tools combined
+  optimizerTools,    // optimize
+  allTools,          // all 22 tools combined
 } from '@gizatech/mcp-server';
 ```
 

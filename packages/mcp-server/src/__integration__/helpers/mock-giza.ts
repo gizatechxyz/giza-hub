@@ -54,10 +54,6 @@ export function createMockGiza(): Giza & { __mockAgent: ReturnType<typeof create
     optimize: jest.fn().mockResolvedValue({
       allocations: [{ protocol: 'Aave', share: 0.6 }],
     }),
-    simulate: jest.fn().mockResolvedValue({
-      projectedApr: 5.2,
-      allocations: [],
-    }),
   } as unknown as Giza & { __mockAgent: ReturnType<typeof createMockAgent> };
 
   return giza;

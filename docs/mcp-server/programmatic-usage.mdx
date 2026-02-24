@@ -42,7 +42,7 @@ await serve({ transport: 'http', port: 3001 });
 
 ## Cherry-Picking Tools
 
-You don't have to register all 23 tools. Import only what you need:
+You don't have to register all 22 tools. Import only what you need:
 
 ```typescript
 import { Giza, Chain } from '@gizatech/agent-sdk';
@@ -74,7 +74,7 @@ Available tool groups:
 | `portfolioTools` | `get_portfolio`, `get_performance`, `get_apr`, `get_deposits` |
 | `financialTools` | `withdraw`, `get_withdrawal_status`, `get_transactions`, `get_fees` |
 | `rewardsTools` | `claim_rewards` |
-| `optimizerTools` | `optimize`, `simulate` |
+| `optimizerTools` | `optimize` |
 | `allTools` | All of the above combined |
 
 <Tip>
@@ -207,7 +207,7 @@ Everything exported by `@gizatech/mcp-server`:
 | `portfolioTools` | `ToolDefinition[]` | Portfolio monitoring tools |
 | `financialTools` | `ToolDefinition[]` | Withdrawal and transaction tools |
 | `rewardsTools` | `ToolDefinition[]` | Reward claiming tools |
-| `optimizerTools` | `ToolDefinition[]` | Optimization and simulation tools |
+| `optimizerTools` | `ToolDefinition[]` | Optimization tools |
 | `WalletContextStore` | Class | Per-session wallet address storage |
 | `WalletNotConnectedError` | Class | Error thrown when no wallet is connected |
 | `formatToolError` | Function | Convert any error into an LLM-friendly `ToolResult` |

@@ -850,18 +850,6 @@ interface OptimizeOptions {
 }
 ```
 
-### SimulateOptions
-
-```typescript
-interface SimulateOptions {
-  chain?: Chain;
-  token: string;
-  balance: string | number;
-  protocols?: string[];
-  constraints?: ConstraintConfig[];
-}
-```
-
 ### OptimizeResponse
 
 ```typescript
@@ -917,27 +905,6 @@ interface CalldataInfo {
   value: string;
   protocol: string;
   description: string;
-}
-```
-
-### SimulationResponse
-
-```typescript
-interface SimulationResponse {
-  allocations: SimulationAllocation[];
-  weighted_apr_initial: number;
-  weighted_apr_final: number;
-  data_timestamp?: string;
-}
-```
-
-### SimulationAllocation
-
-```typescript
-interface SimulationAllocation {
-  protocol: string;
-  allocation: number;
-  apr: number;
 }
 ```
 

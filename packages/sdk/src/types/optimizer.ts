@@ -37,15 +37,6 @@ export interface OptimizeOptions {
   wallet?: Address;
 }
 
-export interface SimulateOptions {
-  /** Chain to simulate on. Defaults to client chain if omitted. */
-  chain?: Chain;
-  token: string;
-  balance: string | number;
-  protocols?: string[];
-  constraints?: ConstraintConfig[];
-}
-
 // ============================================================================
 // Internal Request Types (sent to API)
 // ============================================================================
@@ -101,26 +92,3 @@ export interface OptimizeResponse {
   calldata: CalldataInfo[];
 }
 
-// ============================================================================
-// Simulation Types
-// ============================================================================
-
-export interface SimulationRequest {
-  token_address: string;
-  balance: string | number;
-  protocol_names?: string[];
-  constraints?: ConstraintConfig[];
-}
-
-export interface SimulationAllocation {
-  protocol: string;
-  allocation: number;
-  apr: number;
-}
-
-export interface SimulationResponse {
-  allocations: SimulationAllocation[];
-  weighted_apr_initial: number;
-  weighted_apr_final: number;
-  data_timestamp?: string;
-}

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { OptimizeOptions, SimulateOptions } from '@gizatech/agent-sdk';
+import type { OptimizeOptions } from '@gizatech/agent-sdk';
 import type { ToolDefinition } from '../types.js';
 import { jsonResult } from '../format.js';
 
@@ -43,33 +43,4 @@ const optimize: ToolDefinition = {
   },
 };
 
-const simulate: ToolDefinition = {
-  name: 'simulate',
-  description:
-    'Simulate a yield allocation for the given token and balance. ' +
-    'Returns projected allocations and weighted APR.',
-  inputSchema: z.object({
-    token: z.string().min(1, 'Token address required'),
-    balance: z.union([z.string(), z.number()]),
-    protocols: z.array(z.string()).optional(),
-    constraints: z
-      .array(
-        z.object({
-          kind: z.string(),
-          params: z.record(z.unknown()),
-        }),
-      )
-      .optional(),
-  }),
-  async handler(ctx, input) {
-    const result = await ctx.giza.simulate({
-      token: input['token'],
-      balance: input['balance'],
-      protocols: input['protocols'],
-      constraints: input['constraints'],
-    } as SimulateOptions);
-    return jsonResult(result);
-  },
-};
-
-export const optimizerTools: ToolDefinition[] = [optimize, simulate];
+export const optimizerTools: ToolDefinition[] = [optimize];

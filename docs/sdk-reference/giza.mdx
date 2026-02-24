@@ -244,7 +244,7 @@ console.log(`TVL: $${tvl}`);
 
 ## Optimizer
 
-The optimizer provides capital allocation recommendations and simulations. See the [Optimizer reference](/sdk-reference/optimizer) for full documentation.
+The optimizer provides capital allocation recommendations. See the [Optimizer reference](/sdk-reference/optimizer) for full documentation.
 
 ### `optimize(options)`
 
@@ -262,25 +262,6 @@ const result = await giza.optimize({
   currentAllocations: { aave: '500000000', compound: '500000000' },
 });
 console.log('Optimal allocations:', result.optimization_result.allocations);
-```
-
----
-
-### `simulate(options)`
-
-```typescript
-async simulate(options: SimulateOptions): Promise<SimulationResponse>
-```
-
-Simulates allocation results for a given balance without executing any transactions.
-
-```typescript
-const sim = await giza.simulate({
-  token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-  balance: '1000000000',
-  protocols: ['aave', 'compound', 'moonwell'],
-});
-console.log('Simulated APR:', sim.weighted_apr_final);
 ```
 
 ## System
@@ -355,7 +336,7 @@ Returns the resolved API base URL.
     Wallet-scoped lifecycle, monitoring, and operations
   </Card>
   <Card title="Optimizer" icon="brain" href="/sdk-reference/optimizer">
-    Capital allocation optimization and simulation
+    Capital allocation optimization
   </Card>
   <Card title="Overview" icon="book" href="/sdk-reference/overview">
     SDK architecture and configuration reference

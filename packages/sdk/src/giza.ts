@@ -27,9 +27,6 @@ import {
   OptimizeOptions,
   OptimizeRequest,
   OptimizeResponse,
-  SimulateOptions,
-  SimulationRequest,
-  SimulationResponse,
 } from './types/optimizer';
 
 /**
@@ -254,39 +251,24 @@ export class Giza {
     );
   }
 
-  async simulate(
-    options: SimulateOptions,
-  ): Promise<SimulationResponse> {
-    const chain = options.chain ?? this.config.chain;
-    validateChainId(chain);
-
-    const body: SimulationRequest = {
-      token_address: options.token,
-      balance: options.balance,
-      protocol_names: options.protocols,
-      constraints: options.constraints,
-    };
-
-    return this.httpClient.post<SimulationResponse>(
-      `/api/v1/${chain}/simulation`,
-      body,
-    );
-  }
-
   // ================================================================
   // System
   // ================================================================
 
   async health(): Promise<HealthcheckResponse> {
-    return this.httpClient.get<HealthcheckResponse>('/healthcheck');
+    return this.httpClient.get<HealthcheckResponse>(
+      '/api/v1/healthcheck',
+    );
   }
 
   async getApiConfig(): Promise<GlobalConfigResponse> {
-    return this.httpClient.get<GlobalConfigResponse>('/config');
+    return this.httpClient.get<GlobalConfigResponse>(
+      '/api/v1/config',
+    );
   }
 
   async chains(): Promise<ChainsResponse> {
-    return this.httpClient.get<ChainsResponse>('/chains');
+    return this.httpClient.get<ChainsResponse>('/api/v1/chains');
   }
 
   // ================================================================

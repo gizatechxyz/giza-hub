@@ -4,7 +4,6 @@ module.exports = {
   roots: ['<rootDir>/__tests__'],
   testMatch: ['**/__tests__/e2e/**/*.e2e.spec.ts'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  // Increased timeout for E2E tests (5 minutes for long operations)
   testTimeout: 300000,
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
@@ -19,11 +18,11 @@ module.exports = {
   clearMocks: true,
   resetMocks: true,
   restoreMocks: true,
+  globalSetup: '<rootDir>/__tests__/e2e/global-setup.ts',
+  globalTeardown: '<rootDir>/__tests__/e2e/global-teardown.ts',
   setupFiles: ['<rootDir>/__tests__/e2e/dotenv-config.ts'],
-  setupFilesAfterEnv: ['<rootDir>/__tests__/e2e/setup.ts'],
+  testSequencer: '<rootDir>/__tests__/e2e/sequencer.js',
   maxWorkers: 1,
-  // Show console output immediately
   verbose: true,
   silent: false,
 };
-

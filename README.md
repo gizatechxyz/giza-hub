@@ -121,7 +121,7 @@ await server.stdio();
 | Portfolio | `get_portfolio`, `get_performance`, `get_apr`, `get_deposits` |
 | Financial | `withdraw`, `get_withdrawal_status`, `get_transactions`, `get_fees` |
 | Rewards | `claim_rewards` |
-| Optimizer | `optimize`, `simulate` |
+| Optimizer | `optimize` |
 
 ## Development
 

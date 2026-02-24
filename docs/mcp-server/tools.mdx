@@ -5,7 +5,7 @@ description: "Complete reference for all MCP server tools"
 
 ## Overview
 
-The MCP server has **23 tools** in 8 groups. Tools that operate on an agent require a **connected wallet** -- call `connect_wallet` first, or the tool returns an error telling the LLM to connect one.
+The MCP server has **22 tools** in 8 groups. Tools that operate on an agent require a **connected wallet** -- call `connect_wallet` first, or the tool returns an error telling the LLM to connect one.
 
 ## Wallet
 
@@ -279,7 +279,7 @@ Claim available rewards for the connected wallet. Requires a connected wallet.
 
 ## Optimizer
 
-Yield optimization and simulation. These tools do **not** require a connected wallet.
+Yield optimization. These tools do **not** require a connected wallet.
 
 ### `optimize`
 
@@ -295,19 +295,6 @@ Run the Giza yield optimizer to find the best allocation across protocols.
 | `wallet` | `string` | No | Wallet address for context |
 
 **Returns:** JSON with optimal allocations, APR improvement, gas estimates, and action plan.
-
-### `simulate`
-
-Simulate a yield allocation for a given token and balance.
-
-| Parameter | Type | Required | Description |
-|-----------|------|:--------:|-------------|
-| `token` | `string` | Yes | Token address |
-| `balance` | `string \| number` | Yes | Balance to simulate |
-| `protocols` | `string[]` | No | Protocols to consider (defaults to all) |
-| `constraints` | `Array<{ kind, params }>` | No | Optimization constraints |
-
-**Returns:** JSON with projected allocations and weighted APR.
 
 ---
 
