@@ -41,7 +41,7 @@ Add the following to your Claude Desktop configuration file:
         "GIZA_API_KEY": "your-api-key",
         "GIZA_PARTNER_NAME": "your-partner-name",
         "GIZA_API_URL": "https://api.giza.tech",
-        "GIZA_CHAIN_ID": "8453"
+        "CHAIN_ID": "8453"
       }
     }
   }
@@ -51,7 +51,7 @@ Add the following to your Claude Desktop configuration file:
 Restart Claude Desktop. You should see the Giza tools available in the tools menu (hammer icon).
 
 <Tip>
-`GIZA_CHAIN_ID` defaults to Base (`8453`). Change it to target a different chain.
+`CHAIN_ID` defaults to Base (`8453`). Change it to target a different chain.
 </Tip>
 
 ## Cursor
@@ -73,7 +73,7 @@ Add the same configuration to your Cursor MCP settings:
         "GIZA_API_KEY": "your-api-key",
         "GIZA_PARTNER_NAME": "your-partner-name",
         "GIZA_API_URL": "https://api.giza.tech",
-        "GIZA_CHAIN_ID": "8453"
+        "CHAIN_ID": "8453"
       }
     }
   }
@@ -95,7 +95,7 @@ claude mcp add giza \
   --env GIZA_API_KEY=your-api-key \
   --env GIZA_PARTNER_NAME=your-partner-name \
   --env GIZA_API_URL=https://api.giza.tech \
-  --env GIZA_CHAIN_ID=8453 \
+  --env CHAIN_ID=8453 \
   -- npx @gizatech/mcp-server
 ```
 
@@ -107,7 +107,7 @@ Run the server directly from the command line:
 export GIZA_API_KEY=your-api-key
 export GIZA_PARTNER_NAME=your-partner-name
 export GIZA_API_URL=https://api.giza.tech
-export GIZA_CHAIN_ID=8453
+export CHAIN_ID=8453
 
 npx @gizatech/mcp-server
 ```
@@ -150,7 +150,7 @@ You: "Show me my portfolio"
 | `GIZA_API_KEY` | Yes | -- | Partner API key |
 | `GIZA_PARTNER_NAME` | Yes | -- | Partner identifier |
 | `GIZA_API_URL` | Yes | -- | Giza backend URL |
-| `GIZA_CHAIN_ID` | No | -- | Chain ID (e.g., `8453` for Base) |
+| `CHAIN_ID` | No | -- | Chain ID (e.g., `8453` for Base) |
 | `TRANSPORT` | No | `stdio` | Transport type: `stdio` or `http` |
 | `PORT` | No | `3000` | HTTP port (only used when `TRANSPORT=http`) |
 

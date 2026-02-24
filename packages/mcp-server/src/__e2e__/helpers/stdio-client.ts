@@ -21,7 +21,7 @@ const DEFAULT_ENV: Record<string, string> = {
   GIZA_API_KEY: 'test-key',
   GIZA_PARTNER_NAME: 'test',
   GIZA_API_URL: 'https://api.test.giza.tech',
-  GIZA_CHAIN_ID: '8453',
+  CHAIN_ID: '8453',
   NODE_ENV: 'test',
 };
 

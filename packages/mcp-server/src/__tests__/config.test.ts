@@ -31,7 +31,7 @@ describe('resolveConfig', () => {
     process.env['GIZA_API_KEY'] = 'key';
     process.env['GIZA_PARTNER_NAME'] = 'partner';
     process.env['GIZA_API_URL'] = 'https://api.test.com';
-    process.env['GIZA_CHAIN_ID'] = '8453';
+    process.env['CHAIN_ID'] = '8453';
     process.env['TRANSPORT'] = 'http';
     process.env['PORT'] = '4000';
 

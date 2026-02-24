@@ -103,7 +103,7 @@ await server.stdio();
         "GIZA_API_KEY": "your-api-key",
         "GIZA_PARTNER_NAME": "your-partner-name",
         "GIZA_API_URL": "https://api.giza.tech",
-        "GIZA_CHAIN_ID": "8453"
+        "CHAIN_ID": "8453"
       }
     }
   }

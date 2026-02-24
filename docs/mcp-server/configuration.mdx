@@ -17,7 +17,7 @@ import { serve } from '@gizatech/mcp-server';
 serve();
 ```
 
-The server reads `GIZA_API_KEY`, `GIZA_PARTNER_NAME`, `GIZA_API_URL`, `GIZA_CHAIN_ID`, `TRANSPORT`, and `PORT` from the environment. See [Environment Variables](/mcp-server/quickstart#environment-variables) for the full list.
+The server reads `GIZA_API_KEY`, `GIZA_PARTNER_NAME`, `GIZA_API_URL`, `CHAIN_ID`, `TRANSPORT`, and `PORT` from the environment. See [Environment Variables](/mcp-server/quickstart#environment-variables) for the full list.
 
 ## Tier 2: Explicit Config
 
@@ -82,7 +82,7 @@ All options for `serve()` and `createGizaServer()`:
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `giza` | `Giza` | -- | Pre-built SDK instance (tier 3). Overrides `chain`, `apiKey`, `partner`, `apiUrl`. |
-| `chain` | `number` | `GIZA_CHAIN_ID` env | Chain ID. Must be a supported chain from the `Chain` enum. |
+| `chain` | `number` | `CHAIN_ID` env | Chain ID. Must be a supported chain from the `Chain` enum. |
 | `apiKey` | `string` | `GIZA_API_KEY` env | Partner API key. |
 | `partner` | `string` | `GIZA_PARTNER_NAME` env | Partner identifier. |
 | `apiUrl` | `string` | `GIZA_API_URL` env | Giza backend base URL. |
@@ -103,7 +103,7 @@ For each field, the server resolves values in this order:
 
 | Config Field | Environment Variable | Default |
 |-------------|---------------------|---------|
-| `chain` | `GIZA_CHAIN_ID` | -- (required) |
+| `chain` | `CHAIN_ID` | -- (required) |
 | `apiKey` | `GIZA_API_KEY` | -- (required) |
 | `partner` | `GIZA_PARTNER_NAME` | -- (required) |
 | `apiUrl` | `GIZA_API_URL` | -- (required) |

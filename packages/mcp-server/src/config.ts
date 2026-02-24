@@ -78,7 +78,7 @@ export function resolveConfig(
 }
 
 function envChainId(): number | undefined {
-  const raw = process.env['GIZA_CHAIN_ID'];
+  const raw = process.env['CHAIN_ID'];
   if (!raw) return undefined;
   const n = Number(raw);
   return Number.isFinite(n) ? n : undefined;

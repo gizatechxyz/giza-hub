@@ -41,7 +41,7 @@ export interface ToolDefinition {
 export interface ServerConfig {
   /** Pre-built Giza SDK instance (tier 3). */
   giza?: Giza;
-  /** Chain ID -- falls back to GIZA_CHAIN_ID env var. */
+  /** Chain ID -- falls back to CHAIN_ID env var. */
   chain?: number;
   /** API key -- falls back to GIZA_API_KEY env var. */
   apiKey?: string;
