@@ -7,15 +7,16 @@ description: 'Guide to implementing partial and full withdrawals'
 
 Learn how to implement both partial and full withdrawals for users.
 
+<Info>
+These methods are called on an `Agent` handle. Get one via `giza.createAgent(eoa)`, `giza.getAgent(eoa)`, or `giza.agent(wallet)`.
+</Info>
+
 ## Partial Withdrawal
 
 Agent remains active, only withdraw specified amount:
 
 ```typescript
-const result = await giza.agent.withdraw({
-  wallet: smartAccountAddress,
-  amount: '500000000', // 500 USDC (6 decimals)
-});
+const result = await agent.withdraw('500000000'); // 500 USDC (6 decimals)
 
 if ('total_value' in result) {
   console.log(`Withdrawn: ${result.total_value_in_usd} USD`);
@@ -28,23 +29,17 @@ if ('total_value' in result) {
 Deactivate agent and withdraw everything:
 
 ```typescript
-// Initiate withdrawal
-await giza.agent.withdraw({
-  wallet: smartAccountAddress,
-  transfer: true, // Transfer to origin wallet
-});
+// Initiate full withdrawal (deactivation)
+await agent.withdraw();
 
 // Poll for completion
-const finalStatus = await giza.agent.pollWithdrawalStatus(
-  smartAccountAddress,
-  {
-    interval: 5000,
-    timeout: 300000,
-    onUpdate: (status) => {
-      updateUI(status); // Update progress in UI
-    }
+const finalStatus = await agent.waitForDeactivation({
+  interval: 5000,
+  timeout: 300000,
+  onUpdate: (status) => {
+    updateUI(status); // Update progress in UI
   }
-);
+});
 
 console.log('Withdrawal complete:', finalStatus.status);
 ```
@@ -53,17 +48,17 @@ console.log('Withdrawal complete:', finalStatus.status);
 
 ```typescript
 try {
-  await giza.agent.withdraw({ wallet: address, transfer: true });
+  await agent.withdraw();
 } catch (error) {
   if (error instanceof TimeoutError) {
     // Still polling, funds safe
     showMessage('Withdrawal taking longer than expected...');
   } else if (error instanceof GizaAPIError) {
     // Check agent status
-    const status = await giza.agent.getWithdrawalStatus(address);
-    if (status.status === 'deactivating') {
+    const currentStatus = await agent.status();
+    if (currentStatus.status === 'deactivating') {
       // Still in progress
-      continue polling
+      showMessage('Withdrawal in progress, please wait...');
     }
   }
 }

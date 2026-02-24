@@ -1,0 +1,404 @@
+---
+title: Optimizer
+description: 'Stateless capital allocation optimization and simulation'
+---
+
+## Overview
+
+The optimizer provides stateless capital allocation optimization across DeFi protocols. It computes optimal allocations, generates action plans, and returns execution-ready calldata.
+
+Optimizer methods are on the `Giza` client, not on the `Agent` instance. They operate at the chain level and do not require a specific smart account.
+
+```typescript
+import { Giza, Chain } from '@gizatech/agent-sdk';
+
+const giza = new Giza({ chain: Chain.BASE });
+
+// Optimizer methods are called on the Giza client
+const result = await giza.optimize({ ... });
+const simulation = await giza.simulate({ ... });
+```
+
+---
+
+## optimize()
+
+Compute the optimal allocation of capital across a set of protocols, given the current allocations and constraints. Returns the target allocations, an action plan describing the required moves, and execution-ready calldata.
+
+### Signature
+
+```typescript
+giza.optimize(options: OptimizeOptions): Promise<OptimizeResponse>
+```
+
+### Parameters
+
+<ParamField path="options" type="OptimizeOptions" required>
+  Optimization input parameters.
+
+  <ParamField path="options.token" type="Address" required>
+    Token address to optimize for (e.g., USDC).
+  </ParamField>
+
+  <ParamField path="options.capital" type="string" required>
+    Total capital in the token's smallest unit (e.g., `'1000000000'` for 1000 USDC). Must be a positive integer string.
+  </ParamField>
+
+  <ParamField path="options.currentAllocations" type="Record<string, string>" required>
+    Current allocation per protocol, as a map of protocol name to amount in smallest units. Use `'0'` for protocols with no current allocation.
+  </ParamField>
+
+  <ParamField path="options.protocols" type="string[]" required>
+    List of protocol names to consider for allocation. Must contain at least one entry.
+  </ParamField>
+
+  <ParamField path="options.chain" type="Chain">
+    Target chain. Defaults to the chain configured on the `Giza` client.
+  </ParamField>
+
+  <ParamField path="options.constraints" type="ConstraintConfig[]">
+    Allocation constraints to apply. See [Constraints](#constraints) below.
+  </ParamField>
+
+  <ParamField path="options.wallet" type="Address">
+    Smart account address. When provided, the optimizer can use wallet-specific data for more accurate results.
+  </ParamField>
+</ParamField>
+
+### Returns
+
+`Promise<OptimizeResponse>`
+
+### Response Types
+
+```typescript
+interface OptimizeResponse {
+  optimization_result: OptimizationResult;
+  action_plan: ActionDetail[];
+  calldata: CalldataInfo[];
+}
+
+interface OptimizationResult {
+  allocations: ProtocolAllocation[];
+  total_costs: number;
+  weighted_apr_initial: number;
+  weighted_apr_final: number;
+  apr_improvement: number;
+  gas_estimate_usd?: number;
+  break_even_days?: number;
+}
+
+interface ProtocolAllocation {
+  protocol: string;
+  allocation: string;
+  apr: number;
+}
+
+interface ActionDetail {
+  action_type: 'deposit' | 'withdraw';
+  protocol: string;
+  amount: string;
+  underlying_amount?: string;
+}
+
+interface CalldataInfo {
+  contract_address: string;
+  function_name: string;
+  parameters: string[];
+  value: string;
+  protocol: string;
+  description: string;
+}
+```
+
+### Examples
+
+<CodeGroup>
+
+```typescript Basic optimization
+import { Giza, Chain } from '@gizatech/agent-sdk';
+
+const giza = new Giza({ chain: Chain.BASE });
+const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+
+const result = await giza.optimize({
+  token: USDC,
+  capital: '1000000000', // 1000 USDC
+  currentAllocations: {
+    aave: '500000000',
+    morpho: '500000000',
+  },
+  protocols: ['aave', 'morpho', 'moonwell'],
+});
+
+// Optimal allocations
+console.log('Target allocations:');
+for (const alloc of result.optimization_result.allocations) {
+  console.log(`  ${alloc.protocol}: ${alloc.allocation} (${alloc.apr}% APR)`);
+}
+
+// APR improvement
+const { optimization_result } = result;
+console.log(`APR: ${optimization_result.weighted_apr_initial}% -> ${optimization_result.weighted_apr_final}%`);
+console.log(`Improvement: +${optimization_result.apr_improvement}%`);
+
+if (optimization_result.gas_estimate_usd) {
+  console.log(`Gas estimate: $${optimization_result.gas_estimate_usd}`);
+}
+if (optimization_result.break_even_days) {
+  console.log(`Break-even: ${optimization_result.break_even_days} days`);
+}
+```
+
+```typescript With constraints
+import { Giza, Chain, WalletConstraints } from '@gizatech/agent-sdk';
+
+const giza = new Giza({ chain: Chain.BASE });
+const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+
+const result = await giza.optimize({
+  token: USDC,
+  capital: '5000000000', // 5000 USDC
+  currentAllocations: {
+    aave: '0',
+    morpho: '0',
+    moonwell: '0',
+  },
+  protocols: ['aave', 'morpho', 'moonwell'],
+  constraints: [
+    {
+      kind: WalletConstraints.MAX_ALLOCATION_AMOUNT_PER_PROTOCOL,
+      params: { max_allocation: 50 },
+    },
+    {
+      kind: WalletConstraints.MIN_PROTOCOLS,
+      params: { min_protocols: 2 },
+    },
+  ],
+});
+
+console.log('Constrained allocations:');
+for (const alloc of result.optimization_result.allocations) {
+  console.log(`  ${alloc.protocol}: ${alloc.allocation}`);
+}
+```
+
+```typescript Reading the action plan
+const result = await giza.optimize({
+  token: USDC,
+  capital: '2000000000',
+  currentAllocations: { aave: '1000000000', morpho: '1000000000' },
+  protocols: ['aave', 'morpho', 'moonwell'],
+});
+
+// Action plan: what needs to happen
+console.log('Action plan:');
+for (const action of result.action_plan) {
+  console.log(`  ${action.action_type} ${action.amount} on ${action.protocol}`);
+}
+
+// Calldata: ready to execute on-chain
+console.log('Calldata:');
+for (const call of result.calldata) {
+  console.log(`  ${call.protocol}: ${call.function_name}`);
+  console.log(`    Contract: ${call.contract_address}`);
+  console.log(`    Description: ${call.description}`);
+}
+```
+
+</CodeGroup>
+
+---
+
+## simulate()
+
+Run a simulation to preview how capital would be allocated across protocols without generating calldata. This is lighter than `optimize()` and useful for displaying projected allocations to users before committing.
+
+### Signature
+
+```typescript
+giza.simulate(options: SimulateOptions): Promise<SimulationResponse>
+```
+
+### Parameters
+
+<ParamField path="options" type="SimulateOptions" required>
+  Simulation input parameters.
+
+  <ParamField path="options.token" type="string" required>
+    Token address to simulate for.
+  </ParamField>
+
+  <ParamField path="options.balance" type="string | number" required>
+    Total balance to allocate.
+  </ParamField>
+
+  <ParamField path="options.chain" type="Chain">
+    Target chain. Defaults to the chain configured on the `Giza` client.
+  </ParamField>
+
+  <ParamField path="options.protocols" type="string[]">
+    List of protocol names to consider. When omitted, all available protocols are used.
+  </ParamField>
+
+  <ParamField path="options.constraints" type="ConstraintConfig[]">
+    Allocation constraints to apply. See [Constraints](#constraints) below.
+  </ParamField>
+</ParamField>
+
+### Returns
+
+`Promise<SimulationResponse>`
+
+### Response Types
+
+```typescript
+interface SimulationResponse {
+  allocations: SimulationAllocation[];
+  weighted_apr_initial: number;
+  weighted_apr_final: number;
+  data_timestamp?: string;
+}
+
+interface SimulationAllocation {
+  protocol: string;
+  allocation: number;
+  apr: number;
+}
+```
+
+### Examples
+
+```typescript
+import { Giza, Chain } from '@gizatech/agent-sdk';
+
+const giza = new Giza({ chain: Chain.BASE });
+const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+
+const sim = await giza.simulate({
+  token: USDC,
+  balance: '1000000000', // 1000 USDC
+  protocols: ['aave', 'morpho', 'moonwell'],
+});
+
+console.log(`Projected APR: ${sim.weighted_apr_final}%`);
+
+for (const alloc of sim.allocations) {
+  const pct = (alloc.allocation * 100).toFixed(1);
+  console.log(`  ${alloc.protocol}: ${pct}% at ${alloc.apr}% APR`);
+}
+
+if (sim.data_timestamp) {
+  console.log(`Data as of: ${sim.data_timestamp}`);
+}
+```
+
+---
+
+## Constraints
+
+Constraints control how the optimizer distributes capital. Pass them in the `constraints` array of `OptimizeOptions` or `SimulateOptions`.
+
+### WalletConstraints Enum
+
+```typescript
+enum WalletConstraints {
+  MIN_PROTOCOLS = 'min_protocols',
+  MAX_ALLOCATION_AMOUNT_PER_PROTOCOL = 'max_allocation_amount_per_protocol',
+  MAX_AMOUNT_PER_PROTOCOL = 'max_amount_per_protocol',
+  MIN_AMOUNT = 'min_amount',
+  EXCLUDE_PROTOCOL = 'exclude_protocol',
+  MIN_ALLOCATION_AMOUNT_PER_PROTOCOL = 'min_allocation_amount_per_protocol',
+}
+```
+
+### ConstraintConfig (Optimizer)
+
+```typescript
+interface ConstraintConfig {
+  kind: WalletConstraints;
+  params: Record<string, unknown>;
+}
+```
+
+<Note>
+The optimizer uses its own `ConstraintConfig` type where `kind` is a `WalletConstraints` enum value. The agent's `ConstraintConfig` uses a plain `string` for `kind`. Both are exported from the SDK -- use `OptimizerConstraintConfig` for the optimizer variant if you need to distinguish them.
+</Note>
+
+### Constraint Reference
+
+| Constraint | Description | Example Params |
+|-----------|-------------|----------------|
+| `MIN_PROTOCOLS` | Require allocation across at least N protocols | `{ min_protocols: 2 }` |
+| `MAX_ALLOCATION_AMOUNT_PER_PROTOCOL` | Cap each protocol at N% of total capital | `{ max_allocation: 50 }` |
+| `MAX_AMOUNT_PER_PROTOCOL` | Cap each protocol at an absolute amount | `{ max_amount: 500000000 }` |
+| `MIN_AMOUNT` | Minimum total allocation amount | `{ min_amount: 100000000 }` |
+| `EXCLUDE_PROTOCOL` | Exclude a specific protocol | `{ protocol: 'compound' }` |
+| `MIN_ALLOCATION_AMOUNT_PER_PROTOCOL` | Minimum allocation per protocol | `{ min_allocation: 50000000 }` |
+
+### Constraint Example
+
+```typescript
+import { WalletConstraints } from '@gizatech/agent-sdk';
+
+const constraints = [
+  {
+    kind: WalletConstraints.MAX_ALLOCATION_AMOUNT_PER_PROTOCOL,
+    params: { max_allocation: 40 },
+  },
+  {
+    kind: WalletConstraints.MIN_PROTOCOLS,
+    params: { min_protocols: 3 },
+  },
+  {
+    kind: WalletConstraints.EXCLUDE_PROTOCOL,
+    params: { protocol: 'compound' },
+  },
+];
+
+const result = await giza.optimize({
+  token: USDC,
+  capital: '10000000000',
+  currentAllocations: { aave: '0', morpho: '0', moonwell: '0' },
+  protocols: ['aave', 'morpho', 'moonwell'],
+  constraints,
+});
+```
+
+---
+
+## Comparing Scenarios
+
+Use `simulate()` to compare allocation strategies before committing with `optimize()`.
+
+```typescript
+import { Giza, Chain, WalletConstraints } from '@gizatech/agent-sdk';
+
+const giza = new Giza({ chain: Chain.BASE });
+const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+const balance = '5000000000'; // 5000 USDC
+
+// Scenario 1: No constraints
+const unconstrained = await giza.simulate({
+  token: USDC,
+  balance,
+  protocols: ['aave', 'morpho', 'moonwell'],
+});
+
+// Scenario 2: Diversified (max 40% per protocol)
+const diversified = await giza.simulate({
+  token: USDC,
+  balance,
+  protocols: ['aave', 'morpho', 'moonwell'],
+  constraints: [
+    {
+      kind: WalletConstraints.MAX_ALLOCATION_AMOUNT_PER_PROTOCOL,
+      params: { max_allocation: 40 },
+    },
+  ],
+});
+
+console.log(`Unconstrained APR: ${unconstrained.weighted_apr_final}%`);
+console.log(`Diversified APR:   ${diversified.weighted_apr_final}%`);
+console.log(`APR difference:    ${(unconstrained.weighted_apr_final - diversified.weighted_apr_final).toFixed(2)}%`);
+```

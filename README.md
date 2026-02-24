@@ -29,28 +29,24 @@ Contact Giza at [gizatech.xyz](https://www.gizatech.xyz/) to obtain partner cred
 ### Usage
 
 ```typescript
-import { GizaAgent, Chain } from '@gizatech/agent-sdk';
+import { Giza, Chain } from '@gizatech/agent-sdk';
 
-const giza = new GizaAgent({ chainId: Chain.BASE });
+const giza = new Giza({ chain: Chain.BASE });
 
 // Create a smart account for a user
-const account = await giza.agent.createSmartAccount({
-  origin_wallet: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
-});
+const agent = await giza.createAgent('0x742d35Cc6634C0532925a3b844Bc454e4438f44e');
+console.log('Smart Account:', agent.wallet);
 
 // Activate the agent after the user deposits funds
-await giza.agent.activate({
-  wallet: account.smartAccountAddress,
-  origin_wallet: userWallet,
-  initial_token: USDC_ADDRESS,
-  selected_protocols: ['aave', 'compound'],
-  tx_hash: depositTxHash,
+await agent.activate({
+  owner: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
+  token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+  protocols: ['aave', 'compound'],
+  txHash: depositTxHash,
 });
 
 // Monitor performance
-const { apr } = await giza.agent.getAPR({
-  wallet: account.smartAccountAddress,
-});
+const { apr } = await agent.apr();
 ```
 
 ## Development
@@ -89,7 +85,6 @@ bun run --filter @gizatech/agent-sdk example:optimizer
 - [Integration Methods](./docs/integration-methods.mdx)
 - [Core Concepts](./docs/concepts/overview.mdx)
 - [SDK Reference](./docs/sdk-reference/overview.mdx)
-- [API Reference](./docs/api-reference/client.mdx)
 - [Examples](./docs/examples/basic-usage.mdx)
 
 ## License

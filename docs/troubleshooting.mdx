@@ -76,8 +76,8 @@ GizaAPIError: Smart account not found (404)
 ```
 
 **Solution:**
-1. Create smart account first with `createSmartAccount()`
-2. Verify you're using correct origin wallet
+1. Create smart account first with `giza.createAgent(eoa)`
+2. Verify you're using correct EOA wallet
 3. Check you're querying correct chain
 
 ## Activation Issues
@@ -101,7 +101,7 @@ GizaAPIError: Protocol "xyz" not available for token
 ```
 
 **Solution:**
-1. Use `getProtocols()` to check available protocols
+1. Use `giza.protocols(token)` to check available protocols
 2. Ensure protocol name is spelled correctly
 3. Verify protocol supports your token
 4. Check protocol is active on your chain
@@ -111,8 +111,8 @@ GizaAPIError: Protocol "xyz" not available for token
 **Solution:**
 1. Increase timeout in SDK config:
    ```typescript
-   const giza = new GizaAgent({
-     chainId: Chain.BASE,
+   const giza = new Giza({
+     chain: Chain.BASE,
      timeout: 60000 // 60 seconds
    });
    ```
@@ -128,8 +128,8 @@ GizaAPIError: Protocol "xyz" not available for token
 - Try increasing timeout
 - Enable retry for better reliability:
   ```typescript
-  const giza = new GizaAgent({
-    chainId: Chain.BASE,
+  const giza = new Giza({
+    chain: Chain.BASE,
     enableRetry: true
   });
   ```
@@ -155,13 +155,13 @@ GizaAPIError: Too Many Requests (429)
 - Withdrawals can take 5-15 minutes
 - Protocols may have withdrawal queues
 - Network congestion affects speed
-- Use `pollWithdrawalStatus()` to track progress
+- Use `agent.waitForDeactivation()` to track progress
 - If > 30 minutes, contact support
 
 ### Withdrawal Stuck in "Deactivating"
 
 **Solution:**
-1. Check agent status: `getWithdrawalStatus()`
+1. Check agent status: `agent.status()`
 2. Verify transactions on block explorer
 3. Some protocols have withdrawal delays
 4. Network congestion can slow processing
@@ -194,11 +194,11 @@ Update to latest:
 npm update @gizatech/agent-sdk
 ```
 
-### Verify Chain ID
+### Verify Chain
 
 ```typescript
-console.log('Chain ID:', giza.getChainId());
-console.log('Backend URL:', giza.getBackendUrl());
+console.log('Chain:', giza.getChain());
+console.log('API URL:', giza.getApiUrl());
 ```
 
 ## Getting Help
@@ -208,7 +208,7 @@ If issues persist:
 1. **Check Documentation**: Review relevant docs sections
 2. **Search Issues**: Check GitHub issues for similar problems
 3. **Enable Retry**: Try with `enableRetry: true`
-4. **Collect Info**: 
+4. **Collect Info**:
    - SDK version
    - Node version
    - Error messages
@@ -231,11 +231,11 @@ If issues persist:
 
 ## Best Practices to Avoid Issues
 
-1. ✅ Always validate inputs before SDK calls
-2. ✅ Use try-catch for error handling
-3. ✅ Implement retry logic for network issues
-4. ✅ Cache responses appropriately
-5. ✅ Monitor API health in production
-6. ✅ Keep SDK updated to latest version
-7. ✅ Test on testnet before production
-8. ✅ Handle timeouts gracefully
+1. Always validate inputs before SDK calls
+2. Use try-catch for error handling
+3. Implement retry logic for network issues
+4. Cache responses appropriately
+5. Monitor API health in production
+6. Keep SDK updated to latest version
+7. Test on testnet before production
+8. Handle timeouts gracefully

@@ -14,25 +14,25 @@ graph TB
     subgraph "Partner Application"
         A[Your App]
     end
-    
+
     subgraph "Giza Agent SDK"
-        B[GizaAgent Client]
-        C[Agent Module]
-        D[Optimizer Module]
+        B[Giza Client]
+        C[Agent Class]
+        D[Optimizer]
     end
-    
+
     subgraph "Giza Infrastructure"
         E[Backend API]
         F[Agent Service]
         G[Intelligence-as-a-Service]
     end
-    
+
     subgraph "Blockchain"
         H[Smart Account]
         I[Session Keys]
         J[DeFi Protocols]
     end
-    
+
     A --> B
     B --> C
     B --> D
@@ -119,15 +119,15 @@ sequenceDiagram
     participant Agent as Agent Service
     participant SA as Smart Account
     participant Protocol as DeFi Protocol
-    
-    App->>SDK: createSmartAccount(origin_wallet)
+
+    App->>SDK: createAgent(eoa)
     SDK->>API: POST /smart-accounts
     API-->>SDK: smartAccountAddress
-    SDK-->>App: SmartAccountInfo
-    
+    SDK-->>App: Agent handle
+
     Note over App: User deposits to smart account
-    
-    App->>SDK: activate(wallet, protocols, tx_hash)
+
+    App->>SDK: agent.activate({owner, token, protocols, txHash})
     SDK->>API: POST /wallets (activate)
     API->>Agent: Initialize agent
     Agent->>SA: Setup session keys
@@ -135,7 +135,7 @@ sequenceDiagram
     Agent-->>API: Agent activated
     API-->>SDK: ActivateResponse
     SDK-->>App: Success
-    
+
     loop Every optimization cycle
         Agent->>Protocol: Check APRs
         Protocol-->>Agent: Current rates
@@ -173,7 +173,7 @@ When activating agents, you can specify **constraints** to control behavior:
 | `exclude_protocol` | Blacklist specific protocols |
 | `min_amount` | Minimum allocation per protocol |
 
-<Card title="API Reference" icon="code" href="/sdk-reference/agent/activate">
+<Card title="API Reference" icon="code" href="/sdk-reference/agent/lifecycle">
   See activate() for constraint examples
 </Card>
 
@@ -181,8 +181,8 @@ When activating agents, you can specify **constraints** to control behavior:
 
 Giza charges a **performance fee** on earned yield. Fees are automatically deducted from earnings - users always get back at least their principal.
 
-<Card title="API Reference" icon="code" href="/sdk-reference/agent/get-fees">
-  See getFees() for details
+<Card title="API Reference" icon="code" href="/sdk-reference/agent/withdrawals">
+  See withdraw methods for details
 </Card>
 
 ## Next Steps

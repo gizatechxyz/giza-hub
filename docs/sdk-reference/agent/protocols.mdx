@@ -1,0 +1,259 @@
+---
+title: Protocols & Constraints
+description: 'Manage protocol selection, allocation constraints, and whitelist for an agent'
+---
+
+## Overview
+
+The Agent class provides methods for managing which DeFi protocols an agent can allocate to and what constraints govern those allocations. These are wallet-scoped operations that apply to a specific smart account.
+
+<Note>
+There are two levels of protocol queries in the SDK:
+
+- **`giza.protocols(token)`** -- Chain-level query on the `Giza` client. Returns active protocol names for a given token across the chain.
+- **`agent.protocols()`** -- Wallet-scoped query on the `Agent` instance. Returns full `Protocol` objects configured for this specific agent.
+</Note>
+
+---
+
+## protocols()
+
+Get the full list of protocols configured for this agent's smart account, including metadata like TVL, APR, and pool information.
+
+### Signature
+
+```typescript
+protocols(): Promise<Protocol[]>
+```
+
+### Returns
+
+`Promise<Protocol[]>`
+
+### Protocol Type
+
+```typescript
+interface Protocol {
+  name: string;
+  is_active: boolean;
+  description: string;
+  tvl: number;
+  apr: number | null;
+  pools: ProtocolPool[] | null;
+  created_at: string;
+  updated_at: string | null;
+  chain_id: number;
+  parent_protocol: string;
+  link: string;
+  address: string | null;
+  agent_token: string | null;
+  title: string | null;
+}
+
+interface ProtocolPool {
+  name: string;
+  apy: number;
+}
+```
+
+### Examples
+
+```typescript
+import { Giza, Chain } from '@gizatech/agent-sdk';
+
+const giza = new Giza({ chain: Chain.BASE });
+const agent = giza.agent('0xYourSmartAccountAddress');
+
+const protocols = await agent.protocols();
+
+for (const protocol of protocols) {
+  console.log(`${protocol.name} (active: ${protocol.is_active})`);
+  console.log(`  TVL: $${protocol.tvl}`);
+  console.log(`  APR: ${protocol.apr ?? 'N/A'}%`);
+
+  if (protocol.pools) {
+    for (const pool of protocol.pools) {
+      console.log(`  Pool: ${pool.name} - APY: ${pool.apy}%`);
+    }
+  }
+}
+```
+
+---
+
+## updateProtocols()
+
+Update the list of protocols the agent is allowed to allocate to. At least one protocol must be provided.
+
+### Signature
+
+```typescript
+updateProtocols(protocols: string[]): Promise<void>
+```
+
+### Parameters
+
+<ParamField path="protocols" type="string[]" required>
+  Array of protocol names to enable for this agent. Must contain at least one entry.
+</ParamField>
+
+### Errors
+
+- **`ValidationError`**: Thrown if the protocols array is empty.
+
+### Examples
+
+```typescript
+// Update to use Aave and Morpho
+await agent.updateProtocols(['aave', 'morpho']);
+
+// Verify the update
+const updated = await agent.protocols();
+const activeNames = updated
+  .filter((p) => p.is_active)
+  .map((p) => p.name);
+console.log('Active protocols:', activeNames);
+```
+
+---
+
+## constraints()
+
+Get the current allocation constraints for this agent.
+
+### Signature
+
+```typescript
+constraints(): Promise<ConstraintConfig[]>
+```
+
+### Returns
+
+`Promise<ConstraintConfig[]>`
+
+### ConstraintConfig Type
+
+```typescript
+interface ConstraintConfig {
+  kind: string;
+  params: Record<string, unknown>;
+}
+```
+
+The `kind` field corresponds to one of the constraint types. Common constraint kinds include:
+
+| Kind | Description | Params |
+|------|-------------|--------|
+| `min_protocols` | Minimum number of protocols to allocate across | `{ min_protocols: number }` |
+| `max_allocation_amount_per_protocol` | Maximum percentage per protocol | `{ max_allocation: number }` |
+| `max_amount_per_protocol` | Maximum absolute amount per protocol | `{ max_amount: number }` |
+| `min_amount` | Minimum allocation amount | `{ min_amount: number }` |
+| `exclude_protocol` | Exclude a protocol from allocation | `{ protocol: string }` |
+| `min_allocation_amount_per_protocol` | Minimum allocation per protocol | `{ min_allocation: number }` |
+
+### Examples
+
+```typescript
+const constraints = await agent.constraints();
+
+for (const constraint of constraints) {
+  console.log(`${constraint.kind}:`, constraint.params);
+}
+```
+
+---
+
+## updateConstraints()
+
+Replace the allocation constraints for this agent.
+
+### Signature
+
+```typescript
+updateConstraints(constraints: ConstraintConfig[]): Promise<void>
+```
+
+### Parameters
+
+<ParamField path="constraints" type="ConstraintConfig[]" required>
+  Array of constraint configurations to apply to the agent.
+</ParamField>
+
+### Examples
+
+```typescript
+await agent.updateConstraints([
+  {
+    kind: 'max_allocation_amount_per_protocol',
+    params: { max_allocation: 50 },
+  },
+  {
+    kind: 'min_protocols',
+    params: { min_protocols: 2 },
+  },
+  {
+    kind: 'exclude_protocol',
+    params: { protocol: 'compound' },
+  },
+]);
+
+// Verify
+const updated = await agent.constraints();
+console.log('Constraints:', updated);
+```
+
+---
+
+## whitelist()
+
+Get the whitelist configuration for this agent's smart account.
+
+### Signature
+
+```typescript
+whitelist(): Promise<unknown>
+```
+
+### Returns
+
+`Promise<unknown>` -- the whitelist data structure varies by configuration.
+
+### Examples
+
+```typescript
+const wl = await agent.whitelist();
+console.log('Whitelist:', wl);
+```
+
+---
+
+## Chain-Level vs. Wallet-Scoped Protocols
+
+The SDK provides protocol queries at two levels. Here is how they differ:
+
+<CodeGroup>
+
+```typescript Chain-level (Giza client)
+import { Giza, Chain } from '@gizatech/agent-sdk';
+
+const giza = new Giza({ chain: Chain.BASE });
+
+// Returns active protocol names for USDC on Base
+const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+const { protocols } = await giza.protocols(USDC);
+console.log(protocols); // ['aave', 'morpho', 'moonwell', ...]
+```
+
+```typescript Wallet-scoped (Agent instance)
+const agent = giza.agent('0xYourSmartAccountAddress');
+
+// Returns full Protocol objects for this agent
+const protocols = await agent.protocols();
+for (const p of protocols) {
+  console.log(p.name, p.tvl, p.apr);
+}
+```
+
+</CodeGroup>
+
+Use the chain-level query to discover available protocols for a token. Use the wallet-scoped query to inspect and manage the protocols configured for a specific agent.

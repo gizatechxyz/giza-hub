@@ -52,15 +52,14 @@ The Optimizer is **completely stateless** - no data stored, no side effects. Eac
 
 ```typescript
 {
-  chainId: Chain.BASE,
-  total_capital: "1000000000",           // Your total capital
-  token_address: USDC_ADDRESS,           // Token you're optimizing
-  current_allocations: {                 // Current state
-    aave: "500000000",
-    compound: "500000000"
+  token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',  // Token you're optimizing
+  capital: '1000000000',                   // Your total capital
+  currentAllocations: {                    // Current state
+    aave: '500000000',
+    compound: '500000000'
   },
-  protocols: ["aave", "compound", "moonwell"],  // Protocols to consider
-  constraints: [...]                     // Optional constraints
+  protocols: ['aave', 'compound', 'moonwell'],  // Protocols to consider
+  constraints: [...]                       // Optional constraints
 }
 ```
 
@@ -97,21 +96,20 @@ The Optimizer is **completely stateless** - no data stored, no side effects. Eac
 ## Integration Example
 
 ```typescript
-import { GizaAgent, Chain, WalletConstraints } from '@gizatech/agent-sdk';
+import { Giza, Chain, WalletConstraints } from '@gizatech/agent-sdk';
 
-const giza = new GizaAgent({ chainId: Chain.BASE });
+const giza = new Giza({ chain: Chain.BASE });
 
 async function getOptimalAllocation() {
   // Call optimizer
-  const result = await giza.optimizer.optimize({
-    chainId: Chain.BASE,
-    total_capital: "1000000000",
-    token_address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-    current_allocations: {
-      aave: "600000000",
-      compound: "400000000"
+  const result = await giza.optimize({
+    token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+    capital: '1000000000',
+    currentAllocations: {
+      aave: '600000000',
+      compound: '400000000'
     },
-    protocols: ["aave", "compound", "moonwell", "seamless"],
+    protocols: ['aave', 'compound', 'moonwell', 'seamless'],
     constraints: [
       {
         kind: WalletConstraints.MIN_PROTOCOLS,
@@ -121,7 +119,7 @@ async function getOptimalAllocation() {
   });
 
   console.log(`APR improvement: +${result.optimization_result.apr_improvement}%`);
-  
+
   // Decide whether to execute based on YOUR logic
   if (result.optimization_result.apr_improvement > 0.5) {
     // Execute with YOUR infrastructure

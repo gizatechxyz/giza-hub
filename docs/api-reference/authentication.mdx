@@ -172,19 +172,20 @@ This occurs when:
 The [TypeScript SDK](/sdk-reference/overview) handles authentication automatically:
 
 ```typescript
-import { GizaAgent, Chain } from '@gizatech/agent-sdk';
+import { Giza, Chain } from '@gizatech/agent-sdk';
 
 // SDK reads from environment variables:
 // - GIZA_API_KEY
 // - GIZA_PARTNER_NAME
 // - GIZA_API_URL
 
-const giza = new GizaAgent({
-  chainId: Chain.BASE,
+const giza = new Giza({
+  chain: Chain.BASE,
 });
 
 // Authentication headers are added automatically
-await giza.agent.activate({...});
+const agent = await giza.createAgent('0x...');
+await agent.activate({...});
 ```
 
 <Card title="SDK Overview" icon="code" href="/sdk-reference/overview">

@@ -1,0 +1,283 @@
+---
+title: Transactions & Executions
+description: 'Paginated access to transaction history, execution records, and agent logs'
+---
+
+## Overview
+
+The Agent class provides paginated methods for querying transaction history, execution records, and logs. Each method returns a [`Paginator`](/sdk-reference/paginator) instance that supports async iteration, page-based access, and convenience helpers.
+
+## transactions()
+
+Returns a paginator over the agent's on-chain transactions, sorted by date.
+
+### Signature
+
+```typescript
+transactions(options?: PaginationOptions): Paginator<Transaction>
+```
+
+### Parameters
+
+<ParamField path="options" type="PaginationOptions">
+  Optional pagination and sorting configuration.
+  <ParamField path="options.limit" type="number">
+    Items per page. Defaults to `20`.
+  </ParamField>
+  <ParamField path="options.sort" type="string">
+    Sort order. Use `SortOrder.DATE_ASC` or `SortOrder.DATE_DESC`.
+  </ParamField>
+</ParamField>
+
+### Returns
+
+`Paginator<Transaction>` -- an async-iterable paginator yielding `Transaction` objects.
+
+### Transaction Type
+
+```typescript
+interface Transaction {
+  action: TxAction;
+  date: string;
+  amount: number;
+  amount_out?: number;
+  token_type: string;
+  status: TxStatus;
+  transaction_hash?: string;
+  protocol?: string;
+  new_token?: string;
+  correlation_id?: string;
+  apr?: number;
+  block_number?: number;
+}
+
+enum TxAction {
+  UNKNOWN = 'unknown',
+  APPROVE = 'approve',
+  DEPOSIT = 'deposit',
+  TRANSFER = 'transfer',
+  BRIDGE = 'bridge',
+  WITHDRAW = 'withdraw',
+  SWAP = 'swap',
+  REFILL_GAS_TANK = 'refill_gas_tank',
+  WRAP = 'wrap',
+  UNWRAP = 'unwrap',
+  FEE_TRANSFER = 'fee_transfer',
+}
+
+enum TxStatus {
+  UNKNOWN = 'unknown',
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  CANCELLED = 'cancelled',
+  FAILED = 'failed',
+}
+```
+
+### Examples
+
+<CodeGroup>
+
+```typescript Async iteration
+import { Giza, Chain, SortOrder } from '@gizatech/agent-sdk';
+
+const giza = new Giza({ chain: Chain.BASE });
+const agent = giza.agent('0xYourSmartAccountAddress');
+
+for await (const tx of agent.transactions({ sort: SortOrder.DATE_DESC })) {
+  console.log(tx.date, tx.action, tx.amount, tx.token_type);
+}
+```
+
+```typescript First N items
+const recentTxs = await agent.transactions({
+  sort: SortOrder.DATE_DESC,
+}).first(5);
+
+for (const tx of recentTxs) {
+  console.log(`${tx.action}: ${tx.amount} ${tx.token_type}`);
+}
+```
+
+```typescript Specific page
+const page2 = await agent.transactions().page(2, { limit: 25 });
+
+console.log(`Page ${page2.page}, total: ${page2.total}`);
+for (const tx of page2.items) {
+  console.log(tx.transaction_hash, tx.status);
+}
+```
+
+</CodeGroup>
+
+---
+
+## executions()
+
+Returns a paginator over the agent's execution records. Each execution contains a list of transactions that were part of that run.
+
+### Signature
+
+```typescript
+executions(options?: PaginationOptions): Paginator<ExecutionWithTransactionsDTO>
+```
+
+### Parameters
+
+<ParamField path="options" type="PaginationOptions">
+  Optional pagination and sorting configuration.
+  <ParamField path="options.limit" type="number">
+    Items per page. Defaults to `20`.
+  </ParamField>
+  <ParamField path="options.sort" type="string">
+    Sort order. Use `SortOrder.DATE_ASC` or `SortOrder.DATE_DESC`.
+  </ParamField>
+</ParamField>
+
+### Returns
+
+`Paginator<ExecutionWithTransactionsDTO>`
+
+### ExecutionWithTransactionsDTO Type
+
+```typescript
+interface ExecutionWithTransactionsDTO {
+  id: string;
+  execution_plan: unknown;
+  execution_type: string;
+  status: ExecutionStatus;
+  created_at: string;
+  transactions: Transaction[];
+}
+
+enum ExecutionStatus {
+  RUNNING = 'running',
+  FAILED = 'failed',
+  SUCCESS = 'success',
+}
+```
+
+### Examples
+
+```typescript
+const recentExecutions = await agent.executions({
+  sort: SortOrder.DATE_DESC,
+}).first(10);
+
+for (const exec of recentExecutions) {
+  console.log(`Execution ${exec.id}: ${exec.status}`);
+  console.log(`  Type: ${exec.execution_type}`);
+  console.log(`  Transactions: ${exec.transactions.length}`);
+}
+```
+
+---
+
+## executionLogs()
+
+Returns a paginator over the logs for a specific execution.
+
+### Signature
+
+```typescript
+executionLogs(
+  executionId: string,
+  options?: PaginationOptions
+): Paginator<LogDTO>
+```
+
+### Parameters
+
+<ParamField path="executionId" type="string" required>
+  The execution ID to fetch logs for.
+</ParamField>
+
+<ParamField path="options" type="PaginationOptions">
+  Optional pagination configuration.
+  <ParamField path="options.limit" type="number">
+    Items per page. Defaults to `20`.
+  </ParamField>
+</ParamField>
+
+### Returns
+
+`Paginator<LogDTO>`
+
+### LogDTO Type
+
+```typescript
+interface LogDTO {
+  type: string;
+  data: unknown;
+}
+```
+
+### Examples
+
+```typescript
+const executions = await agent.executions().first(1);
+const latestExec = executions[0];
+
+if (latestExec) {
+  for await (const log of agent.executionLogs(latestExec.id)) {
+    console.log(`[${log.type}]`, log.data);
+  }
+}
+```
+
+---
+
+## logs()
+
+Returns a paginator over all logs for the agent, across all executions.
+
+### Signature
+
+```typescript
+logs(options?: PaginationOptions): Paginator<LogDTO>
+```
+
+### Parameters
+
+<ParamField path="options" type="PaginationOptions">
+  Optional pagination configuration.
+  <ParamField path="options.limit" type="number">
+    Items per page. Defaults to `20`.
+  </ParamField>
+</ParamField>
+
+### Returns
+
+`Paginator<LogDTO>`
+
+### Examples
+
+```typescript
+const recentLogs = await agent.logs().first(50);
+
+for (const log of recentLogs) {
+  console.log(`[${log.type}]`, JSON.stringify(log.data));
+}
+```
+
+---
+
+## PaginationOptions
+
+All paginated methods accept the same options object.
+
+```typescript
+interface PaginationOptions {
+  limit?: number;
+  sort?: string;
+}
+
+enum SortOrder {
+  DATE_ASC = 'date_asc',
+  DATE_DESC = 'date_desc',
+}
+```
+
+<Info>
+All paginated methods return a [`Paginator`](/sdk-reference/paginator) instance. See the [Paginator reference](/sdk-reference/paginator) for the full API including async iteration, `.page()`, and `.first()`.
+</Info>

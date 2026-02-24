@@ -1,0 +1,236 @@
+---
+title: Paginator
+description: 'Async-iterable pagination utility for collection methods'
+---
+
+## Overview
+
+`Paginator<T>` is an async-iterable class returned by all collection methods on the `Agent` class (transactions, executions, logs, rewards). It provides three ways to consume paginated API results:
+
+1. **Async iteration** with `for await...of` -- automatically pages through all results.
+2. **`.first(count)`** -- fetch the first N items as an array.
+3. **`.page(num, opts)`** -- fetch a specific page with metadata.
+
+You never construct a `Paginator` directly. It is returned by agent methods like `agent.transactions()`, `agent.executions()`, `agent.rewards()`, and others.
+
+```typescript
+import { Giza, Chain } from '@gizatech/agent-sdk';
+
+const giza = new Giza({ chain: Chain.BASE });
+const agent = giza.agent('0xYourSmartAccountAddress');
+
+// Each of these returns a Paginator instance
+const txPaginator = agent.transactions();
+const execPaginator = agent.executions();
+const logPaginator = agent.logs();
+const rewardPaginator = agent.rewards();
+```
+
+---
+
+## Usage Patterns
+
+### Pattern 1: Async Iteration
+
+The paginator implements `AsyncIterable<T>`, so you can use `for await...of` to iterate over all items across all pages. The paginator automatically fetches subsequent pages as needed.
+
+```typescript
+for await (const tx of agent.transactions()) {
+  console.log(tx.action, tx.amount);
+}
+```
+
+<Warning>
+Async iteration fetches all pages sequentially. For large datasets, consider using `.first()` or `.page()` to limit the amount of data retrieved.
+</Warning>
+
+### Pattern 2: First N Items
+
+Use `.first(count)` to get an array of the first N items. This fetches only the pages needed to fulfill the request.
+
+```typescript
+import { SortOrder } from '@gizatech/agent-sdk';
+
+const recent = await agent.transactions({
+  sort: SortOrder.DATE_DESC,
+}).first(5);
+
+for (const tx of recent) {
+  console.log(`${tx.date}: ${tx.action} ${tx.amount} ${tx.token_type}`);
+}
+```
+
+When called without an argument, `.first()` returns the first page of items using the configured page size.
+
+```typescript
+// Returns up to 20 items (default page size)
+const firstPage = await agent.transactions().first();
+```
+
+### Pattern 3: Specific Page
+
+Use `.page(num, opts)` to fetch a specific page and get pagination metadata alongside the items.
+
+```typescript
+const page2 = await agent.transactions().page(2, { limit: 25 });
+
+console.log(`Page ${page2.page} of ${Math.ceil(page2.total / page2.limit)}`);
+console.log(`Total items: ${page2.total}`);
+console.log(`Has more: ${page2.hasMore}`);
+
+for (const tx of page2.items) {
+  console.log(tx.transaction_hash);
+}
+```
+
+---
+
+## Class Reference
+
+### Paginator&lt;T&gt;
+
+```typescript
+class Paginator<T> implements AsyncIterable<T> {
+  async *[Symbol.asyncIterator](): AsyncIterableIterator<T>;
+  async page(num: number, opts?: { limit?: number }): Promise<PaginatedResponse<T>>;
+  async first(count?: number): Promise<T[]>;
+}
+```
+
+### [Symbol.asyncIterator]()
+
+Enables `for await...of` iteration. Automatically fetches pages until all items have been yielded.
+
+**Returns**: `AsyncIterableIterator<T>`
+
+### page()
+
+Fetch a specific page of results with pagination metadata.
+
+<ParamField path="num" type="number" required>
+  The 1-based page number to fetch.
+</ParamField>
+
+<ParamField path="opts" type="{ limit?: number }">
+  Optional override for the page size.
+  <ParamField path="opts.limit" type="number">
+    Number of items per page. Defaults to the limit configured when the paginator was created (typically `20`).
+  </ParamField>
+</ParamField>
+
+**Returns**: `Promise<PaginatedResponse<T>>`
+
+### first()
+
+Fetch the first N items as an array.
+
+<ParamField path="count" type="number">
+  Number of items to return. When omitted, returns the first page using the configured page size.
+</ParamField>
+
+**Returns**: `Promise<T[]>`
+
+---
+
+## PaginatedResponse&lt;T&gt;
+
+The response object returned by `.page()`.
+
+```typescript
+interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `items` | `T[]` | The items on this page |
+| `total` | `number` | Total number of items across all pages |
+| `page` | `number` | Current page number (1-based) |
+| `limit` | `number` | Items per page |
+| `hasMore` | `boolean` | Whether there are more pages after this one |
+
+---
+
+## PageFetcher&lt;T&gt;
+
+The internal type for the function that fetches a page of results. This is used internally by the SDK and is not needed for normal usage.
+
+```typescript
+type PageFetcher<T> = (
+  page: number,
+  limit: number,
+) => Promise<PaginatedResponse<T>>;
+```
+
+---
+
+## Methods That Return Paginators
+
+The following `Agent` methods return `Paginator` instances:
+
+| Method | Item Type | Reference |
+|--------|-----------|-----------|
+| `agent.transactions()` | `Transaction` | [Transactions](/sdk-reference/agent/transactions) |
+| `agent.executions()` | `ExecutionWithTransactionsDTO` | [Transactions](/sdk-reference/agent/transactions) |
+| `agent.executionLogs(id)` | `LogDTO` | [Transactions](/sdk-reference/agent/transactions) |
+| `agent.logs()` | `LogDTO` | [Transactions](/sdk-reference/agent/transactions) |
+| `agent.rewards()` | `RewardDTO` | [Rewards](/sdk-reference/agent/rewards) |
+| `agent.rewardHistory()` | `RewardDTO` | [Rewards](/sdk-reference/agent/rewards) |
+
+All accept an optional `PaginationOptions` parameter:
+
+```typescript
+interface PaginationOptions {
+  limit?: number;
+  sort?: string;
+}
+```
+
+---
+
+## Building a Paginated UI
+
+This example shows how to use `.page()` to build a paginated list with navigation.
+
+```typescript
+import { Giza, Chain, SortOrder } from '@gizatech/agent-sdk';
+
+const giza = new Giza({ chain: Chain.BASE });
+const agent = giza.agent('0xYourSmartAccountAddress');
+
+const PAGE_SIZE = 10;
+let currentPage = 1;
+
+async function loadPage(pageNum: number) {
+  const result = await agent.transactions({
+    sort: SortOrder.DATE_DESC,
+  }).page(pageNum, { limit: PAGE_SIZE });
+
+  const totalPages = Math.ceil(result.total / result.limit);
+
+  return {
+    items: result.items,
+    page: result.page,
+    totalPages,
+    total: result.total,
+    hasNext: result.hasMore,
+    hasPrev: result.page > 1,
+  };
+}
+
+// Load first page
+const page1 = await loadPage(1);
+console.log(`Showing page ${page1.page} of ${page1.totalPages}`);
+console.log(`${page1.total} total transactions`);
+
+// Load next page
+if (page1.hasNext) {
+  const page2 = await loadPage(2);
+  console.log(`Showing page ${page2.page} of ${page2.totalPages}`);
+}
+```

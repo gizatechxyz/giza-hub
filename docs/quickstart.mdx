@@ -23,10 +23,10 @@ graph TB
     E --> F2[Compound]
     E --> F3[Moonwell]
     E --> F4[Other Protocols]
-    
+
     G[User] -->|Deposit| E
     G -->|Monitor| A
-    A -->|Performance Data| G    
+    A -->|Performance Data| G
 ```
 
 ## Prerequisites
@@ -34,20 +34,20 @@ graph TB
 <AccordionGroup>
   <Accordion title="Node.js 18+">
     Check your version: `node --version`
-    
+
     Download from [nodejs.org](https://nodejs.org/) if needed.
   </Accordion>
-  
+
   <Accordion title="TypeScript Project">
     The SDK is built for TypeScript. JavaScript works too, but you'll miss out on type safety.
   </Accordion>
-  
+
   <Accordion title="Giza API Credentials">
     You'll need:
     - `GIZA_API_KEY` - Your partner API key
     - `GIZA_API_URL` - Giza backend URL
     - `GIZA_PARTNER_NAME` - Your partner identifier
-    
+
     <Card title="Get API Keys" icon="key" href="https://www.gizatech.xyz/">
       Contact Giza to obtain your credentials
     </Card>
@@ -91,11 +91,11 @@ Never commit your `.env` file to version control! Add it to `.gitignore`.
 ### Step 1: Initialize the SDK
 
 ```typescript
-import { GizaAgent, Chain } from '@gizatech/agent-sdk';
+import { Giza, Chain } from '@gizatech/agent-sdk';
 
 // Initialize once, reuse throughout your app
-const giza = new GizaAgent({
-  chainId: Chain.BASE,
+const giza = new Giza({
+  chain: Chain.BASE,
   timeout: 60000,      // Optional: 60s timeout
   enableRetry: true,   // Optional: retry failed requests
 });
@@ -106,20 +106,18 @@ const giza = new GizaAgent({
 Generate a smart account for your user. This is where they'll deposit funds.
 
 ```typescript
-async function onboardUser(userWallet: string) {
-  const account = await giza.agent.createSmartAccount({
-    origin_wallet: userWallet as `0x${string}`,
-  });
+async function onboardUser(userWallet: `0x${string}`) {
+  const agent = await giza.createAgent(userWallet);
 
-  console.log('Smart Account:', account.smartAccountAddress);
+  console.log('Smart Account:', agent.wallet);
   console.log('Deposit funds to this address');
-  
-  return account;
+
+  return agent;
 }
 ```
 
 <Tip>
-The smart account address is **deterministic** - calling `createSmartAccount` with the same `origin_wallet` always returns the same address.
+The smart account address is **deterministic** - calling `giza.createAgent` with the same EOA always returns the same address.
 </Tip>
 
 ### Step 3: Get Available Protocols
@@ -129,7 +127,7 @@ Check which DeFi protocols are available for the token you want to optimize:
 ```typescript
 const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 
-const { protocols } = await giza.agent.getProtocols(USDC_BASE);
+const { protocols } = await giza.protocols(USDC_BASE);
 
 console.log('Available protocols:', protocols);
 // ['aave', 'compound', 'moonwell', 'fluid', ...]
@@ -139,7 +137,7 @@ console.log('Available protocols:', protocols);
 
 <Steps>
   <Step title="User sends tokens to smart account">
-    User transfers USDC (or supported token) to the `smartAccountAddress` from Step 2.
+    User transfers USDC (or supported token) to the `agent.wallet` address from Step 2.
   </Step>
   <Step title="Wait for confirmation">
     Wait for the transaction to be confirmed on-chain.
@@ -149,7 +147,7 @@ console.log('Available protocols:', protocols);
 ```typescript
 // Example: User deposits via your UI
 const depositTxHash = await userWallet.sendTransaction({
-  to: account.smartAccountAddress,
+  to: agent.wallet,
   value: parseUnits('1000', 6), // 1000 USDC (6 decimals)
 });
 ```
@@ -159,12 +157,11 @@ const depositTxHash = await userWallet.sendTransaction({
 After the user deposits, activate the agent to start optimization:
 
 ```typescript
-const activation = await giza.agent.activate({
-  wallet: account.smartAccountAddress,
-  origin_wallet: userWallet,
-  initial_token: USDC_BASE,
-  selected_protocols: ['aave', 'compound', 'moonwell'],
-  tx_hash: depositTxHash, // Optional but recommended
+await agent.activate({
+  owner: userWallet,
+  token: USDC_BASE,
+  protocols: ['aave', 'compound', 'moonwell'],
+  txHash: depositTxHash,
   constraints: [
     {
       kind: 'min_protocols',
@@ -172,8 +169,6 @@ const activation = await giza.agent.activate({
     }
   ]
 });
-
-console.log(activation.message);
 ```
 
 <Info>
@@ -190,26 +185,19 @@ Track the agent's performance:
 
 ```typescript
 // Get current portfolio status
-const portfolio = await giza.agent.getPortfolio({
-  wallet: account.smartAccountAddress,
-});
+const info = await agent.portfolio();
 
-console.log('Status:', portfolio.status);
-console.log('Protocols:', portfolio.selected_protocols);
+console.log('Status:', info.status);
 
 // Get APR
-const { apr } = await giza.agent.getAPR({
-  wallet: account.smartAccountAddress,
-});
+const { apr } = await agent.apr();
 
 console.log(`Current APR: ${apr.toFixed(2)}%`);
 
 // Get performance history
-const performance = await giza.agent.getPerformance({
-  wallet: account.smartAccountAddress,
-});
+const { performance } = await agent.performance();
 
-performance.performance.forEach(point => {
+performance.forEach(point => {
   console.log(`${point.date}: $${point.value_in_usd}`);
 });
 ```
@@ -222,34 +210,21 @@ Users can withdraw partially or fully at any time:
   <Tab title="Full Withdrawal">
     ```typescript
     // Withdraw everything and deactivate agent
-    await giza.agent.withdraw({
-      wallet: account.smartAccountAddress,
-      transfer: true, // Transfer to origin wallet
+    await agent.withdraw();
+
+    // Wait for completion
+    await agent.waitForDeactivation({
+      interval: 5000,
+      timeout: 300000,
+      onUpdate: (status) => console.log('Status:', status),
     });
-
-    // Poll for completion
-    const finalStatus = await giza.agent.pollWithdrawalStatus(
-      account.smartAccountAddress,
-      {
-        interval: 5000,
-        timeout: 300000,
-        onUpdate: (status) => console.log('Status:', status),
-      }
-    );
-
-    console.log('Withdrawal complete:', finalStatus.status);
     ```
   </Tab>
-  
+
   <Tab title="Partial Withdrawal">
     ```typescript
     // Withdraw specific amount, agent stays active
-    const withdrawal = await giza.agent.withdraw({
-      wallet: account.smartAccountAddress,
-      amount: '500000000', // 500 USDC (6 decimals)
-    });
-
-    console.log('Withdrawn:', withdrawal.total_value);
+    await agent.withdraw('500000000'); // 500 USDC (6 decimals)
     // Agent continues optimizing remaining balance
     ```
   </Tab>
@@ -260,27 +235,19 @@ Users can withdraw partially or fully at any time:
 ### Top-Up Active Agent
 
 ```typescript
-await giza.agent.topUp({
-  wallet: smartAccountAddress,
-  tx_hash: newDepositTxHash,
-});
+await agent.topUp(newDepositTxHash);
 ```
 
 ### Update Protocols
 
 ```typescript
-await giza.agent.updateProtocols(
-  smartAccountAddress,
-  ['aave', 'compound', 'moonwell', 'fluid']
-);
+await agent.updateProtocols(['aave', 'compound', 'moonwell', 'fluid']);
 ```
 
 ### Manual Rebalance
 
 ```typescript
-const result = await giza.agent.run({
-  wallet: smartAccountAddress
-});
+await agent.run();
 ```
 
 ## Error Handling
@@ -291,9 +258,7 @@ Always wrap SDK calls in try-catch blocks:
 import { ValidationError, GizaAPIError, TimeoutError } from '@gizatech/agent-sdk';
 
 try {
-  const account = await giza.agent.createSmartAccount({
-    origin_wallet: userWallet,
-  });
+  const agent = await giza.createAgent(userWallet);
 } catch (error) {
   if (error instanceof ValidationError) {
     console.error('Invalid input:', error.message);
@@ -318,21 +283,21 @@ try {
     - You're loading it (e.g., `dotenv` package)
     - Variable names match exactly: `GIZA_API_KEY`, `GIZA_API_URL`, `GIZA_PARTNER_NAME`
   </Accordion>
-  
+
   <Accordion title="ValidationError: invalid address">
     Addresses must:
     - Start with `0x`
     - Be 42 characters long (0x + 40 hex chars)
     - Use valid hex characters (0-9, a-f, A-F)
   </Accordion>
-  
+
   <Accordion title="API returns 401 Unauthorized">
     Check:
     - API key is correct and active
     - Partner name matches your registration
     - API URL is correct
   </Accordion>
-  
+
   <Accordion title="Agent activation fails">
     Ensure:
     - Smart account has received the deposit

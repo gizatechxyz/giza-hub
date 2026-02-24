@@ -6,25 +6,23 @@ description: 'Advanced usage patterns and techniques'
 ## Custom Rebalancing Strategy
 
 ```typescript
+import { Giza, Chain } from '@gizatech/agent-sdk';
+import type { Agent } from '@gizatech/agent-sdk';
+
 class CustomStrategy {
-  constructor(private giza: GizaAgent) {}
-  
-  async shouldRebalance(address: string): Promise<boolean> {
-    // Get current performance
-    const { performance } = await this.giza.agent.getPerformance({
-      wallet: address
-    });
-    
-    // Custom logic: only rebalance if been > 24 hours
+  constructor(private giza: Giza) {}
+
+  async shouldRebalance(agent: Agent): Promise<boolean> {
+    const { performance } = await agent.performance();
     const lastPoint = performance[performance.length - 1];
-    const hoursSinceUpdate = (Date.now() - new Date(lastPoint.date).getTime()) / 3600000;
-    
+    const hoursSinceUpdate =
+      (Date.now() - new Date(lastPoint.date).getTime()) / 3600000;
     return hoursSinceUpdate > 24;
   }
-  
-  async run(address: string) {
-    if (await this.shouldRebalance(address)) {
-      await this.giza.agent.run({ wallet: address });
+
+  async run(agent: Agent) {
+    if (await this.shouldRebalance(agent)) {
+      await agent.run();
     }
   }
 }
@@ -33,88 +31,88 @@ class CustomStrategy {
 ## Multi-Chain Management
 
 ```typescript
-const baseGiza = new GizaAgent({ chainId: Chain.BASE });
-const arbGiza = new GizaAgent({ chainId: Chain.ARBITRUM });
+import { Giza, Chain } from '@gizatech/agent-sdk';
 
-// User has accounts on both chains
-const accounts = await Promise.all([
-  baseGiza.agent.createSmartAccount({ origin_wallet: userWallet }),
-  arbGiza.agent.createSmartAccount({ origin_wallet: userWallet })
+const baseGiza = new Giza({ chain: Chain.BASE });
+const arbGiza = new Giza({ chain: Chain.ARBITRUM });
+
+const baseAgent = await baseGiza.createAgent(userWallet);
+const arbAgent = await arbGiza.createAgent(userWallet);
+
+const [baseApr, arbApr] = await Promise.all([
+  baseAgent.apr(),
+  arbAgent.apr(),
 ]);
 
-// Get combined performance
-const basePerf = await baseGiza.agent.getAPR({ wallet: accounts[0].smartAccountAddress });
-const arbPerf = await arbGiza.agent.getAPR({ wallet: accounts[1].smartAccountAddress });
-
-console.log('Total APR:', (basePerf.apr + arbPerf.apr) / 2);
+console.log('Base APR:', baseApr.apr);
+console.log('Arbitrum APR:', arbApr.apr);
 ```
 
 ## Constraint-Based Risk Management
 
 ```typescript
-await giza.agent.activate({
-  wallet: smartAccountAddress,
-  origin_wallet: userWallet,
-  initial_token: USDC,
-  selected_protocols: ['aave', 'compound', 'moonwell', 'seamless'],
+await agent.activate({
+  owner: userWallet,
+  token: USDC,
+  protocols: ['aave', 'compound', 'moonwell', 'fluid'],
+  txHash: depositTxHash,
   constraints: [
-    // Diversification
     { kind: 'min_protocols', params: { min_protocols: 3 } },
-    // Risk limits
-    { kind: 'max_amount_per_protocol', params: { max_amount: '5000000000' } },
-    // Conservative on newer protocols
-    { kind: 'max_allocation_amount_per_protocol', params: {
-      protocol: 'seamless',
-      max_amount: '1000000000'
-    }},
-    // Avoid dust allocations
-    { kind: 'min_amount', params: { min_amount: '100000000' } }
-  ]
+    {
+      kind: 'max_amount_per_protocol',
+      params: { protocol: 'fluid', max_ratio: 0.3 },
+    },
+    { kind: 'min_amount', params: { min_amount: '100000000' } },
+  ],
 });
 ```
 
 ## Transaction History Analysis
 
+Using the `Paginator` to fetch and analyze recent transactions:
+
 ```typescript
 import { TxAction, TxStatus } from '@gizatech/agent-sdk';
 
-const { transactions } = await giza.agent.getTransactions({
-  wallet: smartAccountAddress,
-  limit: 100
-});
+const recentTxs = await agent
+  .transactions({ sort: 'date_desc' })
+  .first(100);
 
-// Group by action
-const byAction = transactions.reduce((acc, tx) => {
+const byAction = recentTxs.reduce((acc, tx) => {
   acc[tx.action] = (acc[tx.action] || 0) + 1;
   return acc;
 }, {} as Record<string, number>);
 
-// Count failed transactions
-const failed = transactions.filter(tx => tx.status === TxStatus.FAILED).length;
+const failed = recentTxs.filter(
+  tx => tx.status === TxStatus.FAILED
+).length;
 
-// Protocol distribution
-const protocols = [...new Set(transactions.map(tx => tx.protocol))];
-
-console.log('Activity summary:', { byAction, failed, protocols });
+console.log('Activity summary:', { byAction, failed });
 ```
 
 ## Performance Dashboard
 
 ```typescript
-async function buildDashboard(address: string) {
-  const [portfolio, apr, performance, txHistory] = await Promise.all([
-    giza.agent.getPortfolio({ wallet: address }),
-    giza.agent.getAPR({ wallet: address }),
-    giza.agent.getPerformance({ wallet: address }),
-    giza.agent.getTransactions({ wallet: address, limit: 10 })
+import type { Agent } from '@gizatech/agent-sdk';
+
+async function buildDashboard(agent: Agent) {
+  const [info, aprData, perf] = await Promise.all([
+    agent.portfolio(),
+    agent.apr(),
+    agent.performance(),
   ]);
-  
+
+  const recent = await agent
+    .transactions({ sort: 'date_desc' })
+    .first(10);
+
   return {
-    status: portfolio.status,
-    currentAPR: apr.apr,
-    totalValue: performance.performance[performance.performance.length - 1].value_in_usd,
-    protocols: portfolio.selected_protocols,
-    recentActivity: txHistory.transactions
+    status: info.status,
+    currentAPR: aprData.apr,
+    totalValue:
+      perf.performance[perf.performance.length - 1]?.value_in_usd,
+    protocols: info.selected_protocols,
+    recentActivity: recent,
   };
 }
 ```

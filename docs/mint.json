@@ -62,36 +62,27 @@
     },
     {
       "group": "SDK Overview",
-      "pages": ["sdk-reference/overview", "sdk-reference/client"]
+      "pages": ["sdk-reference/overview", "sdk-reference/giza"]
     },
     {
-      "group": "Agent Module",
+      "group": "Agent Class",
       "pages": [
-        "sdk-reference/agent/create-smart-account",
-        "sdk-reference/agent/get-smart-account",
-        "sdk-reference/agent/get-protocols",
-        "sdk-reference/agent/update-protocols",
-        "sdk-reference/agent/activate",
-        "sdk-reference/agent/deactivate",
-        "sdk-reference/agent/top-up",
-        "sdk-reference/agent/run",
-        "sdk-reference/agent/get-performance",
-        "sdk-reference/agent/get-portfolio",
-        "sdk-reference/agent/get-apr",
-        "sdk-reference/agent/get-deposits",
-        "sdk-reference/agent/get-transactions",
-        "sdk-reference/agent/get-withdrawal-history",
-        "sdk-reference/agent/withdraw",
-        "sdk-reference/agent/get-withdrawal-status",
-        "sdk-reference/agent/poll-withdrawal-status",
-        "sdk-reference/agent/get-fees",
-        "sdk-reference/agent/get-limit",
-        "sdk-reference/agent/claim-rewards"
+        "sdk-reference/agent/overview",
+        "sdk-reference/agent/lifecycle",
+        "sdk-reference/agent/monitoring",
+        "sdk-reference/agent/transactions",
+        "sdk-reference/agent/withdrawals",
+        "sdk-reference/agent/rewards",
+        "sdk-reference/agent/protocols"
       ]
     },
     {
-      "group": "Optimizer Module",
-      "pages": ["sdk-reference/optimizer/optimize"]
+      "group": "Utilities",
+      "pages": [
+        "sdk-reference/paginator",
+        "sdk-reference/optimizer",
+        "sdk-reference/types"
+      ]
     },
     {
       "group": "API Overview",
@@ -100,6 +91,8 @@
     {
       "group": "Agents",
       "pages": [
+        "api-reference/agents/create-smart-account",
+        "api-reference/agents/get-smart-account",
         "api-reference/agents/activate-wallet",
         "api-reference/agents/get-wallet-info",
         "api-reference/agents/get-wallet-deposits",
@@ -191,18 +184,28 @@
     }
   },
   "redirects": [
-    {
-      "source": "/api-reference/client",
-      "destination": "/sdk-reference/client"
-    },
-    {
-      "source": "/api-reference/agent/:slug",
-      "destination": "/sdk-reference/agent/:slug"
-    },
-    {
-      "source": "/api-reference/optimizer/:slug",
-      "destination": "/sdk-reference/optimizer/:slug"
-    }
+    { "source": "/sdk-reference/client", "destination": "/sdk-reference/giza" },
+    { "source": "/sdk-reference/agent/create-smart-account", "destination": "/sdk-reference/agent/overview" },
+    { "source": "/sdk-reference/agent/get-smart-account", "destination": "/sdk-reference/agent/overview" },
+    { "source": "/sdk-reference/agent/activate", "destination": "/sdk-reference/agent/lifecycle" },
+    { "source": "/sdk-reference/agent/deactivate", "destination": "/sdk-reference/agent/lifecycle" },
+    { "source": "/sdk-reference/agent/top-up", "destination": "/sdk-reference/agent/lifecycle" },
+    { "source": "/sdk-reference/agent/run", "destination": "/sdk-reference/agent/lifecycle" },
+    { "source": "/sdk-reference/agent/get-performance", "destination": "/sdk-reference/agent/monitoring" },
+    { "source": "/sdk-reference/agent/get-portfolio", "destination": "/sdk-reference/agent/monitoring" },
+    { "source": "/sdk-reference/agent/get-apr", "destination": "/sdk-reference/agent/monitoring" },
+    { "source": "/sdk-reference/agent/get-deposits", "destination": "/sdk-reference/agent/monitoring" },
+    { "source": "/sdk-reference/agent/get-transactions", "destination": "/sdk-reference/agent/transactions" },
+    { "source": "/sdk-reference/agent/withdraw", "destination": "/sdk-reference/agent/withdrawals" },
+    { "source": "/sdk-reference/agent/get-withdrawal-status", "destination": "/sdk-reference/agent/withdrawals" },
+    { "source": "/sdk-reference/agent/poll-withdrawal-status", "destination": "/sdk-reference/agent/withdrawals" },
+    { "source": "/sdk-reference/agent/get-withdrawal-history", "destination": "/sdk-reference/agent/withdrawals" },
+    { "source": "/sdk-reference/agent/get-fees", "destination": "/sdk-reference/agent/withdrawals" },
+    { "source": "/sdk-reference/agent/get-limit", "destination": "/sdk-reference/agent/withdrawals" },
+    { "source": "/sdk-reference/agent/claim-rewards", "destination": "/sdk-reference/agent/rewards" },
+    { "source": "/sdk-reference/agent/get-protocols", "destination": "/sdk-reference/agent/protocols" },
+    { "source": "/sdk-reference/agent/update-protocols", "destination": "/sdk-reference/agent/protocols" },
+    { "source": "/sdk-reference/optimizer/optimize", "destination": "/sdk-reference/optimizer" }
   ],
   "metadata": {
     "og:site_name": "Giza Integrations",

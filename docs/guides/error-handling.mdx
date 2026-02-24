@@ -13,11 +13,10 @@ Input validation failures:
 
 ```typescript
 import { ValidationError } from '@gizatech/agent-sdk';
+import type { Address } from '@gizatech/agent-sdk';
 
 try {
-  await giza.agent.createSmartAccount({
-    origin_wallet: 'invalid-address'
-  });
+  await giza.createAgent('invalid-address' as Address);
 } catch (error) {
   if (error instanceof ValidationError) {
     // Invalid input
@@ -35,7 +34,12 @@ API errors (4xx, 5xx):
 import { GizaAPIError } from '@gizatech/agent-sdk';
 
 try {
-  await giza.agent.activate({...});
+  await agent.activate({
+    owner: userWallet,
+    token: USDC,
+    protocols: ['aave', 'compound'],
+    txHash: depositTxHash,
+  });
 } catch (error) {
   if (error instanceof GizaAPIError) {
     console.error('API error:', {
@@ -43,7 +47,7 @@ try {
       message: error.message,
       details: error.details
     });
-    
+
     if (error.statusCode === 401) {
       // Authentication issue
       checkAPICredentials();
@@ -63,7 +67,7 @@ Request timeouts:
 import { TimeoutError } from '@gizatech/agent-sdk';
 
 try {
-  await giza.agent.withdraw({...});
+  await agent.withdraw();
 } catch (error) {
   if (error instanceof TimeoutError) {
     console.error('Request timed out');
@@ -80,13 +84,11 @@ Features not yet available:
 import { NotImplementedError } from '@gizatech/agent-sdk';
 
 try {
-  await giza.agent.getSmartAccount({
-    smartAccount: address // Not supported yet
-  });
+  await someOperation();
 } catch (error) {
   if (error instanceof NotImplementedError) {
     // Feature not available
-    console.log('Use origin_wallet instead');
+    console.log('This feature is not yet supported');
   }
 }
 ```
@@ -105,7 +107,7 @@ async function retryOperation<T>(
       return await operation();
     } catch (error) {
       if (i === maxRetries - 1) throw error;
-      
+
       if (error instanceof GizaAPIError && error.statusCode >= 500) {
         // Server error, retry
         const delay = Math.pow(2, i) * 1000;

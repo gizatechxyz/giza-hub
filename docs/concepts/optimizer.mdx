@@ -14,15 +14,15 @@ graph TD
     A[Input: Current State] --> B[Fetch Protocol APRs]
     A --> C[Get Gas Prices]
     A --> D[Load Constraints]
-    
+
     B --> E[Optimization Engine]
     C --> E
     D --> E
-    
+
     E --> F[Calculate Optimal Allocation]
     F --> G[Generate Action Plan]
     G --> H[Create Transaction Calldata]
-    
+
     H --> I[Output: Optimization Result]
 ```
 
@@ -34,11 +34,11 @@ Agents use the optimizer automatically:
 
 ```typescript
 // You just activate the agent
-await giza.agent.activate({
-  wallet: smartAccountAddress,
-  origin_wallet: userWallet,
-  initial_token: USDC_ADDRESS,
-  selected_protocols: ['aave', 'compound', 'moonwell'],
+await agent.activate({
+  owner: userWallet,
+  token: USDC_ADDRESS,
+  protocols: ['aave', 'compound', 'moonwell'],
+  txHash: depositTxHash,
 });
 
 // Agent internally calls optimizer, then executes the plan
@@ -55,11 +55,10 @@ Behind the scenes:
 Call the optimizer directly for custom implementations:
 
 ```typescript
-const result = await giza.optimizer.optimize({
-  chainId: Chain.BASE,
-  total_capital: "1000000000", // 1000 USDC (6 decimals)
-  token_address: USDC_ADDRESS,
-  current_allocations: {
+const result = await giza.optimize({
+  token: USDC_ADDRESS,
+  capital: "1000000000", // 1000 USDC (6 decimals)
+  currentAllocations: {
     aave: "500000000",
     compound: "500000000"
   },
@@ -81,11 +80,11 @@ Use this for:
 
 The optimizer is **completely stateless**:
 
-- ✅ No storage of historical data
-- ✅ Each call is independent
-- ✅ Same inputs always return same outputs (for same market conditions)
-- ✅ No side effects
-- ✅ Can be called from anywhere
+- No storage of historical data
+- Each call is independent
+- Same inputs always return same outputs (for same market conditions)
+- No side effects
+- Can be called from anywhere
 
 This stateless design enables:
 - **Predictable**: Results depend only on inputs
@@ -99,23 +98,19 @@ This stateless design enables:
 
 ### Required Parameters
 
-<ParamField path="chainId" type="Chain" required>
-  Chain to optimize for (Base or Arbitrum)
-</ParamField>
-
-<ParamField path="total_capital" type="string" required>
-  Total capital to allocate (bigint as string, in token's smallest unit)
-  
-  Example: `"1000000000"` for 1000 USDC (6 decimals)
-</ParamField>
-
-<ParamField path="token_address" type="Address" required>
+<ParamField path="token" type="Address" required>
   Token to optimize (e.g., USDC address)
 </ParamField>
 
-<ParamField path="current_allocations" type="Record<string, string>" required>
+<ParamField path="capital" type="string" required>
+  Total capital to allocate (bigint as string, in token's smallest unit)
+
+  Example: `"1000000000"` for 1000 USDC (6 decimals)
+</ParamField>
+
+<ParamField path="currentAllocations" type="Record<string, string>" required>
   Current distribution across protocols (bigint as string)
-  
+
   Example:
   ```typescript
   {
@@ -128,7 +123,7 @@ This stateless design enables:
 
 <ParamField path="protocols" type="string[]" required>
   Protocols to consider in optimization
-  
+
   Example: `["aave", "compound", "moonwell", "seamless"]`
 </ParamField>
 
@@ -136,7 +131,7 @@ This stateless design enables:
 
 <ParamField path="constraints" type="ConstraintConfig[]">
   Constraints to respect during optimization. See [Constraints](#constraints) section below for details.
-  
+
   Example:
   ```typescript
   [
@@ -165,22 +160,22 @@ This stateless design enables:
 interface OptimizationResult {
   // Optimal allocation for each protocol
   allocations: ProtocolAllocation[];
-  
+
   // Total gas costs for rebalancing
   total_costs: number;
-  
+
   // Initial weighted APR (before optimization)
   weighted_apr_initial: number;
-  
+
   // Final weighted APR (after optimization)
   weighted_apr_final: number;
-  
+
   // Improvement in APR (percentage points)
   apr_improvement: number;
-  
+
   // Estimated total gas cost in USD (optional)
   gas_estimate_usd?: number;
-  
+
   // Number of days until APR improvement exceeds gas cost (optional)
   break_even_days?: number;
 }
@@ -298,23 +293,23 @@ Example:
   <Accordion title="Protocol APRs">
     Real-time APRs from each protocol for the specific token. Weighted by allocation size.
   </Accordion>
-  
+
   <Accordion title="Gas Costs">
     Estimated gas for each rebalancing transaction. Optimization only proceeds if APR improvement exceeds gas costs.
   </Accordion>
-  
+
   <Accordion title="Protocol Liquidity">
     Available liquidity in each protocol. Won't allocate more than what the protocol can efficiently handle.
   </Accordion>
-  
+
   <Accordion title="Slippage">
     Price impact of large deposits/withdrawals, especially for smaller protocols.
   </Accordion>
-  
+
   <Accordion title="Constraints">
     User-defined constraints (min protocols, max per protocol, exclusions, etc.).
   </Accordion>
-  
+
   <Accordion title="Transaction Minimization">
     Prefer fewer, larger transactions over many small ones to save gas.
   </Accordion>
@@ -353,7 +348,7 @@ enum WalletConstraints {
 ```typescript Min Protocols
 {
   kind: WalletConstraints.MIN_PROTOCOLS,
-  params: { 
+  params: {
     min_protocols: 2,
     min_fraction_per_protocol: 0.1  // Optional, default 0.05 (5%)
   }
@@ -364,7 +359,7 @@ enum WalletConstraints {
 ```typescript Max Ratio Per Protocol
 {
   kind: WalletConstraints.MAX_AMOUNT_PER_PROTOCOL,
-  params: { 
+  params: {
     protocol: "aave",
     max_ratio: 0.5  // 50% of total capital
   }
@@ -403,7 +398,7 @@ enum WalletConstraints {
 ```typescript Min Allocation For Specific Protocol
 {
   kind: WalletConstraints.MIN_ALLOCATION_AMOUNT_PER_PROTOCOL,
-  params: { 
+  params: {
     protocol: "aave",
     min_amount: 500000000  // 500 USDC
   }
@@ -425,11 +420,10 @@ Both require the `protocol` parameter to specify which protocol to constrain.
 ### Combining Constraints
 
 ```typescript
-await giza.optimizer.optimize({
-  chainId: Chain.BASE,
-  total_capital: "10000000000", // 10k USDC
-  token_address: USDC_ADDRESS,
-  current_allocations: { aave: "10000000000" },
+await giza.optimize({
+  token: USDC_ADDRESS,
+  capital: "10000000000", // 10k USDC
+  currentAllocations: { aave: "10000000000" },
   protocols: ["aave", "compound", "moonwell", "seamless"],
   constraints: [
     // Diversify across at least 3 protocols
@@ -469,7 +463,7 @@ await giza.optimizer.optimize({
 ```
 
 <Note>
-**Important**: `MAX_AMOUNT_PER_PROTOCOL` requires a constraint for **each protocol** you want to limit. 
+**Important**: `MAX_AMOUNT_PER_PROTOCOL` requires a constraint for **each protocol** you want to limit.
 It uses `max_ratio` (0-1), not `max_amount`. For absolute amounts, use `MAX_ALLOCATION_AMOUNT_PER_PROTOCOL`.
 </Note>
 
@@ -478,15 +472,14 @@ It uses `max_ratio` (0-1), not `max_amount`. For absolute amounts, use `MAX_ALLO
 ### Basic Usage
 
 ```typescript
-import { GizaAgent, Chain, WalletConstraints } from '@gizatech/agent-sdk';
+import { Giza, Chain, WalletConstraints } from '@gizatech/agent-sdk';
 
-const giza = new GizaAgent({ chainId: Chain.BASE });
+const giza = new Giza({ chain: Chain.BASE });
 
-const result = await giza.optimizer.optimize({
-  chainId: Chain.BASE,
-  total_capital: "1000000000",
-  token_address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-  current_allocations: {
+const result = await giza.optimize({
+  token: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  capital: "1000000000",
+  currentAllocations: {
     aave: "600000000",
     compound: "400000000"
   },
@@ -512,20 +505,18 @@ Test different scenarios without executing:
 
 ```typescript
 // Scenario 1: Current allocation
-const current = await giza.optimizer.optimize({
-  chainId: Chain.BASE,
-  total_capital: "1000000000",
-  token_address: USDC_ADDRESS,
-  current_allocations: { aave: "1000000000" },
+const current = await giza.optimize({
+  token: USDC_ADDRESS,
+  capital: "1000000000",
+  currentAllocations: { aave: "1000000000" },
   protocols: ["aave", "compound", "moonwell"],
 });
 
 // Scenario 2: Add more protocols
-const expanded = await giza.optimizer.optimize({
-  chainId: Chain.BASE,
-  total_capital: "1000000000",
-  token_address: USDC_ADDRESS,
-  current_allocations: { aave: "1000000000" },
+const expanded = await giza.optimize({
+  token: USDC_ADDRESS,
+  capital: "1000000000",
+  currentAllocations: { aave: "1000000000" },
   protocols: ["aave", "compound", "moonwell", "seamless", "fluid"],
 });
 
@@ -540,25 +531,25 @@ console.log(`Potential gain: +${expanded.optimization_result.weighted_apr_final 
 <AccordionGroup>
   <Accordion title="Don't over-optimize">
     Calling the optimizer too frequently wastes gas. Let APR differences accumulate before rebalancing.
-    
+
     **Good:** Every 6-24 hours
     **Bad:** Every 5 minutes
   </Accordion>
-  
+
   <Accordion title="Set minimum APR improvement threshold">
     Only rebalance if APR improvement exceeds a threshold (e.g., 0.3%).
-    
+
     ```typescript
     if (result.optimization_result.apr_improvement > 0.3) {
       // Execute rebalancing
     }
     ```
   </Accordion>
-  
+
   <Accordion title="Use constraints for risk management">
     Always set constraints to match your risk tolerance and diversification requirements.
   </Accordion>
-  
+
   <Accordion title="Consider gas prices">
     During high gas periods, higher APR improvement may be needed to justify rebalancing.
   </Accordion>
@@ -577,7 +568,7 @@ console.log(`Potential gain: +${expanded.optimization_result.weighted_apr_final 
   <Card
     title="API Reference"
     icon="code"
-    href="/sdk-reference/optimizer/optimize"
+    href="/sdk-reference/optimizer"
   >
     Complete optimizer API documentation
   </Card>

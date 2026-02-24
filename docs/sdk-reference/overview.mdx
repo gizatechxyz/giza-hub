@@ -1,14 +1,14 @@
 ---
 title: Overview
-description: 'TypeScript SDK for integrating Giza Agent services'
+description: 'TypeScript SDK for building on Giza autonomous yield agents'
 ---
 
 ## Introduction
 
-The `@gizatech/agent-sdk` is a TypeScript SDK that provides a simple and type-safe interface for interacting with Giza's autonomous DeFi yield optimization agents.
+The `@gizatech/agent-sdk` is a TypeScript SDK that provides a resource-oriented, type-safe interface for managing Giza autonomous DeFi yield optimization agents. It handles authentication, request retries, pagination, and error handling so you can focus on building your integration.
 
 <Info>
-The SDK wraps the [HTTP API](/api-reference/introduction) in a convenient TypeScript interface with automatic authentication, type safety, and error handling.
+The SDK wraps the [HTTP API](/api-reference/introduction) in a convenient TypeScript interface with automatic authentication, type safety, and structured error handling.
 </Info>
 
 ## Installation
@@ -32,76 +32,70 @@ yarn add @gizatech/agent-sdk
 ## Quick Start
 
 ```typescript
-import { GizaAgent, Chain } from '@gizatech/agent-sdk';
+import { Giza, Chain } from '@gizatech/agent-sdk';
 
-// Environment variables required:
-// GIZA_API_KEY=your-partner-api-key
-// GIZA_API_URL=https://partners-backend-1038109371738.europe-west1.run.app
-// GIZA_PARTNER_NAME=your-partner-name
+// Credentials fall back to GIZA_API_KEY, GIZA_PARTNER_NAME, GIZA_API_URL env vars
+const giza = new Giza({ chain: Chain.BASE });
 
-const giza = new GizaAgent({
-  chainId: Chain.BASE,
+// Create a smart-account agent for a user's EOA
+const agent = await giza.createAgent('0xYourEOA...');
+
+// Activate the agent after the user deposits USDC
+await agent.activate({
+  owner: '0xYourEOA...',
+  token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
+  protocols: ['aave', 'compound'],
+  txHash: '0xDepositTxHash...',
 });
 
-// Create smart account
-const account = await giza.agent.createSmartAccount({
-  origin_wallet: '0x...'
-});
-
-// Activate agent after user deposits
-await giza.agent.activate({
-  wallet: account.smartAccountAddress,
-  origin_wallet: '0x...',
-  initial_token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC
-  selected_protocols: ['aave', 'compound', 'moonwell'],
-  tx_hash: depositTxHash,
-});
-
-// Monitor performance
-const performance = await giza.agent.getPerformance({
-  wallet: account.smartAccountAddress,
-});
+// Check the current APR
+const { apr } = await agent.apr();
+console.log(`Current APR: ${apr}%`);
 ```
 
 ## SDK Architecture
 
-The SDK is organized into two main modules:
+The SDK follows a resource-oriented design with two primary classes:
 
-<CardGroup cols={2}>
-  <Card title="Agent Module" icon="robot" href="/sdk-reference/agent/create-smart-account">
-    Full lifecycle management of autonomous yield agents:
-    - Smart account creation
-    - Agent activation/deactivation
-    - Portfolio monitoring
-    - Withdrawal operations
-    - Rewards claiming
-  </Card>
-  <Card title="Optimizer Module" icon="brain" href="/sdk-reference/optimizer/optimize">
-    Stateless capital allocation optimization:
-    - Get optimal allocations
-    - Action plan generation
-    - Execution-ready calldata
-  </Card>
-</CardGroup>
+- **`Giza`** -- the top-level client. Handles configuration, authentication, and chain-level queries (protocols, tokens, stats, optimizer). It also acts as a factory for `Agent` instances.
+- **`Agent`** -- a wallet-scoped handle bound to a single smart-account address. All agent lifecycle, monitoring, withdrawal, rewards, and protocol operations live here. You never pass a wallet address to individual methods because the `Agent` already knows it.
+
+The typical flow is:
+
+1. Create a `Giza` client with your chain and credentials.
+2. Obtain an `Agent` via `giza.createAgent(eoa)`, `giza.getAgent(eoa)`, or `giza.agent(wallet)`.
+3. Call methods on the `Agent` instance for all wallet-scoped operations.
+
+```typescript
+const giza = new Giza({ chain: Chain.BASE });
+
+// Three ways to get an Agent handle:
+const agent1 = await giza.createAgent('0xEOA...');    // new smart account
+const agent2 = await giza.getAgent('0xEOA...');       // existing smart account
+const agent3 = giza.agent('0xSmartAccount...');        // known address, no API call
+```
 
 ## Configuration
 
-The SDK reads configuration from environment variables:
+All configuration is passed through the `GizaConfig` interface. Credentials fall back to environment variables when omitted.
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `GIZA_API_KEY` | Yes | Your partner API key |
-| `GIZA_API_URL` | Yes | Giza backend URL |
-| `GIZA_PARTNER_NAME` | Yes | Your partner identifier |
-
-Additional options can be passed to the constructor:
+| Parameter | Type | Required | Default | Env Fallback | Description |
+|-----------|------|----------|---------|--------------|-------------|
+| `chain` | `Chain` | Yes | -- | -- | Target blockchain network |
+| `apiKey` | `string` | No | -- | `GIZA_API_KEY` | Partner API key |
+| `partner` | `string` | No | -- | `GIZA_PARTNER_NAME` | Partner identifier |
+| `apiUrl` | `string` | No | -- | `GIZA_API_URL` | Giza backend URL |
+| `timeout` | `number` | No | `45000` | -- | HTTP request timeout in ms |
+| `enableRetry` | `boolean` | No | `false` | -- | Auto-retry on 5xx and network errors |
 
 ```typescript
-const giza = new GizaAgent({
-  chainId: Chain.BASE,     // Required: Target blockchain
-  timeout: 60000,          // Optional: Request timeout in ms (default: 30000)
-  enableRetry: true,       // Optional: Retry failed requests (default: false)
-  agentId: 'agent-1',      // Optional: Custom agent ID
+const giza = new Giza({
+  chain: Chain.BASE,
+  apiKey: 'your-api-key',       // or set GIZA_API_KEY
+  partner: 'your-partner',      // or set GIZA_PARTNER_NAME
+  apiUrl: 'https://api.gizatech.xyz', // or set GIZA_API_URL
+  timeout: 60000,
+  enableRetry: true,
 });
 ```
 
@@ -110,41 +104,47 @@ const giza = new GizaAgent({
 ```typescript
 import { Chain } from '@gizatech/agent-sdk';
 
-Chain.BASE          // 8453 - Base Mainnet
-Chain.ETHEREUM      // 1 - Ethereum Mainnet
-Chain.ARBITRUM      // 42161 - Arbitrum One
-Chain.POLYGON       // 137 - Polygon Mainnet
-Chain.BASE_SEPOLIA  // 84532 - Base Sepolia (testnet)
-Chain.SEPOLIA       // 11155111 - Sepolia (testnet)
+Chain.ETHEREUM       // 1     - Ethereum Mainnet
+Chain.POLYGON        // 137   - Polygon Mainnet
+Chain.BASE           // 8453  - Base Mainnet
+Chain.ARBITRUM       // 42161 - Arbitrum One
+Chain.SEPOLIA        // 11155111 - Sepolia Testnet
+Chain.BASE_SEPOLIA   // 84532 - Base Sepolia Testnet
+Chain.DEVNET         // -1    - Development Network
 ```
 
 ## Error Handling
 
-The SDK provides typed errors for common failure scenarios:
+The SDK provides a typed error hierarchy so you can handle failures precisely:
+
+| Error Class | When It Occurs |
+|-------------|----------------|
+| `ValidationError` | Invalid input parameters (bad address format, missing fields) |
+| `GizaAPIError` | API returned an HTTP error (includes `statusCode` and `message`) |
+| `TimeoutError` | Request exceeded the configured timeout |
+| `NetworkError` | Network connectivity failure (DNS, connection refused) |
+
+All errors extend the base `GizaError` class.
 
 ```typescript
-import { 
-  ValidationError, 
-  GizaAPIError, 
-  TimeoutError, 
-  NetworkError 
+import {
+  ValidationError,
+  GizaAPIError,
+  TimeoutError,
+  NetworkError,
 } from '@gizatech/agent-sdk';
 
 try {
-  await giza.agent.activate({...});
+  await agent.activate({ /* ... */ });
 } catch (error) {
   if (error instanceof ValidationError) {
-    // Invalid input parameters
-    console.error('Validation failed:', error.message);
+    console.error('Invalid input:', error.message);
   } else if (error instanceof GizaAPIError) {
-    // API returned an error
-    console.error(`API Error [${error.statusCode}]:`, error.message);
+    console.error(`API error [${error.statusCode}]:`, error.message);
   } else if (error instanceof TimeoutError) {
-    // Request timed out
-    console.error('Request timed out:', error.message);
+    console.error('Timed out:', error.message);
   } else if (error instanceof NetworkError) {
-    // Network connectivity issue
-    console.error('Network error:', error.message);
+    console.error('Network failure:', error.message);
   }
 }
 ```
@@ -153,29 +153,30 @@ try {
 
 | Feature | SDK | HTTP API |
 |---------|-----|----------|
-| Type Safety | ✅ Full TypeScript types | ❌ Manual typing |
-| Authentication | ✅ Automatic | Manual headers |
-| Error Handling | ✅ Typed errors | Manual parsing |
-| Retries | ✅ Built-in | Manual implementation |
-| Language | TypeScript/JavaScript | Any HTTP client |
+| Type Safety | Full TypeScript types | Manual typing |
+| Authentication | Automatic via config/env | Manual headers |
+| Error Handling | Typed error classes | Manual response parsing |
+| Retries | Built-in (opt-in) | Manual implementation |
+| Pagination | Async-iterable `Paginator` | Manual page tracking |
+| Language | TypeScript / JavaScript | Any HTTP client |
 
 <Card title="HTTP API Reference" icon="code" href="/api-reference/introduction">
-  For direct HTTP access or non-JavaScript integrations, see the API Reference
+  For direct HTTP access or non-JavaScript integrations, see the API Reference.
 </Card>
 
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="GizaAgent Client" icon="plug" href="/sdk-reference/client">
-    Detailed client configuration and methods
+  <Card title="Giza Client" icon="plug" href="/sdk-reference/giza">
+    Client configuration, agent factory methods, and chain-level queries
   </Card>
-  <Card title="Agent Module" icon="robot" href="/sdk-reference/agent/create-smart-account">
-    Smart account and agent operations
+  <Card title="Agent Class" icon="robot" href="/sdk-reference/agent/overview">
+    Wallet-scoped lifecycle, monitoring, withdrawals, and rewards
   </Card>
-  <Card title="Optimizer Module" icon="brain" href="/sdk-reference/optimizer/optimize">
-    Capital allocation optimization
+  <Card title="Optimizer" icon="brain" href="/sdk-reference/optimizer">
+    Capital allocation optimization and simulation
   </Card>
   <Card title="Quickstart" icon="rocket" href="/quickstart">
-    Complete integration tutorial
+    End-to-end integration tutorial
   </Card>
 </CardGroup>

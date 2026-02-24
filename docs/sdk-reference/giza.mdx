@@ -1,0 +1,366 @@
+---
+title: Giza Client
+description: 'Main SDK entry point for configuration, agent creation, and chain-level queries'
+---
+
+## Overview
+
+The `Giza` class is the primary entry point of the SDK. It manages authentication, HTTP transport, and chain-scoped configuration. Use it to create `Agent` handles, query protocol data, run the optimizer, and check system health.
+
+```typescript
+import { Giza, Chain } from '@gizatech/agent-sdk';
+
+const giza = new Giza({
+  chain: Chain.BASE,
+  // apiKey, partner, apiUrl fall back to env vars
+});
+```
+
+## Constructor
+
+```typescript
+new Giza(config: GizaConfig)
+```
+
+Creates a new SDK client. See the [GizaConfig reference](/sdk-reference/overview#configuration) for all available options.
+
+<ParamField path="config" type="GizaConfig" required>
+  Configuration object specifying the target chain and credentials.
+</ParamField>
+
+The constructor validates all inputs and resolves environment variable fallbacks. It throws a `ValidationError` if any required credential is missing or if the chain ID is invalid.
+
+## Environment Variable Fallback
+
+When a credential is omitted from the constructor config, the SDK reads the corresponding environment variable:
+
+| Config Field | Environment Variable | Required |
+|--------------|---------------------|----------|
+| `apiKey` | `GIZA_API_KEY` | Yes (via config or env) |
+| `partner` | `GIZA_PARTNER_NAME` | Yes (via config or env) |
+| `apiUrl` | `GIZA_API_URL` | Yes (via config or env) |
+
+If neither the config field nor the environment variable is set, the constructor throws a `ValidationError` with a message indicating which value is missing.
+
+## Agent Factory Methods
+
+These methods create or retrieve `Agent` handles bound to a specific smart-account wallet address.
+
+### `agent(wallet)`
+
+```typescript
+agent(wallet: Address): Agent
+```
+
+Returns an `Agent` handle for a known smart-account address without making any API call. Use this when you already have the smart-account address stored (for example, from a previous `createAgent` call).
+
+<ParamField path="wallet" type="Address" required>
+  The smart-account wallet address (`0x`-prefixed hex string).
+</ParamField>
+
+**Returns:** `Agent`
+
+```typescript
+const agent = giza.agent('0x1234567890abcdef1234567890abcdef12345678');
+const info = await agent.portfolio();
+```
+
+---
+
+### `createAgent(eoa)`
+
+```typescript
+async createAgent(eoa: Address): Promise<Agent>
+```
+
+Creates a new smart account for the given externally-owned account (EOA) and returns an `Agent` bound to the new smart-account address.
+
+<ParamField path="eoa" type="Address" required>
+  The user's externally-owned account address.
+</ParamField>
+
+**Returns:** `Promise<Agent>` -- the Agent is bound to the newly created smart-account address.
+
+```typescript
+const agent = await giza.createAgent('0xUserEOA...');
+console.log('Smart account:', agent.wallet);
+```
+
+---
+
+### `getAgent(eoa)`
+
+```typescript
+async getAgent(eoa: Address): Promise<Agent>
+```
+
+Looks up an existing smart account by EOA and returns an `Agent` bound to it. Use this when the smart account was created previously and you need to recover the handle.
+
+<ParamField path="eoa" type="Address" required>
+  The user's externally-owned account address.
+</ParamField>
+
+**Returns:** `Promise<Agent>`
+
+```typescript
+const agent = await giza.getAgent('0xUserEOA...');
+const portfolio = await agent.portfolio();
+```
+
+---
+
+### `getSmartAccount(eoa)`
+
+```typescript
+async getSmartAccount(eoa: Address): Promise<SmartAccountInfo>
+```
+
+Returns full smart-account metadata (address, backend wallet, origin wallet, chain) without creating an `Agent` handle. Useful when you need the raw account data.
+
+<ParamField path="eoa" type="Address" required>
+  The user's externally-owned account address.
+</ParamField>
+
+**Returns:** `Promise<SmartAccountInfo>`
+
+```typescript
+interface SmartAccountInfo {
+  smartAccountAddress: Address;
+  backendWallet: Address;
+  origin_wallet: Address;
+  chain: Chain;
+}
+```
+
+```typescript
+const account = await giza.getSmartAccount('0xUserEOA...');
+console.log('Smart account:', account.smartAccountAddress);
+console.log('Backend wallet:', account.backendWallet);
+```
+
+## Chain-Level Queries
+
+These methods query data scoped to the chain configured on the `Giza` client.
+
+### `protocols(token)`
+
+```typescript
+async protocols(token: Address): Promise<ProtocolsResponse>
+```
+
+Returns the list of active protocol names available for a given token on the current chain.
+
+<ParamField path="token" type="Address" required>
+  The token contract address.
+</ParamField>
+
+**Returns:** `Promise<ProtocolsResponse>` -- `{ protocols: string[] }`
+
+```typescript
+const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+const { protocols } = await giza.protocols(USDC);
+console.log('Available protocols:', protocols);
+// ['aave', 'compound', 'moonwell', ...]
+```
+
+---
+
+### `protocolSupply(token)`
+
+```typescript
+async protocolSupply(token: Address): Promise<ProtocolsSupplyResponse>
+```
+
+Returns supply data for each protocol supporting the given token.
+
+<ParamField path="token" type="Address" required>
+  The token contract address.
+</ParamField>
+
+**Returns:** `Promise<ProtocolsSupplyResponse>`
+
+```typescript
+const supply = await giza.protocolSupply(
+  '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'
+);
+for (const p of supply.protocols) {
+  console.log(`${p.protocol}: ${p.supply}`);
+}
+```
+
+---
+
+### `tokens()`
+
+```typescript
+async tokens(): Promise<TokensResponse>
+```
+
+Returns all supported tokens on the current chain with their metadata (address, symbol, decimals, balance, price).
+
+**Returns:** `Promise<TokensResponse>` -- `{ tokens: TokenInfo[] }`
+
+```typescript
+const { tokens } = await giza.tokens();
+for (const token of tokens) {
+  console.log(`${token.symbol}: ${token.address}`);
+}
+```
+
+---
+
+### `stats()`
+
+```typescript
+async stats(): Promise<Statistics>
+```
+
+Returns aggregate statistics for the current chain: total balance, deposits, users, transactions, APR, and liquidity distribution.
+
+**Returns:** `Promise<Statistics>`
+
+```typescript
+const stats = await giza.stats();
+console.log(`Total users: ${stats.total_users}`);
+console.log(`Total APR: ${stats.total_apr}%`);
+```
+
+---
+
+### `tvl()`
+
+```typescript
+async tvl(): Promise<TVLResponse>
+```
+
+Returns the total value locked on the current chain.
+
+**Returns:** `Promise<TVLResponse>` -- `{ tvl: number }`
+
+```typescript
+const { tvl } = await giza.tvl();
+console.log(`TVL: $${tvl}`);
+```
+
+## Optimizer
+
+The optimizer provides capital allocation recommendations and simulations. See the [Optimizer reference](/sdk-reference/optimizer) for full documentation.
+
+### `optimize(options)`
+
+```typescript
+async optimize(options: OptimizeOptions): Promise<OptimizeResponse>
+```
+
+Computes optimal capital allocation across protocols for a given token and capital amount. Returns the allocation plan, action steps, and execution-ready calldata.
+
+```typescript
+const result = await giza.optimize({
+  token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+  capital: '1000000000', // in token smallest unit
+  protocols: ['aave', 'compound'],
+  currentAllocations: { aave: '500000000', compound: '500000000' },
+});
+console.log('Optimal allocations:', result.optimization_result.allocations);
+```
+
+---
+
+### `simulate(options)`
+
+```typescript
+async simulate(options: SimulateOptions): Promise<SimulationResponse>
+```
+
+Simulates allocation results for a given balance without executing any transactions.
+
+```typescript
+const sim = await giza.simulate({
+  token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+  balance: '1000000000',
+  protocols: ['aave', 'compound', 'moonwell'],
+});
+console.log('Simulated APR:', sim.weighted_apr_final);
+```
+
+## System
+
+### `health()`
+
+```typescript
+async health(): Promise<HealthcheckResponse>
+```
+
+Returns the API health status, version, and server time.
+
+```typescript
+const health = await giza.health();
+console.log(`API version: ${health.version}, status: ${health.message}`);
+```
+
+---
+
+### `getApiConfig()`
+
+```typescript
+async getApiConfig(): Promise<GlobalConfigResponse>
+```
+
+Returns the global API configuration, including minimum withdrawal thresholds, optimizer settings, and per-chain configuration.
+
+```typescript
+const config = await giza.getApiConfig();
+console.log(`Min withdraw: $${config.min_withdraw_usd}`);
+```
+
+---
+
+### `chains()`
+
+```typescript
+async chains(): Promise<ChainsResponse>
+```
+
+Returns the list of supported chain IDs.
+
+```typescript
+const { chain_ids } = await giza.chains();
+console.log('Supported chains:', chain_ids);
+```
+
+## Accessors
+
+### `getChain()`
+
+```typescript
+getChain(): Chain
+```
+
+Returns the `Chain` enum value configured on this client.
+
+---
+
+### `getApiUrl()`
+
+```typescript
+getApiUrl(): string
+```
+
+Returns the resolved API base URL.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Agent Class" icon="robot" href="/sdk-reference/agent/overview">
+    Wallet-scoped lifecycle, monitoring, and operations
+  </Card>
+  <Card title="Optimizer" icon="brain" href="/sdk-reference/optimizer">
+    Capital allocation optimization and simulation
+  </Card>
+  <Card title="Overview" icon="book" href="/sdk-reference/overview">
+    SDK architecture and configuration reference
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    End-to-end integration tutorial
+  </Card>
+</CardGroup>
