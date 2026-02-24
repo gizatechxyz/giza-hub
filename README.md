@@ -7,14 +7,9 @@ TypeScript SDK and tooling for [Giza Agents](https://www.gizatech.xyz/) — auto
 | Package | Description |
 |---------|-------------|
 | [`@gizatech/agent-sdk`](./packages/sdk) | SDK for smart account creation, agent lifecycle, portfolio monitoring, and stateless optimization |
+| [`@gizatech/mcp-server`](./packages/mcp-server) | MCP server exposing Giza tools to LLMs (Claude, GPT, etc.) via stdio or HTTP transport |
 
 ## Quick Start
-
-### Install the SDK
-
-```bash
-bun add @gizatech/agent-sdk
-```
 
 ### Environment variables
 
@@ -26,7 +21,11 @@ GIZA_PARTNER_NAME=your-partner-name
 
 Contact Giza at [gizatech.xyz](https://www.gizatech.xyz/) to obtain partner credentials.
 
-### Usage
+### SDK
+
+```bash
+bun add @gizatech/agent-sdk
+```
 
 ```typescript
 import { Giza, Chain } from '@gizatech/agent-sdk';
@@ -49,6 +48,81 @@ await agent.activate({
 const { apr } = await agent.apr();
 ```
 
+### MCP Server
+
+```bash
+bun add @gizatech/mcp-server
+```
+
+The MCP server exposes all Giza SDK capabilities as tools that LLMs can call via the [Model Context Protocol](https://modelcontextprotocol.io/). Three integration tiers:
+
+**Zero config** -- reads credentials from env vars, starts stdio transport:
+
+```typescript
+import { serve } from '@gizatech/mcp-server';
+serve();
+```
+
+**Explicit config** -- specify chain, transport, and port:
+
+```typescript
+import { serve } from '@gizatech/mcp-server';
+serve({ chain: 8453, transport: 'http', port: 3001 });
+```
+
+**Full control** -- bring your own Giza instance, cherry-pick tools, custom prompt:
+
+```typescript
+import { Giza, Chain } from '@gizatech/agent-sdk';
+import {
+  createGizaServer,
+  portfolioTools,
+  lifecycleTools,
+  protocolTools,
+} from '@gizatech/mcp-server';
+
+const giza = new Giza({ chain: Chain.BASE });
+const server = createGizaServer({
+  giza,
+  tools: [...portfolioTools, ...lifecycleTools, ...protocolTools],
+  systemPrompt: 'You are a savings assistant...',
+});
+
+await server.stdio();
+```
+
+#### Claude Desktop configuration
+
+```json
+{
+  "mcpServers": {
+    "giza": {
+      "command": "npx",
+      "args": ["@gizatech/mcp-server"],
+      "env": {
+        "GIZA_API_KEY": "your-api-key",
+        "GIZA_PARTNER_NAME": "your-partner-name",
+        "GIZA_API_URL": "https://api.giza.tech",
+        "GIZA_CHAIN_ID": "8453"
+      }
+    }
+  }
+}
+```
+
+#### Available tools
+
+| Group | Tools |
+|-------|-------|
+| Wallet | `connect_wallet`, `disconnect_wallet` |
+| Account | `create_smart_account`, `get_smart_account` |
+| Protocol | `get_protocols`, `get_tokens`, `get_stats`, `get_tvl` |
+| Lifecycle | `activate_agent`, `deactivate_agent`, `top_up`, `run_agent` |
+| Portfolio | `get_portfolio`, `get_performance`, `get_apr`, `get_deposits` |
+| Financial | `withdraw`, `get_withdrawal_status`, `get_transactions`, `get_fees` |
+| Rewards | `claim_rewards` |
+| Optimizer | `optimize`, `simulate` |
+
 ## Development
 
 Requires [Bun](https://bun.sh/) and Node.js >= 18.
@@ -70,6 +144,10 @@ bun run --filter '*' test
 # SDK
 bun run --filter @gizatech/agent-sdk build
 bun run --filter @gizatech/agent-sdk test
+
+# MCP Server
+bun run --filter @gizatech/mcp-server build
+bun run --filter @gizatech/mcp-server test
 ```
 
 ### Examples
@@ -85,6 +163,7 @@ bun run --filter @gizatech/agent-sdk example:optimizer
 - [Integration Methods](./docs/integration-methods.mdx)
 - [Core Concepts](./docs/concepts/overview.mdx)
 - [SDK Reference](./docs/sdk-reference/overview.mdx)
+- [MCP Server](./docs/mcp-server/overview.mdx)
 - [Examples](./docs/examples/basic-usage.mdx)
 
 ## License

@@ -1,0 +1,337 @@
+---
+title: Tools Reference
+description: "Complete reference for all MCP server tools"
+---
+
+## Overview
+
+The MCP server exposes **23 tools** across 8 groups. Tools that operate on an agent require a **connected wallet** -- call `connect_wallet` first, or the tool returns an error prompting the LLM to connect one.
+
+## Wallet
+
+Session management tools. Call `connect_wallet` before using any wallet-dependent tool.
+
+### `connect_wallet`
+
+Connect a wallet address to the current session. All subsequent agent operations use this wallet.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| `wallet` | `string` | Yes | Ethereum address (`0x`-prefixed, 40 hex chars) |
+
+**Returns:** Confirmation message with truncated address.
+
+### `disconnect_wallet`
+
+Remove the wallet from the current session.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| -- | -- | -- | No parameters |
+
+**Returns:** Confirmation message.
+
+---
+
+## Account
+
+Create and look up Giza smart accounts.
+
+### `create_smart_account`
+
+Create a new Giza smart account for the given EOA (externally owned account). Also connects the wallet to the session automatically.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| `eoa` | `string` | Yes | User's EOA address |
+
+**Returns:** Smart account address. Wallet is connected to the session.
+
+<Tip>
+Smart account addresses are **deterministic** -- calling `create_smart_account` with the same EOA always returns the same address.
+</Tip>
+
+### `get_smart_account`
+
+Look up the smart account associated with an EOA.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| `eoa` | `string` | Yes | User's EOA address |
+
+**Returns:** JSON with smart account address, backend wallet, and chain.
+
+---
+
+## Protocol
+
+Discover available tokens and DeFi protocols. These tools do not require a connected wallet.
+
+### `get_protocols`
+
+List active DeFi protocols available for a given token.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| `token` | `string` | Yes | Token contract address |
+
+**Returns:** JSON array of protocol names (e.g., `["aave", "compound", "moonwell"]`).
+
+### `get_tokens`
+
+List all tokens available on the configured chain.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| -- | -- | -- | No parameters |
+
+**Returns:** JSON array of tokens with address, symbol, decimals, balance, and current price.
+
+### `get_stats`
+
+Get aggregate statistics for the configured chain.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| -- | -- | -- | No parameters |
+
+**Returns:** JSON with total balance, deposits, users, transactions, APR, and liquidity distribution.
+
+### `get_tvl`
+
+Get the total value locked (TVL) on the configured chain.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| -- | -- | -- | No parameters |
+
+**Returns:** JSON with TVL data.
+
+---
+
+## Lifecycle
+
+Manage the yield agent lifecycle. All tools in this group require a connected wallet.
+
+### `activate_agent`
+
+Activate a yield agent after the user has deposited funds to their smart account.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| `owner` | `string` | Yes | Owner's EOA address |
+| `token` | `string` | Yes | Token contract address to optimize |
+| `protocols` | `string[]` | Yes | List of protocol names (min 1) |
+| `txHash` | `string` | Yes | Deposit transaction hash |
+| `constraints` | `Array<{ kind, params }>` | No | Optimization constraints (e.g., `min_protocols`) |
+
+**Returns:** JSON with activation result.
+
+<Warning>
+Activation is an important operation. The LLM should confirm with the user before calling this tool.
+</Warning>
+
+### `deactivate_agent`
+
+Stop the yield agent. Optionally transfers remaining funds back to the owner.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| `transfer` | `boolean` | No | Transfer funds to owner on deactivation (default: `true`) |
+
+**Returns:** Confirmation message.
+
+### `top_up`
+
+Add funds to an active agent after the user makes an additional deposit.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| `txHash` | `string` | Yes | Deposit transaction hash |
+
+**Returns:** Confirmation message.
+
+### `run_agent`
+
+Trigger a yield optimization execution manually. The agent normally runs automatically, but this forces an immediate rebalance.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| -- | -- | -- | No parameters |
+
+**Returns:** JSON with execution result.
+
+---
+
+## Portfolio
+
+Monitor agent performance. All tools in this group require a connected wallet.
+
+### `get_portfolio`
+
+Get full portfolio info for the connected wallet.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| -- | -- | -- | No parameters |
+
+**Returns:** JSON with deposits, withdrawals, status, active protocols, and activation dates.
+
+### `get_performance`
+
+Get performance chart data for the connected wallet.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| `from` | `string` | No | Start date filter (`YYYY-MM-DD`) |
+
+**Returns:** JSON array of performance data points with dates and USD values.
+
+### `get_apr`
+
+Get the APR (Annual Percentage Rate) for the connected wallet.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| `startDate` | `string` | No | Start date (`YYYY-MM-DD`) |
+| `endDate` | `string` | No | End date (`YYYY-MM-DD`) |
+| `useExactEndDate` | `boolean` | No | Use exact end date instead of rounding |
+
+**Returns:** JSON with APR percentage.
+
+### `get_deposits`
+
+List all deposits for the connected wallet.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| -- | -- | -- | No parameters |
+
+**Returns:** JSON array of deposit records.
+
+---
+
+## Financial
+
+Withdrawals, transactions, and fees. All tools in this group require a connected wallet.
+
+### `withdraw`
+
+Withdraw funds from the yield agent.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| `amount` | `string` | No | Amount in smallest unit (e.g., `"500000000"` for 500 USDC). Omit for full withdrawal. |
+
+**Returns:** JSON with withdrawal result.
+
+<Info>
+- **Partial withdrawal** (amount provided): Withdraws the specified amount, agent stays active.
+- **Full withdrawal** (amount omitted): Withdraws everything and deactivates the agent.
+</Info>
+
+### `get_withdrawal_status`
+
+Get the current withdrawal or deactivation status.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| -- | -- | -- | No parameters |
+
+**Returns:** JSON with current status.
+
+### `get_transactions`
+
+Get the transaction history for the connected wallet.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| `limit` | `number` | No | Number of transactions to return (1-100, default: 20) |
+| `sort` | `string` | No | Sort order |
+
+**Returns:** JSON array of transaction records.
+
+### `get_fees`
+
+Get fee information for the connected wallet.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| -- | -- | -- | No parameters |
+
+**Returns:** JSON with fee percentage and absolute fee values.
+
+---
+
+## Rewards
+
+### `claim_rewards`
+
+Claim available rewards for the connected wallet. Requires a connected wallet.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| -- | -- | -- | No parameters |
+
+**Returns:** JSON with list of claimed reward tokens and amounts.
+
+---
+
+## Optimizer
+
+Yield optimization and simulation. These tools do **not** require a connected wallet.
+
+### `optimize`
+
+Run the Giza yield optimizer to find the best allocation across protocols.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| `token` | `string` | Yes | Token contract address |
+| `capital` | `string` | Yes | Total capital in smallest unit |
+| `currentAllocations` | `Record<string, string>` | Yes | Current allocation per protocol (e.g., `{ "aave": "500000000" }`) |
+| `protocols` | `string[]` | Yes | List of protocol names to consider |
+| `constraints` | `Array<{ kind, params }>` | No | Optimization constraints |
+| `wallet` | `string` | No | Wallet address for context |
+
+**Returns:** JSON with optimal allocations, APR improvement, gas estimates, and action plan.
+
+### `simulate`
+
+Simulate a yield allocation for a given token and balance.
+
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| `token` | `string` | Yes | Token address |
+| `balance` | `string \| number` | Yes | Balance to simulate |
+| `protocols` | `string[]` | No | Protocols to consider (defaults to all) |
+| `constraints` | `Array<{ kind, params }>` | No | Optimization constraints |
+
+**Returns:** JSON with projected allocations and weighted APR.
+
+---
+
+## Typical Conversation Flow
+
+Here's how the tools are typically used together in a conversation:
+
+<Steps>
+  <Step title="Connect wallet">
+    LLM calls `connect_wallet` with the user's address.
+  </Step>
+  <Step title="Explore options">
+    LLM calls `get_tokens` to show available tokens, then `get_protocols` for a specific token.
+  </Step>
+  <Step title="Create smart account">
+    LLM calls `create_smart_account` and tells the user where to deposit.
+  </Step>
+  <Step title="Activate agent">
+    After the user deposits, LLM calls `activate_agent` with the deposit tx hash and chosen protocols.
+  </Step>
+  <Step title="Monitor">
+    LLM calls `get_portfolio`, `get_apr`, and `get_performance` to show the user how their agent is doing.
+  </Step>
+  <Step title="Withdraw">
+    When ready, LLM calls `withdraw` for partial or full withdrawal.
+  </Step>
+</Steps>

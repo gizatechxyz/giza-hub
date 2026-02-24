@@ -19,7 +19,11 @@
       "Bash(cd \"/Users/raphaeldoukhan/Desktop/Giza/Infra/Giza Backend/agent-sdk/packages/sdk\" && bun run build 2>&1)",
       "Bash(cd \"/Users/raphaeldoukhan/Desktop/Giza/Infra/Giza Backend/agent-sdk/packages/sdk\" && bun run test 2>&1)",
       "Bash(wc:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(cd \"/Users/raphaeldoukhan/Desktop/Giza/Infra/Giza Backend/agent-sdk/packages/mcp-server\" && bun run build 2>&1)",
+      "Bash(cd \"/Users/raphaeldoukhan/Desktop/Giza/Infra/Giza Backend/agent-sdk/packages/mcp-server\" && bun run test 2>&1)",
+      "Bash(ls:*)",
+      "Skill(humanizer)"
     ]
   }
 }

@@ -1,0 +1,132 @@
+---
+title: Configuration
+description: "Three configuration tiers from zero-config to full control"
+---
+
+## Overview
+
+The MCP server supports three configuration tiers. Use the simplest one that fits your needs.
+
+## Tier 1: Zero Config
+
+Reads all values from environment variables. Best for CLI usage and MCP client configurations (Claude Desktop, Cursor).
+
+```typescript
+import { serve } from '@gizatech/mcp-server';
+
+serve();
+```
+
+The server reads `GIZA_API_KEY`, `GIZA_PARTNER_NAME`, `GIZA_API_URL`, `GIZA_CHAIN_ID`, `TRANSPORT`, and `PORT` from the environment. See [Environment Variables](/mcp-server/quickstart#environment-variables) for the full list.
+
+## Tier 2: Explicit Config
+
+Pass credentials and options directly. Environment variables fill any gaps.
+
+```typescript
+import { serve } from '@gizatech/mcp-server';
+
+serve({
+  chain: 8453,
+  apiKey: 'your-api-key',
+  partner: 'your-partner-name',
+  apiUrl: 'https://api.giza.tech',
+  transport: 'http',
+  port: 3001,
+});
+```
+
+You can also mix explicit values with env vars -- any field you omit falls back to the corresponding environment variable.
+
+## Tier 3: Full Control
+
+Bring your own `Giza` SDK instance, cherry-pick tools, and set a custom system prompt.
+
+```typescript
+import { Giza, Chain } from '@gizatech/agent-sdk';
+import {
+  createGizaServer,
+  portfolioTools,
+  lifecycleTools,
+  protocolTools,
+} from '@gizatech/mcp-server';
+
+const giza = new Giza({
+  chain: Chain.BASE,
+  apiKey: 'your-api-key',
+  partner: 'your-partner-name',
+  apiUrl: 'https://api.giza.tech',
+});
+
+const server = createGizaServer({
+  giza,
+  tools: [...portfolioTools, ...lifecycleTools, ...protocolTools],
+  systemPrompt: 'You are a savings assistant. Help users monitor their yield.',
+  name: 'my-custom-server',
+  version: '1.0.0',
+});
+
+await server.stdio();
+```
+
+This tier gives you full control over:
+- **Which tools** are registered (cherry-pick by group)
+- **System prompt** sent to the LLM
+- **SDK instance** with custom timeouts, retries, etc.
+- **Server metadata** (name, version)
+
+## Config Options Reference
+
+All options for `serve()` and `createGizaServer()`:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `giza` | `Giza` | -- | Pre-built SDK instance (tier 3). Overrides `chain`, `apiKey`, `partner`, `apiUrl`. |
+| `chain` | `number` | `GIZA_CHAIN_ID` env | Chain ID. Must be a supported chain from the `Chain` enum. |
+| `apiKey` | `string` | `GIZA_API_KEY` env | Partner API key. |
+| `partner` | `string` | `GIZA_PARTNER_NAME` env | Partner identifier. |
+| `apiUrl` | `string` | `GIZA_API_URL` env | Giza backend base URL. |
+| `tools` | `ToolDefinition[]` | All 23 tools | Which tools to register. Import groups from the package. |
+| `systemPrompt` | `string` | Built-in DeFi assistant prompt | Custom system prompt registered as an MCP prompt. |
+| `name` | `string` | `'giza-yield-server'` | MCP server name reported to clients. |
+| `version` | `string` | `'0.0.1'` | MCP server version reported to clients. |
+| `transport` | `'stdio' \| 'http'` | `TRANSPORT` env or `'stdio'` | Which transport to use. |
+| `port` | `number` | `PORT` env or `3000` | HTTP port (ignored for stdio). |
+
+## Config Resolution Order
+
+For each field, the server resolves values in this order:
+
+1. **Explicit value** passed in the config object
+2. **Environment variable** (see table below)
+3. **Default** value
+
+| Config Field | Environment Variable | Default |
+|-------------|---------------------|---------|
+| `chain` | `GIZA_CHAIN_ID` | -- (required) |
+| `apiKey` | `GIZA_API_KEY` | -- (required) |
+| `partner` | `GIZA_PARTNER_NAME` | -- (required) |
+| `apiUrl` | `GIZA_API_URL` | -- (required) |
+| `transport` | `TRANSPORT` | `'stdio'` |
+| `port` | `PORT` | `3000` |
+
+## Validation
+
+The configuration is validated with Zod at startup. If validation fails, the server throws immediately with a descriptive error. Validated constraints:
+
+- `chain` must be a supported chain ID from the `Chain` enum
+- `apiKey` and `partner` must be non-empty strings
+- `apiUrl` must be a valid URL
+- `transport` must be `'stdio'` or `'http'`
+- `port` must be an integer between 1 and 65535
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Programmatic Usage" icon="code" href="/mcp-server/programmatic-usage">
+    Cherry-pick tools, create custom tools, and extend the server
+  </Card>
+  <Card title="Transport" icon="server" href="/mcp-server/transport">
+    Understand stdio vs HTTP transport and when to use each
+  </Card>
+</CardGroup>
