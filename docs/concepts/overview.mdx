@@ -1,11 +1,11 @@
 ---
 title: Core Concepts
-description: 'Understanding the fundamental concepts behind Giza Agent SDK'
+description: 'Smart accounts, agents, protocols, and the optimizer'
 ---
 
 ## Introduction
 
-The Giza Agent SDK is built on several key concepts that work together to enable autonomous yield optimization. Understanding these concepts will help you integrate the SDK effectively.
+This page covers the main concepts behind the Giza Agent SDK and how they fit together.
 
 ## Architecture Overview
 
@@ -51,21 +51,21 @@ graph TB
 **Smart accounts** are the foundation of Giza agents. Each user gets a deterministic smart account address where they deposit funds for the agent to manage.
 
 <Card title="Learn More" icon="shield-halved" href="/concepts/smart-accounts">
-  Deep dive into smart accounts, ZeroDev, and session keys
+  Smart accounts, ZeroDev, and session keys
 </Card>
 
-**Key Features:**
+How they work:
 - **Account Abstraction**: Powered by ZeroDev, enabling gasless transactions
 - **Deterministic**: Same origin wallet always generates the same smart account
-- **Self-custody**: User maintains ultimate control through their origin wallet
-- **Session Keys**: Enable agents to execute functions without user signatures
+- **Self-custody**: User keeps control through their origin wallet
+- **Session Keys**: Let agents execute functions without user signatures
 
 ### 2. Agents
 
-**Agents** are autonomous yield optimizers that manage capital in smart accounts. Once activated, they continuously monitor APRs and rebalance funds across protocols.
+**Agents** are yield optimizers that manage capital in smart accounts. Once activated, they monitor APRs and rebalance funds across protocols on a continuous loop.
 
 <Card title="Learn More" icon="robot" href="/concepts/agents">
-  Understanding agent lifecycle and operations
+  Agent lifecycle and operations
 </Card>
 
 **Agent Lifecycle:**
@@ -75,39 +75,39 @@ graph TB
 4. **Deactivating**: Withdrawing all funds (brief)
 5. **Deactivated**: Agent stopped, funds returned
 
-**Capabilities:**
-- Monitor APRs across multiple protocols in real-time
+What agents do:
+- Monitor APRs across multiple protocols
 - Execute deposits, withdrawals, and swaps automatically
-- Optimize gas costs through transaction batching
-- Handle protocol-specific nuances (fees, limits, rewards)
+- Batch transactions to reduce gas costs
+- Handle protocol-specific details (fees, limits, rewards)
 
 ### 3. Protocols
 
-**Protocols** are DeFi lending platforms where agents deploy capital to earn yield. Giza supports major lending protocols including Aave, Compound, Moonwell, Morpho vaults, and more.
+**Protocols** are DeFi lending platforms where agents deploy capital to earn yield. Giza supports Aave, Compound, Moonwell, Morpho vaults, and others.
 
 <Card title="Learn More" icon="layer-group" href="/concepts/protocols">
-  Explore supported protocols by chain
+  Supported protocols by chain
 </Card>
 
-**Protocol Selection:**
+Protocol selection:
 - Partners can allow agents to use all available protocols
 - Or restrict to a subset based on risk preferences
-- Agents automatically discover the best opportunities within selected protocols
+- Agents find the best rates within the selected set
 
 ### 4. Optimizer
 
 The **Optimizer** is a stateless service that calculates optimal capital allocation across protocols. It can be used standalone (IaaS approach) or automatically by agents (Agentic approach).
 
 <Card title="Learn More" icon="chart-mixed" href="/concepts/optimizer">
-  Understanding the optimization engine
+  How the optimization engine works
 </Card>
 
-**Features:**
-- **Stateless**: No storage, pure computation service
-- **Real-time APR Data**: Uses live protocol rates
-- **Constraint Support**: Respect min protocols, max per protocol, exclusions
-- **Action Plans**: Returns detailed steps to achieve optimal allocation
-- **Execution Calldata**: Provides ready-to-execute transaction data
+What it does:
+- **Stateless**: No storage, pure computation
+- **Live APR Data**: Uses current protocol rates
+- **Constraint Support**: Respects min protocols, max per protocol, exclusions
+- **Action Plans**: Returns steps to reach the optimal allocation
+- **Execution Calldata**: Provides transaction data ready to submit
 
 ## Data Flow
 
@@ -147,19 +147,19 @@ sequenceDiagram
 
 ## Session Keys
 
-**Session keys** enable agents to execute specific functions on behalf of smart accounts without requiring user signatures each time.
+**Session keys** let agents execute specific functions on behalf of smart accounts without requiring user signatures each time.
 
-**How It Works:**
+How it works:
 1. User grants permissions to a session key when activating the agent
 2. Session key has specific capabilities (approved contracts, functions, limits)
 3. Agent uses session key to execute rebalancing transactions
 4. User can revoke permissions at any time
 
-**Security:**
+Security:
 - Session keys have limited permissions (only approved protocols/functions)
 - Time-bound expiration
 - Transaction limits per session
-- User retains ultimate control via origin wallet
+- User keeps control via origin wallet
 
 ## Constraints
 
@@ -179,7 +179,7 @@ When activating agents, you can specify **constraints** to control behavior:
 
 ## Fees
 
-Giza charges a **performance fee** on earned yield. Fees are automatically deducted from earnings - users always get back at least their principal.
+Giza charges a **performance fee** on earned yield. Fees are deducted from earnings -- users always get back at least their principal.
 
 <Card title="API Reference" icon="code" href="/sdk-reference/agent/withdrawals">
   See withdraw methods for details
@@ -193,7 +193,7 @@ Giza charges a **performance fee** on earned yield. Fees are automatically deduc
     icon="shield-halved"
     href="/concepts/smart-accounts"
   >
-    Deep dive into smart account architecture
+    Smart account architecture in detail
   </Card>
   <Card
     title="Agents"

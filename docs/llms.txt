@@ -756,3 +756,361 @@ function useAgentPortfolio(agent: Agent) {
   });
 }
 ```
+
+---
+
+# Giza MCP Server
+
+> MCP server exposing Giza SDK tools to LLMs via the Model Context Protocol.
+> Package: @gizatech/mcp-server
+
+## Install
+
+```bash
+npm install @gizatech/mcp-server
+```
+
+## What It Does
+
+The MCP server wraps the Giza Agent SDK as a set of tools that any LLM can
+call through the Model Context Protocol (MCP). Instead of writing TypeScript
+code, an LLM like Claude or GPT calls tools directly -- creating smart
+accounts, activating agents, checking portfolios, and running optimizations
+through natural language.
+
+Supports **stdio** transport (Claude Desktop, Cursor, Claude Code) and
+**HTTP** transport (backend services, custom integrations).
+
+## Quick Start
+
+### Claude Desktop / Cursor Configuration
+
+```json
+{
+  "mcpServers": {
+    "giza": {
+      "command": "npx",
+      "args": ["@gizatech/mcp-server"],
+      "env": {
+        "GIZA_API_KEY": "your-api-key",
+        "GIZA_PARTNER_NAME": "your-partner-name",
+        "GIZA_API_URL": "https://api.giza.tech",
+        "GIZA_CHAIN_ID": "8453"
+      }
+    }
+  }
+}
+```
+
+### Claude Code
+
+```bash
+claude mcp add giza \
+  --env GIZA_API_KEY=your-api-key \
+  --env GIZA_PARTNER_NAME=your-partner-name \
+  --env GIZA_API_URL=https://api.giza.tech \
+  --env GIZA_CHAIN_ID=8453 \
+  -- npx @gizatech/mcp-server
+```
+
+### CLI
+
+```bash
+export GIZA_API_KEY=your-api-key
+export GIZA_PARTNER_NAME=your-partner-name
+export GIZA_API_URL=https://api.giza.tech
+export GIZA_CHAIN_ID=8453
+npx @gizatech/mcp-server
+```
+
+## Environment Variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| GIZA_API_KEY | Yes | -- | Partner API key |
+| GIZA_PARTNER_NAME | Yes | -- | Partner identifier |
+| GIZA_API_URL | Yes | -- | Giza backend URL |
+| GIZA_CHAIN_ID | No | -- | Chain ID (e.g., 8453 for Base) |
+| TRANSPORT | No | stdio | Transport type: stdio or http |
+| PORT | No | 3000 | HTTP port (only when TRANSPORT=http) |
+
+## Configuration Tiers
+
+### Tier 1: Zero Config (env vars)
+
+```typescript
+import { serve } from '@gizatech/mcp-server';
+serve(); // reads env vars, starts stdio
+```
+
+### Tier 2: Explicit Config
+
+```typescript
+import { serve } from '@gizatech/mcp-server';
+serve({
+  chain: 8453,
+  apiKey: 'your-api-key',
+  partner: 'your-partner-name',
+  apiUrl: 'https://api.giza.tech',
+  transport: 'http',
+  port: 3001,
+});
+```
+
+### Tier 3: Full Control
+
+```typescript
+import { Giza, Chain } from '@gizatech/agent-sdk';
+import {
+  createGizaServer,
+  portfolioTools,
+  lifecycleTools,
+  protocolTools,
+} from '@gizatech/mcp-server';
+
+const giza = new Giza({ chain: Chain.BASE });
+const server = createGizaServer({
+  giza,
+  tools: [...portfolioTools, ...lifecycleTools, ...protocolTools],
+  systemPrompt: 'You are a savings assistant...',
+});
+await server.stdio();
+```
+
+### ServerConfig Options
+
+```typescript
+interface ServerConfig {
+  giza?: Giza;                    // Pre-built SDK instance (tier 3)
+  chain?: number;                 // Chain ID, falls back to GIZA_CHAIN_ID
+  apiKey?: string;                // Falls back to GIZA_API_KEY
+  partner?: string;               // Falls back to GIZA_PARTNER_NAME
+  apiUrl?: string;                // Falls back to GIZA_API_URL
+  tools?: ToolDefinition[];       // Tool subset. Default: allTools (23 tools)
+  systemPrompt?: string;          // Custom MCP prompt. Default: built-in DeFi assistant
+  name?: string;                  // Server name. Default: 'giza-yield-server'
+  version?: string;               // Server version. Default: '0.0.1'
+  transport?: 'stdio' | 'http';   // Default: 'stdio'
+  port?: number;                  // HTTP port. Default: 3000
+}
+```
+
+## Wallet Session Model
+
+The server uses a connect-then-operate pattern. Before calling any
+wallet-dependent tool, the LLM must call `connect_wallet` to set the
+wallet for the session. All subsequent tools resolve the wallet automatically.
+
+```
+User: "Check my portfolio for 0x742d...f44e"
+LLM calls: connect_wallet({ wallet: "0x742d...f44e" })
+LLM calls: get_portfolio()  ← wallet resolved from session
+```
+
+## Tools Reference (23 tools)
+
+### Wallet Tools
+
+| Tool | Parameters | Description |
+|------|-----------|-------------|
+| connect_wallet | wallet: string (0x address) | Store wallet in session. Required before wallet-dependent tools. |
+| disconnect_wallet | (none) | Remove wallet from session. |
+
+### Account Tools
+
+| Tool | Parameters | Description |
+|------|-----------|-------------|
+| create_smart_account | eoa: string | Create Giza smart account for EOA. Auto-connects wallet. |
+| get_smart_account | eoa: string | Look up smart account info by EOA. |
+
+### Protocol Tools (no wallet required)
+
+| Tool | Parameters | Description |
+|------|-----------|-------------|
+| get_protocols | token: string | List DeFi protocols for a token. |
+| get_tokens | (none) | List tokens on configured chain (address, symbol, decimals, price). |
+| get_stats | (none) | Chain stats: balance, deposits, users, txs, APR, liquidity. |
+| get_tvl | (none) | Total value locked on configured chain. |
+
+### Lifecycle Tools (wallet required)
+
+| Tool | Parameters | Description |
+|------|-----------|-------------|
+| activate_agent | owner, token, protocols, txHash, constraints? | Activate yield agent after deposit. |
+| deactivate_agent | transfer? (default: true) | Stop agent, optionally transfer funds to owner. |
+| top_up | txHash | Add funds to active agent. |
+| run_agent | (none) | Trigger immediate yield optimization. |
+
+### Portfolio Tools (wallet required)
+
+| Tool | Parameters | Description |
+|------|-----------|-------------|
+| get_portfolio | (none) | Full portfolio: deposits, status, protocols, dates. |
+| get_performance | from? (YYYY-MM-DD) | Performance chart data. |
+| get_apr | startDate?, endDate?, useExactEndDate? | APR calculation. |
+| get_deposits | (none) | List of deposits. |
+
+### Financial Tools (wallet required)
+
+| Tool | Parameters | Description |
+|------|-----------|-------------|
+| withdraw | amount? (smallest unit string) | Partial (with amount) or full (without) withdrawal. |
+| get_withdrawal_status | (none) | Current withdrawal/deactivation status. |
+| get_transactions | limit? (1-100, default 20), sort? | Transaction history. |
+| get_fees | (none) | Fee percentage and absolute values. |
+
+### Rewards Tools (wallet required)
+
+| Tool | Parameters | Description |
+|------|-----------|-------------|
+| claim_rewards | (none) | Claim rewards. Returns token list and amounts. |
+
+### Optimizer Tools (no wallet required)
+
+| Tool | Parameters | Description |
+|------|-----------|-------------|
+| optimize | token, capital, currentAllocations, protocols, constraints?, wallet? | Find optimal allocation. Returns APR improvement, gas, action plan. |
+| simulate | token, balance, protocols?, constraints? | Simulate allocation. Returns projected allocations and weighted APR. |
+
+## Cherry-Picking Tools
+
+Import only the groups you need:
+
+```typescript
+import {
+  walletTools,       // connect_wallet, disconnect_wallet
+  accountTools,      // create_smart_account, get_smart_account
+  protocolTools,     // get_protocols, get_tokens, get_stats, get_tvl
+  lifecycleTools,    // activate_agent, deactivate_agent, top_up, run_agent
+  portfolioTools,    // get_portfolio, get_performance, get_apr, get_deposits
+  financialTools,    // withdraw, get_withdrawal_status, get_transactions, get_fees
+  rewardsTools,      // claim_rewards
+  optimizerTools,    // optimize, simulate
+  allTools,          // all 23 tools combined
+} from '@gizatech/mcp-server';
+```
+
+Always include `walletTools` when using any wallet-dependent group.
+
+## Custom Tools
+
+Tools are plain objects with a Zod schema and async handler:
+
+```typescript
+import { z } from 'zod';
+import type { ToolDefinition } from '@gizatech/mcp-server';
+import { textResult } from '@gizatech/mcp-server';
+
+const myTool: ToolDefinition = {
+  name: 'my_tool',
+  description: 'Description for the LLM.',
+  inputSchema: z.object({
+    param: z.string().min(1),
+  }),
+  async handler(ctx, input) {
+    return textResult(`Result: ${input['param']}`);
+  },
+};
+```
+
+### ToolDefinition Interface
+
+```typescript
+interface ToolDefinition {
+  name: string;
+  description: string;
+  inputSchema: z.ZodObject<z.ZodRawShape>;
+  handler: (ctx: ToolContext, input: Record<string, unknown>) => Promise<ToolResult>;
+}
+```
+
+### ToolContext
+
+```typescript
+interface ToolContext {
+  giza: Giza;                         // SDK instance
+  walletStore: WalletContextStore;    // Session wallet storage
+  sessionId: string;                  // Current session ID
+}
+```
+
+### Result Helpers
+
+```typescript
+import { textResult, jsonResult, errorResult } from '@gizatech/mcp-server';
+
+textResult('Success message')           // Plain text response
+jsonResult({ apr: 5.42 })               // Pretty-printed JSON response
+errorResult('Something went wrong')     // Error response (isError: true)
+```
+
+## Transport
+
+### Stdio (default)
+
+Reads MCP messages from stdin, writes to stdout. Used by Claude Desktop,
+Cursor, Claude Code, and any client that spawns the server as a child process.
+
+```typescript
+const server = createGizaServer(resolveConfig());
+await server.stdio();
+```
+
+### HTTP
+
+Starts an HTTP server with StreamableHTTP transport.
+
+```typescript
+const server = createGizaServer(resolveConfig());
+await server.http({ port: 3000 });
+```
+
+Endpoints:
+- POST /mcp -- MCP message endpoint
+- GET /health -- Returns {"status": "ok"}
+
+Each HTTP connection gets a unique session ID via crypto.randomUUID().
+
+## Error Handling
+
+All tool errors are caught and converted to LLM-friendly messages.
+The LLM never sees raw stack traces.
+
+Error mapping:
+- WalletNotConnectedError → "No wallet connected. Use connect_wallet first..."
+- GizaAPIError → error.friendlyMessage
+- ValidationError → "Validation error: {message}"
+- TimeoutError → "Request timed out. Please try again."
+- NetworkError → "Network error. Please check connectivity and try again."
+
+## Exports
+
+```typescript
+// Entry points
+export { serve } from '@gizatech/mcp-server';
+export { createGizaServer, GizaServer } from '@gizatech/mcp-server';
+
+// Config
+export { resolveConfig } from '@gizatech/mcp-server';
+
+// Tool groups
+export {
+  walletTools, accountTools, protocolTools, lifecycleTools,
+  portfolioTools, financialTools, rewardsTools, optimizerTools,
+  allTools,
+} from '@gizatech/mcp-server';
+
+// Context & errors
+export { WalletContextStore } from '@gizatech/mcp-server';
+export { WalletNotConnectedError, formatToolError } from '@gizatech/mcp-server';
+
+// Formatting
+export { textResult, errorResult, jsonResult, formatAddress } from '@gizatech/mcp-server';
+export { DEFAULT_SYSTEM_PROMPT } from '@gizatech/mcp-server';
+
+// Types
+export type {
+  ToolDefinition, ToolContext, ToolResult,
+  ServerConfig, ResolvedServerConfig,
+} from '@gizatech/mcp-server';
+```

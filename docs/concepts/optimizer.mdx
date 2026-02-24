@@ -1,11 +1,11 @@
 ---
 title: Optimizer
-description: "Understanding Giza's capital allocation optimization engine"
+description: "How the Giza Optimizer allocates capital across protocols"
 ---
 
 ## What is the Optimizer?
 
-The **Giza Optimizer** is a stateless service that calculates optimal capital allocation across DeFi lending protocols. It analyzes current APRs, gas costs, and constraints to determine the best distribution of capital for maximum net returns.
+The **Giza Optimizer** is a stateless service that calculates optimal capital allocation across DeFi lending protocols. It looks at current APRs, gas costs, and constraints to find the distribution of capital with the highest net return.
 
 ## How It Works
 
@@ -86,13 +86,13 @@ The optimizer is **completely stateless**:
 - No side effects
 - Can be called from anywhere
 
-This stateless design enables:
+This stateless design means:
 - **Predictable**: Results depend only on inputs
 - **Testable**: Easy to unit test scenarios
-- **Composable**: Integrate with any system
+- **Composable**: Plugs into any system
 - **Scalable**: No state to manage
 - **Private**: Giza doesn't store your data
-- **IaaS-Ready**: Perfect for Intelligence as a Service consumption
+- **IaaS-Ready**: Works well as an Intelligence as a Service endpoint
 
 ## Optimizer Input
 
@@ -317,7 +317,7 @@ Example:
 
 ### Optimization Goals
 
-The optimizer uses a **constraint-based optimization** approach:
+The optimizer follows a **constraint-based optimization** approach:
 
 1. **Fetch Data**: Get current APRs, gas prices, liquidity
 2. **Apply Constraints**: Filter out invalid allocations
@@ -577,7 +577,7 @@ console.log(`Potential gain: +${expanded.optimization_result.weighted_apr_final 
     icon="lightbulb"
     href="/examples/advanced-patterns"
   >
-    Advanced optimization patterns
+    Optimization patterns and examples
   </Card>
   <Card
     title="Agentic Integration"

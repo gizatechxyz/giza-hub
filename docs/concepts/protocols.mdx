@@ -5,7 +5,7 @@ description: 'DeFi lending protocols supported by Giza agents across multiple ch
 
 ## Overview
 
-Giza agents optimize yield by deploying capital across leading **DeFi lending protocols** on multiple blockchains. These protocols allow users to supply assets and earn interest from borrowers.
+Giza agents optimize yield by deploying capital across **DeFi lending protocols** on multiple blockchains. Users supply assets and earn interest from borrowers.
 
 ## Supported Protocols by Chain
 
@@ -15,10 +15,10 @@ Giza agents optimize yield by deploying capital across leading **DeFi lending pr
 
     | Protocol | Description | Key Features |
     |----------|-------------|--------------|
-    | **Aave** | Leading decentralized liquidity protocol | Isolated risk pools, battle-tested security, strong liquidity |
-    | **Compound** | Time-tested lending market | Gas-efficient, single collateral model, high composability |
-    | **Moonwell** | Base-native lending protocol | Optimized for Base, competitive rates, community governed |
-    | **Fluid** | Advanced liquidity protocol | Efficient capital usage, modern architecture |
+    | **Aave** | Decentralized liquidity protocol | Isolated risk pools, audited, deep liquidity |
+    | **Compound** | Established lending market | Gas-efficient, single collateral model, composable |
+    | **Moonwell** | Base-native lending protocol | Optimized for Base, community governed |
+    | **Fluid** | Liquidity protocol | Efficient capital usage |
 
     ### Morpho Vaults
 
@@ -49,9 +49,9 @@ Giza agents optimize yield by deploying capital across leading **DeFi lending pr
 
     | Protocol | Description | Key Features |
     |----------|-------------|--------------|
-    | **Aave** | Arbitrum deployment of Aave V3 | Lower gas costs, deep liquidity, proven security |
-    | **Compound** | Compound V3 on Arbitrum | Arbitrum gas efficiency, proven reliability |
-    | **Fluid** | Advanced liquidity protocol | Efficient capital usage, modern architecture |
+    | **Aave** | Arbitrum deployment of Aave V3 | Lower gas costs, deep liquidity |
+    | **Compound** | Compound V3 on Arbitrum | Gas-efficient on Arbitrum |
+    | **Fluid** | Liquidity protocol | Efficient capital usage |
 
     ### Morpho Vaults
 
@@ -83,13 +83,13 @@ Giza agents optimize yield by deploying capital across leading **DeFi lending pr
 
     | Protocol | Description | Key Features |
     |----------|-------------|--------------|
-    | **Aave** | Ethereum mainnet Aave V3 | Original deployment, deepest liquidity, maximum security |
-    | **Compound** | Compound V3 on Ethereum | Battle-tested on mainnet, proven track record |
-    | **Fluid** | Advanced liquidity protocol | Efficient capital usage, modern architecture |
+    | **Aave** | Ethereum mainnet Aave V3 | Original deployment, deepest liquidity |
+    | **Compound** | Compound V3 on Ethereum | Long mainnet history |
+    | **Fluid** | Liquidity protocol | Efficient capital usage |
 
     ### Morpho Vaults
 
-    Extensive Morpho vault ecosystem on Ethereum:
+    Morpho vaults on Ethereum:
 
     | Vault | Strategy |
     |-------|----------|
@@ -112,7 +112,7 @@ Giza agents optimize yield by deploying capital across leading **DeFi lending pr
 
     ### Euler Vaults
 
-    Comprehensive Euler vault selection on Ethereum:
+    Euler vaults on Ethereum:
 
     | Vault | Strategy |
     |-------|----------|
@@ -138,8 +138,8 @@ Giza agents optimize yield by deploying capital across leading **DeFi lending pr
 
     | Protocol | Description | Key Features |
     |----------|-------------|--------------|
-    | **Aave** | Polygon deployment of Aave V3 | Low fees, fast transactions, strong liquidity |
-    | **Fluid** | Advanced liquidity protocol | Efficient capital usage, Polygon-optimized |
+    | **Aave** | Polygon deployment of Aave V3 | Low fees, fast transactions |
+    | **Fluid** | Liquidity protocol | Efficient capital usage, Polygon-optimized |
 
     ### Morpho Vaults
 
@@ -156,7 +156,7 @@ Giza agents optimize yield by deploying capital across leading **DeFi lending pr
     | Protocol | Description | Key Features |
     |----------|-------------|--------------|
     | **Aave** | Plasma deployment of Aave V3 | Plasma network optimization |
-    | **Fluid** | Advanced liquidity protocol | Efficient capital usage |
+    | **Fluid** | Liquidity protocol | Efficient capital usage |
 
     ### Euler Vaults
 
@@ -229,26 +229,26 @@ console.log('Available protocols:', protocols);
 
 ### Core Protocols
 
-**Traditional lending markets** like Aave, Compound, Moonwell, Fluid, and Hyperlend:
+Traditional lending markets like Aave, Compound, Moonwell, Fluid, and Hyperlend:
 
 - Direct lending/borrowing
 - Pool-based liquidity
 - Variable APRs based on utilization
-- Battle-tested security (for established protocols)
+- Audited contracts (for established protocols)
 
 ### Morpho Vaults
 
-**Optimization layer** that aggregates liquidity:
+Optimization layer that aggregates liquidity:
 
 - Built on top of existing protocols
-- Managed strategies by experts (Gauntlet, Steakhouse, Felix, etc.)
-- Often higher APRs through optimization
+- Managed strategies by firms like Gauntlet, Steakhouse, Felix, etc.
+- Can produce higher APRs through optimization
 - Additional layer of risk management
 - Available on most chains with varying strategies
 
 ### Euler Vaults
 
-**Modular lending protocol**:
+Modular lending protocol:
 
 - Non-custodial
 - Permissionless vault creation
@@ -259,7 +259,7 @@ console.log('Available protocols:', protocols);
 ## Protocol Risks
 
 <Warning>
-All DeFi protocols carry inherent risks. Giza agents help manage these through diversification and optimization, but users should be aware of:
+All DeFi protocols carry risk. Giza agents reduce exposure through diversification and optimization, but users should understand what can go wrong:
 </Warning>
 
 ### Smart Contract Risk
@@ -278,7 +278,7 @@ All DeFi protocols carry inherent risks. Giza agents help manage these through d
 
 - Protocols rely on price oracles
 - Oracle failures can cause liquidations or losses
-- **Mitigation**: Using protocols with robust oracle systems
+- **Mitigation**: Using protocols with reliable oracle systems
 
 ### Protocol Governance Risk
 
@@ -291,18 +291,16 @@ All DeFi protocols carry inherent risks. Giza agents help manage these through d
 - Network outages or congestion
 - Bridge vulnerabilities (for L2s)
 - Chain reorganizations
-- **Mitigation**: Choosing established chains with strong security
+- **Mitigation**: Choosing established chains
 
 ## Protocol Diversification
 
-Giza agents automatically diversify across protocols to manage risk:
+Giza agents spread capital across protocols to reduce exposure:
 
-### Benefits
-
-1. **Reduced Exposure**: No single point of failure
-2. **Yield Optimization**: Access best rates across protocols
-3. **Liquidity Management**: Spread across multiple pools
-4. **Risk Mitigation**: Protocol-specific risks are isolated
+1. No single point of failure
+2. Access to the best rates across protocols
+3. Liquidity spread across multiple pools
+4. Protocol-specific risks stay isolated
 
 ## Constraints for Protocol Management
 

@@ -1,11 +1,11 @@
 ---
 title: Quickstart
-description: 'Get started with Giza Agent SDK in minutes'
+description: 'Install the SDK, create a smart account, and activate an agent'
 ---
 
 ## Overview
 
-This guide will get you up and running with the Giza Agent SDK. You'll create a smart account, activate an agent, and start optimizing yield automatically.
+This guide walks through the Giza Agent SDK from installation to a running agent. You'll create a smart account, activate an agent, and start yield optimization.
 
 <Note>
 This quickstart focuses on the **Agentic integration**. For IaaS (Intelligence as a Service) using the Optimizer only, see the [IaaS Integration Guide](/integration/iaas).
@@ -39,7 +39,7 @@ graph TB
   </Accordion>
 
   <Accordion title="TypeScript Project">
-    The SDK is built for TypeScript. JavaScript works too, but you'll miss out on type safety.
+    The SDK is built for TypeScript. JavaScript works too, but without type safety.
   </Accordion>
 
   <Accordion title="Giza API Credentials">
@@ -252,7 +252,7 @@ await agent.run();
 
 ## Error Handling
 
-Always wrap SDK calls in try-catch blocks:
+Wrap SDK calls in try-catch blocks:
 
 ```typescript
 import { ValidationError, GizaAPIError, TimeoutError } from '@gizatech/agent-sdk';

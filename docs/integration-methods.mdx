@@ -5,7 +5,7 @@ description: "Choose between Agentic (full solution) or IaaS (optimization intel
 
 ## Overview
 
-Giza offers two powerful ways to integrate autonomous yield optimization into your application. Choose the approach that best fits your technical requirements and existing infrastructure.
+Giza has two ways to integrate yield optimization into your application. Which one you pick depends on your technical setup and whether you already have execution infrastructure.
 
 <CardGroup cols={2}>
   <Card title="Agentic Integration" icon="robot" color="#BDEE63">
@@ -32,7 +32,7 @@ Giza offers two powerful ways to integrate autonomous yield optimization into yo
 
 ### What is it?
 
-The **Agentic approach** uses the Giza Agent SDK to integrate fully autonomous yield optimization agents. Agents automatically manage capital, rebalance across protocols, and optimize for maximum APR without any manual intervention.
+The **Agentic approach** uses the Giza Agent SDK to run yield optimization agents. Agents manage capital, rebalance across protocols, and optimize for APR without manual intervention.
 
 **Giza manages everything:**
 - Self-custodied smart account creation ([ZeroDev](https://zerodev.app/))
@@ -52,13 +52,13 @@ The **Agentic approach** uses the Giza Agent SDK to integrate fully autonomous y
 
 <AccordionGroup>
   <Accordion title="You want a complete solution">
-    Perfect if you want to offer yield optimization without building execution infrastructure.
+    You want yield optimization without building execution infrastructure.
   </Accordion>
   <Accordion title="You don't have smart account infrastructure">
-    Giza provides smart accounts, session keys, and execution - you don't need to build this.
+    Giza provides smart accounts, session keys, and execution -- you don't need to build this.
   </Accordion>
-  <Accordion title="You need fast time-to-market">
-    Integrate in hours, not weeks. The SDK provides everything out of the box.
+  <Accordion title="You need to ship quickly">
+    The SDK handles the backend. You wire up the UI and you're done.
   </Accordion>
 </AccordionGroup>
 
@@ -72,7 +72,7 @@ The **Agentic approach** uses the Giza Agent SDK to integrate fully autonomous y
 
 ### What is it?
 
-The **Intelligence as a Service (IaaS)** approach provides access to Giza's **Optimizer** as a stateless intelligence service. You already have your own execution infrastructure (smart accounts, transaction execution, capital management, or even Vaults), and you want to leverage Giza's optimization intelligence to inform your rebalancing decisions.
+The **Intelligence as a Service (IaaS)** approach gives you access to Giza's **Optimizer** as a stateless service. You already have your own execution infrastructure (smart accounts, transaction execution, capital management, or even Vaults) and want Giza's optimization to inform your rebalancing decisions.
 
 **Giza provides:**
 - Optimization intelligence (optimal allocations)
@@ -90,16 +90,16 @@ The **Intelligence as a Service (IaaS)** approach provides access to Giza's **Op
 
 <AccordionGroup>
   <Accordion title="You have existing execution infrastructure">
-    Perfect if you already have smart accounts, transaction execution, or even Vaults, and just need optimization intelligence.
+    You already have smart accounts, transaction execution, or Vaults, and just need optimization intelligence.
   </Accordion>
   <Accordion title="You need custom execution logic">
-    Build your own rebalancing schedule, risk management, or execution strategies while leveraging Giza's optimizer.
+    Build your own rebalancing schedule, risk management, or execution strategies on top of Giza's optimizer.
   </Accordion>
   <Accordion title="You want full control">
-    Decide when to rebalance, which suggestions to execute, and how to manage risk - optimizer just provides intelligence.
+    You decide when to rebalance, which suggestions to execute, and how to manage risk. The optimizer just provides intelligence.
   </Accordion>
-  <Accordion title="You want the optimization brain, not the execution">
-    Use Giza's AI-powered optimization engine without handing over execution to agents.
+  <Accordion title="You want the optimization, not the execution">
+    Use Giza's optimization engine without handing over execution to agents.
   </Accordion>
 </AccordionGroup>
 
@@ -109,7 +109,7 @@ The **Intelligence as a Service (IaaS)** approach provides access to Giza's **Op
 
 ## Getting API Keys
 
-Regardless of which approach you choose, you'll need API credentials:
+Both approaches require API credentials:
 
 <Card title="Get API Keys" icon="key" href="https://www.gizatech.xyz/">
   Contact Giza to get your partner API key, API URL, and partner name

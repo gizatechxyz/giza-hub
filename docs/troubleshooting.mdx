@@ -229,13 +229,13 @@ If issues persist:
 | 500 | Server Error | Backend issue, retry |
 | 503 | Service Unavailable | Temporary outage |
 
-## Best Practices to Avoid Issues
+## Avoiding Issues
 
-1. Always validate inputs before SDK calls
+1. Validate inputs before SDK calls
 2. Use try-catch for error handling
-3. Implement retry logic for network issues
-4. Cache responses appropriately
+3. Add retry logic for network issues
+4. Cache responses where it makes sense
 5. Monitor API health in production
-6. Keep SDK updated to latest version
+6. Keep the SDK up to date
 7. Test on testnet before production
-8. Handle timeouts gracefully
+8. Handle timeouts

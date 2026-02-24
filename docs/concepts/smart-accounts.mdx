@@ -1,11 +1,11 @@
 ---
 title: Smart Accounts
-description: 'Understanding smart accounts and account abstraction in Giza'
+description: 'Smart accounts, ZeroDev, session keys, and gas management'
 ---
 
 ## What are Smart Accounts?
 
-Smart accounts are **smart contract wallets** that enable advanced features like gasless transactions, session keys, and programmable permissions. In Giza, every user gets a smart account that serves as the deposit address for agent-managed funds.
+Smart accounts are **smart contract wallets** with gasless transactions, session keys, and programmable permissions. In Giza, every user gets a smart account -- this is the deposit address for agent-managed funds.
 
 Unlike regular wallets (EOAs - Externally Owned Accounts), smart accounts:
 - Are smart contracts, not just private key pairs
@@ -26,15 +26,15 @@ graph LR
 
 ## ZeroDev Integration
 
-Giza smart accounts are powered by **[ZeroDev](https://zerodev.app/)**, a leading account abstraction infrastructure provider.
+Giza smart accounts are powered by **[ZeroDev](https://zerodev.app/)**, an account abstraction infrastructure provider.
 
 <AccordionGroup>
   <Accordion title="ERC-4337 Compliant">
     Follows the official Ethereum account abstraction standard for maximum compatibility and security.
   </Accordion>
 
-  <Accordion title="Battle-Tested">
-    Used by thousands of applications, managing millions in assets.
+  <Accordion title="Production-Proven">
+    Widely deployed across many applications and managing significant assets on-chain.
   </Accordion>
 
   <Accordion title="Gasless Transactions">
@@ -42,7 +42,7 @@ Giza smart accounts are powered by **[ZeroDev](https://zerodev.app/)**, a leadin
   </Accordion>
 
   <Accordion title="Session Keys">
-    Enable secure, time-bound delegated permissions perfect for autonomous agents.
+    Time-bound delegated permissions that work well for autonomous agents.
   </Accordion>
 </AccordionGroup>
 
@@ -130,7 +130,7 @@ When an agent is activated, the smart account grants **session keys** to the bac
 
 ## Gas Management
 
-One of the key benefits of smart accounts is **gasless transactions** for users:
+Smart accounts give users **gasless transactions**:
 
 ```mermaid
 graph LR
@@ -142,14 +142,14 @@ graph LR
     F[User] -.pays nothing.-> D
 ```
 
-**How it works:**
+How it works:
 1. Agent determines optimal rebalancing is needed
 2. Backend wallet crafts and signs the transaction
 3. Giza's paymaster sponsors the gas fee
 4. Smart account executes the transaction
 5. User pays nothing for the rebalancing operation
 
-**Gas costs are:**
+Gas costs are:
 - Covered by Giza during active management
 - Factored into the performance fee structure
 - Optimized through transaction batching

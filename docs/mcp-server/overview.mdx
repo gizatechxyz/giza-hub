@@ -5,7 +5,7 @@ description: "Expose Giza yield optimization tools to any LLM via the Model Cont
 
 ## What is the MCP Server?
 
-`@gizatech/mcp-server` exposes the full Giza Agent SDK as a set of **tools** that any LLM can call through the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/). Instead of writing TypeScript code to interact with the SDK, an LLM like Claude or GPT can call tools directly -- creating smart accounts, activating agents, checking portfolio performance, and running optimizations through natural language.
+`@gizatech/mcp-server` exposes the Giza Agent SDK as **tools** that any LLM can call through the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/). Instead of writing TypeScript to interact with the SDK, an LLM like Claude or GPT calls tools directly -- creating smart accounts, activating agents, checking portfolios, and running optimizations through natural language.
 
 The server ships as both a **library** (import and customize in your own code) and a **CLI** (run directly via `npx`).
 
@@ -59,13 +59,13 @@ This avoids the LLM having to pass the wallet address on every tool call. The se
 
 ### Error Handling
 
-All tool errors are caught and converted to LLM-friendly messages. The LLM never sees raw stack traces -- instead it gets actionable text like:
+All tool errors are caught and converted to messages the LLM can work with. No raw stack traces -- just actionable text like:
 
 - `"No wallet connected. Use connect_wallet first to set your wallet address for this session."`
 - `"Validation error: Invalid Ethereum address"`
 - `"Request timed out. Please try again."`
 
-This allows the LLM to communicate failures clearly and recover (e.g., by calling `connect_wallet` when it gets a wallet-not-connected error).
+This lets the LLM communicate failures and recover (e.g., by calling `connect_wallet` when it gets a wallet-not-connected error).
 
 ## What's Included
 
