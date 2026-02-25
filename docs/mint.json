@@ -46,13 +46,13 @@
     {
       "name": "GitHub",
       "icon": "github",
-      "url": "https://github.com/gizatech/agent-sdk"
+      "url": "https://github.com/gizatechxyz/agent-sdk"
     }
   ],
   "navigation": [
     {
       "group": "Get Started",
-      "pages": ["introduction", "integration-methods", "quickstart"]
+      "pages": ["introduction", "integration-methods", "quickstart", "skills"]
     },
     {
       "group": "Core Concepts",

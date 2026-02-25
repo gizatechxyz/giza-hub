@@ -1,0 +1,38 @@
+{
+  "name": "giza-skills",
+  "owner": {
+    "name": "Giza",
+    "email": "support@gizatech.xyz"
+  },
+  "metadata": {
+    "description": "Giza DeFi yield skills for Claude",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "developer-skills",
+      "description": "SDK integration skills for developers building with @gizatech/agent-sdk — quickstart, agent lifecycle, monitoring, optimization, and MCP server setup",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/giza",
+        "./skills/giza-manage",
+        "./skills/giza-monitor",
+        "./skills/giza-optimize",
+        "./skills/giza-mcp"
+      ]
+    },
+    {
+      "name": "yield-skills",
+      "description": "End-user skills for managing DeFi yield positions through conversation — onboarding, portfolio dashboard, fund management, and optimization via Giza MCP tools",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/yield",
+        "./skills/yield-start",
+        "./skills/yield-check",
+        "./skills/yield-manage"
+      ]
+    }
+  ]
+}

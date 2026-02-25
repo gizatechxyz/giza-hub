@@ -1,0 +1,150 @@
+---
+title: Claude Code Skills
+description: "Pre-built skills that teach Claude how to work with Giza -- for developers and end users"
+---
+
+## What are Skills?
+
+[Skills](https://code.claude.com/docs/en/skills) are instruction sets that Claude loads on demand to handle specialized tasks. Instead of Claude improvising how to use the Giza SDK or MCP tools, skills provide exact workflows, tool sequences, and safety guardrails.
+
+This repo ships two skill collections as installable [Claude Code plugins](https://code.claude.com/docs/en/plugins):
+
+- **Developer Skills** (`/giza-*`) -- for building applications with `@gizatech/agent-sdk`
+- **Yield Skills** (`/yield-*`) -- for end users managing DeFi positions through conversation
+
+## Installation
+
+<Steps>
+  <Step title="Register the marketplace">
+    Run this once in any Claude Code session. It tells Claude Code where to find Giza skills:
+
+    ```
+    /plugin marketplace add gizatechxyz/agent-sdk
+    ```
+  </Step>
+  <Step title="Install the plugin group(s) you need">
+    Pick one or both depending on your use case:
+
+    ```
+    # For developers building with the TypeScript SDK
+    /plugin install developer-skills@giza-skills
+
+    # For end users managing yield via conversation + MCP tools
+    /plugin install yield-skills@giza-skills
+    ```
+  </Step>
+  <Step title="Use any skill by name">
+    Mention the skill in your prompt, or type it as a slash command:
+
+    ```
+    > Use /yield-start to set up my agent
+    > Help me with /giza-manage to deactivate my agent
+    ```
+
+    You can also run `/plugin` and open the **Installed** tab to browse installed skills interactively.
+  </Step>
+</Steps>
+
+<Note>
+  **Yield skills prerequisite:** The Giza MCP server must be running in your Claude Code environment. See [MCP Server Quickstart](/mcp-server/quickstart) for setup instructions.
+</Note>
+
+### Uninstalling
+
+To remove a plugin group:
+
+```
+/plugin uninstall developer-skills@giza-skills
+/plugin uninstall yield-skills@giza-skills
+```
+
+To remove the marketplace entirely (also uninstalls all its plugins):
+
+```
+/plugin marketplace remove giza-skills
+```
+
+## Developer Skills
+
+For developers writing TypeScript with the Giza SDK. These skills produce working code with real token addresses, error handling, and type-safe patterns.
+
+<CardGroup cols={2}>
+  <Card title="/giza" icon="code" href="https://github.com/gizatechxyz/agent-sdk/blob/main/skills/giza/SKILL.md">
+    SDK quickstart, configuration reference, `GizaConfig`, `Chain` enum, common token addresses, and full `Giza` class method reference.
+  </Card>
+  <Card title="/giza-manage" icon="robot" href="https://github.com/gizatechxyz/agent-sdk/blob/main/skills/giza-manage/SKILL.md">
+    Agent lifecycle management -- creation, activation, deactivation, top-up, withdrawals, protocol updates, and constraint configuration. Includes the full `AgentStatus` state machine.
+  </Card>
+  <Card title="/giza-monitor" icon="chart-line" href="https://github.com/gizatechxyz/agent-sdk/blob/main/skills/giza-monitor/SKILL.md">
+    Portfolio monitoring, APR tracking, performance history, deposits, fees, transactions, executions, logs, and rewards. Covers the `Paginator` pattern for collection methods.
+  </Card>
+  <Card title="/giza-optimize" icon="brain" href="https://github.com/gizatechxyz/agent-sdk/blob/main/skills/giza-optimize/SKILL.md">
+    Capital allocation optimizer -- `OptimizeOptions`, `OptimizeResponse`, all 6 constraint types (`WalletConstraints`), result interpretation, and IaaS vs agentic execution modes.
+  </Card>
+  <Card title="/giza-mcp" icon="plug" href="https://github.com/gizatechxyz/agent-sdk/blob/main/skills/giza-mcp/SKILL.md">
+    MCP server setup for Claude Desktop, Cursor, Claude Code, and CLI. Three configuration tiers, all 22 MCP tools, cherry-picking tool groups, and HTTP transport.
+  </Card>
+</CardGroup>
+
+## Yield Skills
+
+For end users who interact with Giza through conversation using the [MCP server](/mcp-server/overview). These skills never show code -- Claude calls MCP tools directly and presents results in plain language.
+
+<Note>
+  Yield skills require the Giza MCP server to be configured. See [MCP Server Quickstart](/mcp-server/quickstart) for setup.
+</Note>
+
+<CardGroup cols={2}>
+  <Card title="/yield" icon="compass" href="https://github.com/gizatechxyz/agent-sdk/blob/main/skills/yield/SKILL.md">
+    Platform hub -- what Giza is, what users can do, DeFi glossary (APR, protocol, smart account, gas, TVL, rebalance), and platform exploration via `get_stats`, `get_tvl`, `get_tokens`, and `get_protocols`.
+  </Card>
+  <Card title="/yield-start" icon="rocket" href="https://github.com/gizatechxyz/agent-sdk/blob/main/skills/yield-start/SKILL.md">
+    Step-by-step onboarding: connect wallet, create or find smart account, deposit tokens externally, choose token and protocols, confirm parameters, activate agent, and verify activation.
+  </Card>
+  <Card title="/yield-check" icon="chart-line" href="https://github.com/gizatechxyz/agent-sdk/blob/main/skills/yield-check/SKILL.md">
+    Portfolio dashboard: quick status summary, APR, detailed performance history, transaction history, deposit history, fees, and withdrawal status. Includes plain-language translations for all 13 agent states.
+  </Card>
+  <Card title="/yield-manage" icon="sliders" href="https://github.com/gizatechxyz/agent-sdk/blob/main/skills/yield-manage/SKILL.md">
+    Fund management: top up, partial withdraw, full withdraw (with deactivation warning), claim rewards, optimize allocation with break-even analysis, and deactivate. Includes unit conversion and tiered safety confirmations.
+  </Card>
+</CardGroup>
+
+### Safety Model
+
+Yield skills enforce three confirmation tiers to protect users from accidental actions:
+
+| Tier | Actions | Confirmation |
+|------|---------|-------------|
+| Read-only | Claim rewards, view portfolio | None |
+| Reversible write | Top up, partial withdraw, run optimization | Light confirmation |
+| Irreversible | Full withdrawal, deactivate agent | Explicit warning + confirmation |
+
+### MCP Tool Coverage
+
+All 22 MCP tools are covered across the 4 yield skills:
+
+| Category | Tools | Skill |
+|----------|-------|-------|
+| Wallet | `connect_wallet`, `disconnect_wallet` | yield-start, yield-check, yield-manage |
+| Account | `create_smart_account`, `get_smart_account` | yield-start |
+| Discovery | `get_tokens`, `get_protocols`, `get_stats`, `get_tvl` | yield, yield-start |
+| Lifecycle | `activate_agent`, `deactivate_agent`, `top_up`, `run_agent` | yield-start, yield-manage |
+| Portfolio | `get_portfolio`, `get_performance`, `get_apr`, `get_deposits` | yield-start, yield-check, yield-manage |
+| Financial | `withdraw`, `get_withdrawal_status`, `get_transactions`, `get_fees` | yield-check, yield-manage |
+| Rewards | `claim_rewards` | yield-manage |
+| Optimizer | `optimize` | yield-manage |
+
+## Creating Custom Skills
+
+You can create your own skills that build on Giza's tools. Each skill is a folder with a `SKILL.md` file containing YAML frontmatter and markdown instructions:
+
+```markdown
+---
+name: my-custom-skill
+description: What this skill does and when Claude should use it
+---
+
+Your instructions here. Claude follows these when the skill is active.
+```
+
+Place custom skills in a `skills/` directory and register them in `.claude-plugin/marketplace.json`. See the [Anthropic Skills spec](https://github.com/anthropics/skills/tree/main/spec) for the full format.

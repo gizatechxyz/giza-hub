@@ -1053,6 +1053,63 @@ Error mapping:
 - TimeoutError → "Request timed out. Please try again."
 - NetworkError → "Network error. Please check connectivity and try again."
 
+## Claude Code Skills
+
+The Giza repo ships installable Claude Code skills in two plugin groups:
+
+### Installation
+
+Skills are distributed as Claude Code plugins. Install in 3 steps:
+
+1. Register the marketplace (one-time):
+```
+/plugin marketplace add gizatechxyz/agent-sdk
+```
+
+2. Install the plugin group(s) you need:
+```
+/plugin install developer-skills@giza-skills
+/plugin install yield-skills@giza-skills
+```
+
+3. Use any skill by mentioning it in your prompt (e.g., "Use /yield-start")
+   or type it as a slash command.
+
+To uninstall: `/plugin uninstall developer-skills@giza-skills`
+To remove marketplace: `/plugin marketplace remove giza-skills`
+
+Yield skills require the Giza MCP server to be configured.
+
+### Developer Skills (for SDK integration)
+
+| Skill | Description |
+|-------|-------------|
+| /giza | SDK quickstart, configuration, and API reference |
+| /giza-manage | Agent lifecycle -- activation, deactivation, funding, protocols |
+| /giza-monitor | Portfolio monitoring, APR, performance, transactions |
+| /giza-optimize | Capital allocation optimizer |
+| /giza-mcp | MCP server setup for Claude Desktop, Cursor, Claude Code |
+
+### Yield Skills (for end users via MCP)
+
+These skills guide end users through DeFi yield management via conversation.
+They never show code -- Claude calls MCP tools on the user's behalf.
+
+| Skill | Description |
+|-------|-------------|
+| /yield | Platform overview, DeFi glossary, platform stats |
+| /yield-start | Onboarding: connect wallet, create smart account, deposit, activate |
+| /yield-check | Portfolio dashboard: balances, APR, performance, transactions, fees |
+| /yield-manage | Fund management: top up, withdraw, claim rewards, optimize, deactivate |
+
+Safety model: read-only ops need no confirmation, reversible writes get light
+confirmation, irreversible ops (full withdrawal, deactivate) require explicit
+warning + confirmation.
+
+All 22 MCP tools are covered across the 4 yield skills.
+
+---
+
 ## Exports
 
 ```typescript

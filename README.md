@@ -123,6 +123,66 @@ await server.stdio();
 | Rewards | `claim_rewards` |
 | Optimizer | `optimize` |
 
+## Claude Code Skills
+
+Pre-built [skills](https://code.claude.com/docs/en/skills) that teach Claude how to work with Giza -- available as installable plugins for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
+
+### Installation
+
+Skills are distributed as Claude Code plugins. Install them in 3 steps inside any Claude Code session:
+
+**Step 1 -- Register the marketplace** (one-time setup):
+
+```
+/plugin marketplace add gizatechxyz/agent-sdk
+```
+
+**Step 2 -- Install the plugin group(s)** you need:
+
+```
+# For developers building with the SDK
+/plugin install developer-skills@giza-skills
+
+# For end users managing yield via MCP tools
+/plugin install yield-skills@giza-skills
+```
+
+**Step 3 -- Use any skill** by mentioning its name in your prompt:
+
+```
+> Use /yield-start to set up my agent
+> Help me with /giza-manage to deactivate my agent
+```
+
+You can also type `/yield-start` directly as a slash command.
+
+To browse installed skills interactively, run `/plugin` and open the **Installed** tab.
+
+> **Prerequisite for yield skills:** The Giza MCP server must be configured in your Claude Code environment. See [MCP Server setup](#claude-desktop-configuration) or the full [MCP Server docs](./docs/mcp-server/overview.mdx).
+
+### Developer Skills
+
+For developers building with `@gizatech/agent-sdk`. These skills produce working TypeScript and reference SDK APIs.
+
+| Skill | Description |
+|-------|-------------|
+| `/giza` | SDK quickstart, configuration, and complete API reference |
+| `/giza-manage` | Agent lifecycle -- activation, deactivation, funding, protocols, constraints |
+| `/giza-monitor` | Portfolio monitoring, APR, performance, and transaction history |
+| `/giza-optimize` | Capital allocation optimizer |
+| `/giza-mcp` | MCP server setup for Claude Desktop, Cursor, and Claude Code |
+
+### Yield Skills
+
+For end users managing DeFi positions through conversation with the [Giza MCP server](#mcp-server). No code -- Claude calls MCP tools on the user's behalf.
+
+| Skill | Description |
+|-------|-------------|
+| `/yield` | Platform overview, DeFi glossary, and platform stats |
+| `/yield-start` | Onboarding -- connect wallet, create smart account, deposit, activate agent |
+| `/yield-check` | Portfolio dashboard -- balances, APR, performance, transactions, fees |
+| `/yield-manage` | Fund management -- top up, withdraw, claim rewards, optimize, deactivate |
+
 ## Development
 
 Requires [Bun](https://bun.sh/) and Node.js >= 18.
@@ -181,6 +241,7 @@ bun run --filter @gizatech/agent-sdk example:optimizer
 - [SDK Reference](./docs/sdk-reference/overview.mdx)
 - [MCP Server](./docs/mcp-server/overview.mdx)
 - [MCP Server Testing](./docs/mcp-server/testing.mdx)
+- [Claude Code Skills](./docs/skills.mdx)
 - [Examples](./docs/examples/basic-usage.mdx)
 
 ## License
