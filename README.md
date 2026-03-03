@@ -4,10 +4,9 @@ TypeScript SDK and tooling for [Giza Agents](https://www.gizatech.xyz/) — auto
 
 ## Packages
 
-| Package | Description |
-|---------|-------------|
+| Package                                 | Description                                                                                       |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | [`@gizatech/agent-sdk`](./packages/sdk) | SDK for smart account creation, agent lifecycle, portfolio monitoring, and stateless optimization |
-| [`@gizatech/mcp-server`](./packages/mcp-server) | MCP server exposing Giza tools to LLMs (Claude, GPT, etc.) via stdio or HTTP transport |
 
 ## Quick Start
 
@@ -28,19 +27,21 @@ bun add @gizatech/agent-sdk
 ```
 
 ```typescript
-import { Giza, Chain } from '@gizatech/agent-sdk';
+import { Giza, Chain } from "@gizatech/agent-sdk";
 
 const giza = new Giza({ chain: Chain.BASE });
 
 // Create a smart account for a user
-const agent = await giza.createAgent('0x742d35Cc6634C0532925a3b844Bc454e4438f44e');
-console.log('Smart Account:', agent.wallet);
+const agent = await giza.createAgent(
+  "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+);
+console.log("Smart Account:", agent.wallet);
 
 // Activate the agent after the user deposits funds
 await agent.activate({
-  owner: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
-  token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-  protocols: ['aave', 'compound'],
+  owner: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+  token: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  protocols: ["aave", "compound"],
   txHash: depositTxHash,
 });
 
@@ -48,183 +49,18 @@ await agent.activate({
 const { apr } = await agent.apr();
 ```
 
-### MCP Server
-
-```bash
-bun add @gizatech/mcp-server
-```
-
-The MCP server exposes all Giza SDK capabilities as tools that LLMs can call via the [Model Context Protocol](https://modelcontextprotocol.io/). Three integration tiers:
-
-**Zero config** -- reads credentials from env vars, starts stdio transport:
-
-```typescript
-import { serve } from '@gizatech/mcp-server';
-serve();
-```
-
-**Explicit config** -- specify chain, transport, and port:
-
-```typescript
-import { serve } from '@gizatech/mcp-server';
-serve({ chain: 8453, transport: 'http', port: 3001 });
-```
-
-**Full control** -- bring your own Giza instance, cherry-pick tools, custom prompt:
-
-```typescript
-import { Giza, Chain } from '@gizatech/agent-sdk';
-import {
-  createGizaServer,
-  portfolioTools,
-  lifecycleTools,
-  protocolTools,
-} from '@gizatech/mcp-server';
-
-const giza = new Giza({ chain: Chain.BASE });
-const server = createGizaServer({
-  giza,
-  tools: [...portfolioTools, ...lifecycleTools, ...protocolTools],
-  systemPrompt: 'You are a savings assistant...',
-});
-
-await server.stdio();
-```
-
-#### Claude Desktop configuration
-
-```json
-{
-  "mcpServers": {
-    "giza": {
-      "command": "npx",
-      "args": ["@gizatech/mcp-server"],
-      "env": {
-        "GIZA_API_KEY": "your-api-key",
-        "GIZA_PARTNER_NAME": "your-partner-name",
-        "GIZA_API_URL": "https://api.giza.tech",
-        "CHAIN_ID": "8453"
-      }
-    }
-  }
-}
-```
-
 #### Available tools
 
-| Group | Tools |
-|-------|-------|
-| Wallet | `connect_wallet`, `disconnect_wallet` |
-| Account | `create_smart_account`, `get_smart_account` |
-| Protocol | `get_protocols`, `get_tokens`, `get_stats`, `get_tvl` |
-| Lifecycle | `activate_agent`, `deactivate_agent`, `top_up`, `run_agent` |
-| Portfolio | `get_portfolio`, `get_performance`, `get_apr`, `get_deposits` |
+| Group     | Tools                                                               |
+| --------- | ------------------------------------------------------------------- |
+| Wallet    | `connect_wallet`, `disconnect_wallet`                               |
+| Account   | `create_smart_account`, `get_smart_account`                         |
+| Protocol  | `get_protocols`, `get_tokens`, `get_stats`, `get_tvl`               |
+| Lifecycle | `activate_agent`, `deactivate_agent`, `top_up`, `run_agent`         |
+| Portfolio | `get_portfolio`, `get_performance`, `get_apr`, `get_deposits`       |
 | Financial | `withdraw`, `get_withdrawal_status`, `get_transactions`, `get_fees` |
-| Rewards | `claim_rewards` |
-| Optimizer | `optimize` |
-
-## Claude Code Skills
-
-Pre-built [skills](https://code.claude.com/docs/en/skills) that teach Claude how to work with Giza -- available as installable plugins for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
-
-### Installation
-
-Skills are distributed as Claude Code plugins. Install them in 3 steps inside any Claude Code session:
-
-**Step 1 -- Register the marketplace** (one-time setup):
-
-```
-/plugin marketplace add gizatechxyz/agent-sdk
-```
-
-**Step 2 -- Install the plugin group(s)** you need:
-
-```
-# For developers building with the SDK
-/plugin install developer-skills@giza-skills
-
-# For end users managing yield via MCP tools
-/plugin install yield-skills@giza-skills
-```
-
-**Step 3 -- Use any skill** by mentioning its name in your prompt:
-
-```
-> Use /yield-start to set up my agent
-> Help me with /giza-manage to deactivate my agent
-```
-
-You can also type `/yield-start` directly as a slash command.
-
-To browse installed skills interactively, run `/plugin` and open the **Installed** tab.
-
-> **Prerequisite for yield skills:** The Giza MCP server must be configured in your Claude Code environment. See [MCP Server setup](#claude-desktop-configuration) or the full [MCP Server docs](./docs/mcp-server/overview.mdx).
-
-### Developer Skills
-
-For developers building with `@gizatech/agent-sdk`. These skills produce working TypeScript and reference SDK APIs.
-
-| Skill | Description |
-|-------|-------------|
-| `/giza` | SDK quickstart, configuration, and complete API reference |
-| `/giza-manage` | Agent lifecycle -- activation, deactivation, funding, protocols, constraints |
-| `/giza-monitor` | Portfolio monitoring, APR, performance, and transaction history |
-| `/giza-optimize` | Capital allocation optimizer |
-| `/giza-mcp` | MCP server setup for Claude Desktop, Cursor, and Claude Code |
-
-### Yield Skills
-
-For end users managing DeFi positions through conversation with the [Giza MCP server](#mcp-server). No code -- Claude calls MCP tools on the user's behalf.
-
-| Skill | Description |
-|-------|-------------|
-| `/yield` | Platform overview, DeFi glossary, and platform stats |
-| `/yield-start` | Onboarding -- connect wallet, create smart account, deposit, activate agent |
-| `/yield-check` | Portfolio dashboard -- balances, APR, performance, transactions, fees |
-| `/yield-manage` | Fund management -- top up, withdraw, claim rewards, optimize, deactivate |
-
-## Development
-
-Requires [Bun](https://bun.sh/) and Node.js >= 18.
-
-```bash
-# Install all workspace dependencies
-bun install
-
-# Build everything
-bun run --filter '*' build
-
-# Run all tests
-bun run --filter '*' test
-```
-
-### Per-package commands
-
-```bash
-# SDK
-bun run --filter @gizatech/agent-sdk build
-bun run --filter @gizatech/agent-sdk test
-
-# MCP Server
-bun run --filter @gizatech/mcp-server build
-bun run --filter @gizatech/mcp-server test
-bun run --filter @gizatech/mcp-server test:integration
-bun run --filter @gizatech/mcp-server test:e2e
-```
-
-### MCP Server test layers
-
-The MCP server has three test layers:
-
-| Command | Layer | What it tests |
-|---------|-------|---------------|
-| `test` | Unit | Tool handlers, formatters, config resolution |
-| `test:integration` | Integration | MCP protocol via `InMemoryTransport` with mocked SDK |
-| `test:e2e` | E2E | Spawned CLI process via stdio and HTTP transports |
-
-Integration tests exercise tool registration, Zod schema wiring, wallet session state, error propagation, and prompt registration through a real MCP client/server handshake -- all in-process with no network calls.
-
-E2E tests spawn `dist/cli.js` and connect via `StdioClientTransport` and `StreamableHTTPClientTransport`, verifying the full process boundary. The `test:e2e` script builds automatically before running.
+| Rewards   | `claim_rewards`                                                     |
+| Optimizer | `optimize`                                                          |
 
 ### Examples
 
@@ -239,8 +75,6 @@ bun run --filter @gizatech/agent-sdk example:optimizer
 - [Integration Methods](./docs/integration-methods.mdx)
 - [Core Concepts](./docs/concepts/overview.mdx)
 - [SDK Reference](./docs/sdk-reference/overview.mdx)
-- [MCP Server](./docs/mcp-server/overview.mdx)
-- [MCP Server Testing](./docs/mcp-server/testing.mdx)
 - [Claude Code Skills](./docs/skills.mdx)
 - [Examples](./docs/examples/basic-usage.mdx)
 

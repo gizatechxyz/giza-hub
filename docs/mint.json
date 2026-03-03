@@ -25,10 +25,6 @@
       "url": "api-reference"
     },
     {
-      "name": "MCP Server",
-      "url": "mcp-server"
-    },
-    {
       "name": "Guides",
       "url": "guides"
     },
@@ -52,7 +48,7 @@
   "navigation": [
     {
       "group": "Get Started",
-      "pages": ["introduction", "integration-methods", "quickstart", "skills"]
+      "pages": ["introduction", "integration-methods", "quickstart"]
     },
     {
       "group": "Core Concepts",
@@ -86,23 +82,6 @@
         "sdk-reference/paginator",
         "sdk-reference/optimizer",
         "sdk-reference/types"
-      ]
-    },
-    {
-      "group": "MCP Server",
-      "pages": [
-        "mcp-server/overview",
-        "mcp-server/quickstart",
-        "mcp-server/configuration"
-      ]
-    },
-    {
-      "group": "Reference",
-      "pages": [
-        "mcp-server/tools",
-        "mcp-server/programmatic-usage",
-        "mcp-server/transport",
-        "mcp-server/testing"
       ]
     },
     {
