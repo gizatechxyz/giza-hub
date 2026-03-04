@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__plugin_zeroize-audit_serena__read_memory",
+      "mcp__plugin_zeroize-audit_serena__list_dir",
+      "mcp__plugin_zeroize-audit_serena__get_symbols_overview",
+      "mcp__plugin_zeroize-audit_serena__search_for_pattern"
+    ]
+  }
+}
