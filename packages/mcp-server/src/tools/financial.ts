@@ -1,0 +1,92 @@
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import * as z from 'zod/v4';
+import { requireAuth } from '../auth/types.js';
+import { chainSchema } from '../schemas.js';
+import { handleToolCall, jsonResult } from '../services/error-handler.js';
+import { getAgentForSession } from '../services/sdk-factory.js';
+
+export function registerFinancialTools(server: McpServer): void {
+  server.registerTool(
+    'giza_withdraw',
+    {
+      title: 'Withdraw Funds',
+      description:
+        'Withdraw funds from the agent. If no amount is specified, performs a full withdrawal (deactivation). Provide an amount string for partial withdrawal.',
+      inputSchema: z.object({
+        chain: chainSchema,
+        amount: z
+          .string()
+          .optional()
+          .describe(
+            'Amount to withdraw as a string. Omit for full withdrawal.',
+          ),
+      }),
+    },
+    async ({ chain, amount }, extra) =>
+      handleToolCall(
+        async () => {
+          const ctx = requireAuth(extra.authInfo);
+          const agent = await getAgentForSession(chain, ctx.walletAddress);
+          return agent.withdraw(amount);
+        },
+        jsonResult,
+      ),
+  );
+
+  server.registerTool(
+    'giza_get_withdrawal_status',
+    {
+      title: 'Get Withdrawal Status',
+      description:
+        'Get the current withdrawal/deactivation status of the agent.',
+      inputSchema: z.object({ chain: chainSchema }),
+    },
+    async ({ chain }, extra) =>
+      handleToolCall(
+        async () => {
+          const ctx = requireAuth(extra.authInfo);
+          const agent = await getAgentForSession(chain, ctx.walletAddress);
+          return agent.status();
+        },
+        jsonResult,
+      ),
+  );
+
+  server.registerTool(
+    'giza_get_fees',
+    {
+      title: 'Get Fees',
+      description:
+        'Get the current fee structure for the agent, including percentage and absolute fee amounts.',
+      inputSchema: z.object({ chain: chainSchema }),
+    },
+    async ({ chain }, extra) =>
+      handleToolCall(
+        async () => {
+          const ctx = requireAuth(extra.authInfo);
+          const agent = await getAgentForSession(chain, ctx.walletAddress);
+          return agent.fees();
+        },
+        jsonResult,
+      ),
+  );
+
+  server.registerTool(
+    'giza_get_limit',
+    {
+      title: 'Get Deposit Limit',
+      description:
+        'Get the deposit limit for the authenticated wallet on the specified chain.',
+      inputSchema: z.object({ chain: chainSchema }),
+    },
+    async ({ chain }, extra) =>
+      handleToolCall(
+        async () => {
+          const ctx = requireAuth(extra.authInfo);
+          const agent = await getAgentForSession(chain, ctx.walletAddress);
+          return agent.limit(ctx.walletAddress);
+        },
+        jsonResult,
+      ),
+  );
+}
