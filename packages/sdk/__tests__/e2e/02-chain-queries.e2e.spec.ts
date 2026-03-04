@@ -1,3 +1,4 @@
+import './setup.js';
 import { Giza } from '../../src';
 import { Address } from '../../src/types/common';
 import { getState, setState } from './helpers/state';

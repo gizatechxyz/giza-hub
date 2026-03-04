@@ -1,3 +1,4 @@
+import './setup.js';
 import { Giza, AgentStatus, Period, Agent } from '../../src';
 import { getState } from './helpers/state';
 import { ifState } from './helpers/skip';

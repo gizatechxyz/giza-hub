@@ -3,6 +3,10 @@ import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { createMockGiza } from '../helpers/mock-sdk.js';
 
+// Set required env vars before importing modules that read them
+process.env.PRIVY_APP_ID = 'test-privy-app-id';
+process.env.JWT_SECRET = 'test-secret-that-is-at-least-32-chars-long!!';
+
 const mockGiza = createMockGiza();
 
 mock.module('../../services/sdk-factory.js', () => ({

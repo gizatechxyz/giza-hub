@@ -1,5 +1,9 @@
 import { describe, test, expect, mock, beforeEach } from 'bun:test';
 
+// Set required env vars before importing modules that read them
+process.env.PRIVY_APP_ID = 'test-privy-app-id';
+process.env.JWT_SECRET = 'test-secret-that-is-at-least-32-chars-long!!';
+
 const TEST_WALLET = '0x1234567890abcdef1234567890abcdef12345678';
 const TEST_PRIVY_USER = 'privy-user-123';
 const TEST_CLIENT_ID = 'test-client';

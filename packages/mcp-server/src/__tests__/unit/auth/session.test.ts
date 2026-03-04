@@ -1,4 +1,7 @@
-import { describe, test, expect } from 'bun:test';
+import { describe, test, expect, beforeAll } from 'bun:test';
+
+// Set required env vars before importing session module
+process.env.JWT_SECRET = 'test-secret-that-is-at-least-32-chars-long!!';
 
 import {
   createTokenPair,

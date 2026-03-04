@@ -1,3 +1,4 @@
+import './setup.js';
 import {
   Giza,
   Agent,

@@ -1,3 +1,4 @@
+import './setup.js';
 import { Giza } from '../../src';
 import { getState, setState } from './helpers/state';
 import { ifState } from './helpers/skip';

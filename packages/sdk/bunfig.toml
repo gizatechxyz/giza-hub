@@ -1,0 +1,2 @@
+[test]
+preload = ["./__tests__/e2e/setup.ts"]

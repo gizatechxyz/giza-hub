@@ -1,3 +1,4 @@
+import './setup.js';
 import { Giza, ValidationError } from '../../src';
 import { Address } from '../../src/types/common';
 import { getState } from './helpers/state';
