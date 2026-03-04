@@ -1,0 +1,216 @@
+import type { Response, RequestHandler } from 'express';
+import type {
+  AuthorizationParams,
+  OAuthServerProvider,
+} from '@modelcontextprotocol/sdk/server/auth/provider.js';
+import type { OAuthRegisteredClientsStore } from '@modelcontextprotocol/sdk/server/auth/clients.js';
+import type {
+  OAuthClientInformationFull,
+  OAuthTokens,
+} from '@modelcontextprotocol/sdk/shared/auth.js';
+import type { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js';
+import { InMemoryClientsStore } from './clients-store.js';
+import {
+  createTokenPair,
+  verifyAccessToken,
+  verifyRefreshToken,
+} from './session.js';
+import { verifyPrivyToken } from './privy.js';
+import { buildPrivyLoginUrl } from './authorize-page.js';
+import {
+  ENV_PRIVY_APP_ID,
+  AUTH_CODE_TTL_MS,
+  SUPPORTED_SCOPES,
+} from '../constants.js';
+import type { PendingAuthSession, PendingAuthCode } from './types.js';
+
+interface TokenPair {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
+function toOAuthTokens(pair: TokenPair, scopes: string[]): OAuthTokens {
+  return {
+    access_token: pair.accessToken,
+    token_type: 'Bearer',
+    expires_in: pair.expiresIn,
+    refresh_token: pair.refreshToken,
+    scope: scopes.join(' '),
+  };
+}
+
+export class GizaAuthProvider implements OAuthServerProvider {
+  readonly clientsStore: OAuthRegisteredClientsStore =
+    new InMemoryClientsStore();
+
+  private pendingSessions = new Map<string, PendingAuthSession>();
+  private codes = new Map<string, PendingAuthCode>();
+  private readonly baseUrl: string;
+  private readonly privyAppId: string;
+
+  constructor(baseUrl: string) {
+    this.baseUrl = baseUrl.replace(/\/$/, '');
+    const appId = process.env[ENV_PRIVY_APP_ID];
+    if (!appId) {
+      throw new Error(`${ENV_PRIVY_APP_ID} must be set`);
+    }
+    this.privyAppId = appId;
+  }
+
+  private sweepExpired(): void {
+    const now = Date.now();
+    for (const [id, session] of this.pendingSessions) {
+      if (now - session.createdAt > AUTH_CODE_TTL_MS) {
+        this.pendingSessions.delete(id);
+      }
+    }
+    for (const [code, data] of this.codes) {
+      if (now - data.createdAt > AUTH_CODE_TTL_MS) {
+        this.codes.delete(code);
+      }
+    }
+  }
+
+  async authorize(
+    client: OAuthClientInformationFull,
+    params: AuthorizationParams,
+    res: Response,
+  ): Promise<void> {
+    this.sweepExpired();
+
+    const sessionId = crypto.randomUUID();
+
+    this.pendingSessions.set(sessionId, {
+      clientId: client.client_id,
+      redirectUri: params.redirectUri,
+      state: params.state,
+      codeChallenge: params.codeChallenge,
+      scopes: params.scopes ?? [...SUPPORTED_SCOPES],
+      createdAt: Date.now(),
+    });
+
+    const callbackUrl = `${this.baseUrl}/authorize/callback`;
+    const loginUrl = buildPrivyLoginUrl(
+      this.privyAppId,
+      callbackUrl,
+      sessionId,
+    );
+    res.redirect(loginUrl);
+  }
+
+  async challengeForAuthorizationCode(
+    _client: OAuthClientInformationFull,
+    authorizationCode: string,
+  ): Promise<string> {
+    const pending = this.codes.get(authorizationCode);
+    if (!pending) {
+      throw new Error('Invalid authorization code');
+    }
+    return pending.codeChallenge;
+  }
+
+  async exchangeAuthorizationCode(
+    _client: OAuthClientInformationFull,
+    authorizationCode: string,
+  ): Promise<OAuthTokens> {
+    const pending = this.codes.get(authorizationCode);
+    if (!pending) {
+      throw new Error('Invalid authorization code');
+    }
+
+    if (Date.now() - pending.createdAt > AUTH_CODE_TTL_MS) {
+      this.codes.delete(authorizationCode);
+      throw new Error('Authorization code expired');
+    }
+
+    this.codes.delete(authorizationCode);
+
+    const pair = await createTokenPair({
+      privyUserId: pending.privyUserId,
+      walletAddress: pending.walletAddress,
+      clientId: pending.clientId,
+      scopes: pending.scopes,
+    });
+
+    return toOAuthTokens(pair, pending.scopes);
+  }
+
+  async exchangeRefreshToken(
+    _client: OAuthClientInformationFull,
+    refreshToken: string,
+    scopes?: string[],
+  ): Promise<OAuthTokens> {
+    const claims = await verifyRefreshToken(refreshToken);
+    const effectiveScopes = scopes ?? claims.scopes;
+
+    const pair = await createTokenPair({
+      privyUserId: claims.sub,
+      walletAddress: claims.wallet,
+      clientId: claims.clientId,
+      scopes: effectiveScopes,
+    });
+
+    return toOAuthTokens(pair, effectiveScopes);
+  }
+
+  async verifyAccessToken(token: string): Promise<AuthInfo> {
+    return verifyAccessToken(token);
+  }
+
+  handlePrivyCallback(): RequestHandler {
+    return async (req, res) => {
+      try {
+        const privyToken =
+          (req.query['privy_token'] as string | undefined) ??
+          (req.query['token'] as string | undefined);
+        const sessionId = req.query['state'] as string | undefined;
+
+        if (!privyToken || !sessionId) {
+          res
+            .status(400)
+            .json({ error: 'Missing privy_token or state parameter' });
+          return;
+        }
+
+        const session = this.pendingSessions.get(sessionId);
+        if (!session) {
+          res
+            .status(400)
+            .json({ error: 'Invalid or expired session' });
+          return;
+        }
+
+        this.pendingSessions.delete(sessionId);
+
+        const { privyUserId, walletAddress } =
+          await verifyPrivyToken(privyToken);
+
+        const code = crypto.randomUUID();
+        this.codes.set(code, {
+          clientId: session.clientId,
+          redirectUri: session.redirectUri,
+          codeChallenge: session.codeChallenge,
+          scopes: session.scopes,
+          privyUserId,
+          walletAddress,
+          createdAt: Date.now(),
+        });
+
+        const redirectUrl = new URL(session.redirectUri);
+        redirectUrl.searchParams.set('code', code);
+        if (session.state) {
+          redirectUrl.searchParams.set('state', session.state);
+        }
+
+        res.redirect(redirectUrl.toString());
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : 'Authentication failed';
+        res.status(500).json({ error: message });
+      }
+    };
+  }
+}

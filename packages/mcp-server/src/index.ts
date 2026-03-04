@@ -2,16 +2,42 @@ import { randomUUID } from 'node:crypto';
 import express from 'express';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
+import { mcpAuthRouter } from '@modelcontextprotocol/sdk/server/auth/router.js';
 import { createMcpServer } from './server.js';
-import { DEFAULT_PORT, ENV_PORT } from './constants.js';
+import {
+  DEFAULT_PORT,
+  ENV_PORT,
+  ENV_MCP_DOMAIN,
+  SUPPORTED_SCOPES,
+} from './constants.js';
+import { GizaAuthProvider } from './auth/provider.js';
+import { optionalBearerAuth } from './auth/middleware.js';
 
 const transports: Record<string, StreamableHTTPServerTransport> = {};
 
-function createApp(): express.Express {
+function createApp(port: number): express.Express {
   const app = express();
   app.use(express.json());
 
-  app.post('/mcp', async (req, res) => {
+  const issuerBase =
+    process.env[ENV_MCP_DOMAIN] ?? `http://127.0.0.1:${port}`;
+  const issuerUrl = new URL(issuerBase);
+
+  const provider = new GizaAuthProvider(issuerBase);
+
+  app.use(
+    mcpAuthRouter({
+      provider,
+      issuerUrl,
+      scopesSupported: [...SUPPORTED_SCOPES],
+    }),
+  );
+
+  app.get('/authorize/callback', provider.handlePrivyCallback());
+
+  const authMiddleware = optionalBearerAuth(provider);
+
+  app.post('/mcp', authMiddleware, async (req, res) => {
     const sessionId = req.headers['mcp-session-id'] as string | undefined;
 
     if (sessionId && transports[sessionId]) {
@@ -39,10 +65,12 @@ function createApp(): express.Express {
       return;
     }
 
-    res.status(400).json({ error: 'Invalid request: missing or invalid session' });
+    res
+      .status(400)
+      .json({ error: 'Invalid request: missing or invalid session' });
   });
 
-  app.get('/mcp', async (req, res) => {
+  app.get('/mcp', authMiddleware, async (req, res) => {
     const sessionId = req.headers['mcp-session-id'] as string | undefined;
     if (!sessionId || !transports[sessionId]) {
       res.status(400).json({ error: 'Invalid or missing session ID' });
@@ -51,7 +79,7 @@ function createApp(): express.Express {
     await transports[sessionId].handleRequest(req, res);
   });
 
-  app.delete('/mcp', async (req, res) => {
+  app.delete('/mcp', authMiddleware, async (req, res) => {
     const sessionId = req.headers['mcp-session-id'] as string | undefined;
     if (sessionId && transports[sessionId]) {
       await transports[sessionId].handleRequest(req, res);
@@ -68,7 +96,7 @@ function createApp(): express.Express {
 }
 
 const port = Number(process.env[ENV_PORT]) || DEFAULT_PORT;
-const app = createApp();
+const app = createApp(port);
 
 app.listen(port, '127.0.0.1', () => {
   console.log(`Giza MCP server listening on http://127.0.0.1:${port}/mcp`);
