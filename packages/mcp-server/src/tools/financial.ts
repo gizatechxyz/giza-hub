@@ -3,6 +3,10 @@ import * as z from 'zod/v4';
 import { requireAuth } from '../auth/types.js';
 import { chainSchema } from '../schemas.js';
 import { handleToolCall, jsonResult } from '../services/error-handler.js';
+import {
+  createPendingOperation,
+  confirmationPayload,
+} from '../services/confirmation.js';
 import { getAgentForSession } from '../services/sdk-factory.js';
 
 export function registerFinancialTools(server: McpServer): void {
@@ -11,7 +15,7 @@ export function registerFinancialTools(server: McpServer): void {
     {
       title: 'Withdraw Funds',
       description:
-        'Withdraw funds from the agent. If no amount is specified, performs a full withdrawal (deactivation). Provide an amount string for partial withdrawal.',
+        'Withdraw funds from the agent. If no amount is specified, performs a full withdrawal. Provide an amount string for partial withdrawal. Returns a confirmation token that must be passed to giza_confirm_operation to execute.',
       inputSchema: z.object({
         chain: chainSchema,
         amount: z
@@ -27,7 +31,16 @@ export function registerFinancialTools(server: McpServer): void {
         async () => {
           const ctx = requireAuth(extra.authInfo);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
-          return agent.withdraw(amount);
+          const description = amount
+            ? `Withdraw ${amount} from agent on ${chain}`
+            : `Full withdrawal from agent on ${chain}`;
+          const token = createPendingOperation(
+            'withdraw',
+            description,
+            ctx.walletAddress,
+            () => agent.withdraw(amount),
+          );
+          return confirmationPayload('withdraw', description, token);
         },
         jsonResult,
       ),

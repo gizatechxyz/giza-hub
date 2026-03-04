@@ -3,6 +3,10 @@ import * as z from 'zod/v4';
 import { requireAuth } from '../auth/types.js';
 import { chainSchema, paginationSchema } from '../schemas.js';
 import { handleToolCall, jsonResult } from '../services/error-handler.js';
+import {
+  createPendingOperation,
+  confirmationPayload,
+} from '../services/confirmation.js';
 import { getAgentForSession } from '../services/sdk-factory.js';
 
 export function registerRewardTools(server: McpServer): void {
@@ -55,7 +59,7 @@ export function registerRewardTools(server: McpServer): void {
     {
       title: 'Claim Rewards',
       description:
-        'Claim all pending rewards for the agent. Returns the list of claimed reward tokens and amounts.',
+        'Claim all pending rewards for the agent. Returns a confirmation token that must be passed to giza_confirm_operation to execute.',
       inputSchema: z.object({ chain: chainSchema }),
     },
     async ({ chain }, extra) =>
@@ -63,7 +67,14 @@ export function registerRewardTools(server: McpServer): void {
         async () => {
           const ctx = requireAuth(extra.authInfo);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
-          return agent.claimRewards();
+          const description = `Claim all pending rewards on ${chain}`;
+          const token = createPendingOperation(
+            'claim_rewards',
+            description,
+            ctx.walletAddress,
+            () => agent.claimRewards(),
+          );
+          return confirmationPayload('claim_rewards', description, token);
         },
         jsonResult,
       ),

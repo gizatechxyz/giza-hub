@@ -11,6 +11,7 @@ import { registerRewardTools } from './tools/rewards.js';
 import { registerProtocolTools } from './tools/protocols.js';
 import { registerOptimizerTools } from './tools/optimizer.js';
 import { registerFinancialTools } from './tools/financial.js';
+import { registerCriticalTools } from './tools/critical.js';
 
 export function createMcpServer(): McpServer {
   const server = new McpServer({
@@ -29,6 +30,7 @@ export function createMcpServer(): McpServer {
   registerProtocolTools(server);
   registerOptimizerTools(server);
   registerFinancialTools(server);
+  registerCriticalTools(server);
 
   return server;
 }

@@ -4,6 +4,10 @@ import * as z from 'zod/v4';
 import { requireAuth } from '../auth/types.js';
 import { chainSchema, addressSchema, constraintSchema } from '../schemas.js';
 import { handleToolCall, jsonResult } from '../services/error-handler.js';
+import {
+  createPendingOperation,
+  confirmationPayload,
+} from '../services/confirmation.js';
 import { getAgentForSession } from '../services/sdk-factory.js';
 
 export function registerLifecycleTools(server: McpServer): void {
@@ -49,7 +53,7 @@ export function registerLifecycleTools(server: McpServer): void {
     {
       title: 'Deactivate Agent',
       description:
-        'Deactivate the agent and optionally transfer remaining funds back to the owner wallet.',
+        'Deactivate the agent and optionally transfer remaining funds back to the owner wallet. Returns a confirmation token that must be passed to giza_confirm_operation to execute.',
       inputSchema: z.object({
         chain: chainSchema,
         transfer: z
@@ -65,7 +69,16 @@ export function registerLifecycleTools(server: McpServer): void {
         async () => {
           const ctx = requireAuth(extra.authInfo);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
-          return agent.deactivate({ transfer });
+          const description = transfer !== false
+            ? `Deactivate agent on ${chain} and transfer remaining funds`
+            : `Deactivate agent on ${chain} without fund transfer`;
+          const token = createPendingOperation(
+            'deactivate',
+            description,
+            ctx.walletAddress,
+            () => agent.deactivate({ transfer }),
+          );
+          return confirmationPayload('deactivate', description, token);
         },
         jsonResult,
       ),
