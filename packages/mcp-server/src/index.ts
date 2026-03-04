@@ -95,9 +95,12 @@ function createApp(port: number): express.Express {
   return app;
 }
 
-const port = Number(process.env[ENV_PORT]) || DEFAULT_PORT;
-const app = createApp(port);
+export { createApp };
 
-app.listen(port, '127.0.0.1', () => {
-  console.log(`Giza MCP server listening on http://127.0.0.1:${port}/mcp`);
-});
+if (import.meta.main) {
+  const port = Number(process.env[ENV_PORT]) || DEFAULT_PORT;
+  const app = createApp(port);
+  app.listen(port, '127.0.0.1', () => {
+    console.log(`Giza MCP server listening on http://127.0.0.1:${port}/mcp`);
+  });
+}
