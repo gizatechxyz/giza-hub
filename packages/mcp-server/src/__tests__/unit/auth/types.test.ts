@@ -136,4 +136,5 @@ describe('requireAuth', () => {
       'Authentication required',
     );
   });
+
 });

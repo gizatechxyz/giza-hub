@@ -2,6 +2,12 @@ import { describe, test, expect, mock, beforeAll, afterAll } from 'bun:test';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { createMockGiza } from '../helpers/mock-sdk.js';
+import {
+  TEST_WALLET,
+  TEST_PRIVY_USER,
+  TEST_CLIENT_ID,
+  TEST_SCOPES,
+} from '../helpers/mock-auth.js';
 
 // Set required env vars before importing modules that read them
 process.env.PRIVY_APP_ID = 'test-privy-app-id';
@@ -15,11 +21,13 @@ mock.module('../../services/sdk-factory.js', () => ({
   getAgentForSession: () => Promise.resolve(mockGiza),
 }));
 
+const { createTokenPair } = await import('../../auth/session.js');
 const { createApp } = await import('../../index.js');
 
 describe('MCP handshake integration', () => {
   let server: Server;
   let baseUrl: string;
+  let validToken: string;
 
   beforeAll(async () => {
     const app = createApp(0);
@@ -27,6 +35,14 @@ describe('MCP handshake integration', () => {
     await new Promise<void>((resolve) => server.once('listening', resolve));
     const addr = server.address() as AddressInfo;
     baseUrl = `http://127.0.0.1:${addr.port}`;
+
+    const pair = await createTokenPair({
+      privyUserId: TEST_PRIVY_USER,
+      walletAddress: TEST_WALLET,
+      clientId: TEST_CLIENT_ID,
+      scopes: TEST_SCOPES,
+    });
+    validToken = pair.accessToken;
   });
 
   afterAll(async () => {
@@ -42,10 +58,25 @@ describe('MCP handshake integration', () => {
     expect(body).toEqual({ status: 'ok' });
   });
 
-  test('POST /mcp without initialize request returns 400', async () => {
+  test('POST /mcp without auth returns 401 with WWW-Authenticate', async () => {
     const res = await fetch(`${baseUrl}/mcp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', method: 'tools/list', id: 1 }),
+    });
+    expect(res.status).toBe(401);
+    const wwwAuth = res.headers.get('www-authenticate');
+    expect(wwwAuth).toContain('resource_metadata=');
+    expect(wwwAuth).toContain('.well-known/oauth-protected-resource');
+  });
+
+  test('POST /mcp without initialize request returns 400', async () => {
+    const res = await fetch(`${baseUrl}/mcp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${validToken}`,
+      },
       body: JSON.stringify({ jsonrpc: '2.0', method: 'tools/list', id: 1 }),
     });
     expect(res.status).toBe(400);
@@ -68,6 +99,7 @@ describe('MCP handshake integration', () => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json, text/event-stream',
+        Authorization: `Bearer ${validToken}`,
       },
       body: JSON.stringify(initRequest),
     });
@@ -94,6 +126,7 @@ describe('MCP handshake integration', () => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json, text/event-stream',
+        Authorization: `Bearer ${validToken}`,
       },
       body: JSON.stringify(initRequest),
     });
@@ -121,6 +154,7 @@ describe('MCP handshake integration', () => {
         'Content-Type': 'application/json',
         Accept: 'application/json, text/event-stream',
         'mcp-session-id': sessionId!,
+        Authorization: `Bearer ${validToken}`,
       },
       body: JSON.stringify([notifyRequest, listRequest]),
     });
@@ -147,6 +181,7 @@ describe('MCP handshake integration', () => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json, text/event-stream',
+        Authorization: `Bearer ${validToken}`,
       },
       body: JSON.stringify(initRequest),
     });
@@ -161,6 +196,7 @@ describe('MCP handshake integration', () => {
         'Content-Type': 'application/json',
         Accept: 'application/json, text/event-stream',
         'mcp-session-id': sessionId!,
+        Authorization: `Bearer ${validToken}`,
       },
       body: JSON.stringify({
         jsonrpc: '2.0',
@@ -175,6 +211,7 @@ describe('MCP handshake integration', () => {
         'Content-Type': 'application/json',
         Accept: 'application/json, text/event-stream',
         'mcp-session-id': sessionId!,
+        Authorization: `Bearer ${validToken}`,
       },
       body: JSON.stringify({
         jsonrpc: '2.0',

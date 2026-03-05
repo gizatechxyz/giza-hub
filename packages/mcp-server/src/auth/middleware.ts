@@ -3,13 +3,20 @@ import type { OAuthTokenVerifier } from '@modelcontextprotocol/sdk/server/auth/p
 // Augments express.Request with `auth?: AuthInfo`
 import '@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js';
 
-export function optionalBearerAuth(
+export function requireBearerAuth(
   verifier: OAuthTokenVerifier,
+  resourceMetadataUrl: string,
 ): RequestHandler {
   return async (req, res, next) => {
     const header = req.headers.authorization;
     if (!header) {
-      next();
+      res
+        .status(401)
+        .set(
+          'WWW-Authenticate',
+          `Bearer resource_metadata="${resourceMetadataUrl}"`,
+        )
+        .json({ error: 'Authentication required' });
       return;
     }
 

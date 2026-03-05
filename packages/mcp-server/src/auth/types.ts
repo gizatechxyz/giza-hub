@@ -66,7 +66,7 @@ export function requireAuth(authInfo?: AuthInfo): AuthContext {
   const ctx = extractAuthContext(authInfo);
   if (!ctx) {
     throw new Error(
-      'Authentication required. Please connect your wallet via OAuth.',
+      'Authentication required. Please reconnect with a valid token.',
     );
   }
   return ctx;

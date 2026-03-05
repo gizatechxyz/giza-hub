@@ -2,8 +2,11 @@ import { describe, test, expect, mock, beforeEach } from 'bun:test';
 import type { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js';
 import type { OAuthTokenVerifier } from '@modelcontextprotocol/sdk/server/auth/provider.js';
 
-import { optionalBearerAuth } from '../../../auth/middleware.js';
+import { requireBearerAuth } from '../../../auth/middleware.js';
 import { buildAuthInfo } from '../../helpers/mock-auth.js';
+
+const TEST_RESOURCE_METADATA_URL =
+  'https://example.com/.well-known/oauth-protected-resource';
 
 function createMockReq(headers: Record<string, string> = {}) {
   return { headers, auth: undefined } as any;
@@ -12,6 +15,7 @@ function createMockReq(headers: Record<string, string> = {}) {
 function createMockRes() {
   const res: any = {};
   res.status = mock((code: number) => res);
+  res.set = mock((key: string, value: string) => res);
   res.json = mock((body: any) => res);
   return res;
 }
@@ -27,24 +31,30 @@ function createMockVerifier(
   } as OAuthTokenVerifier;
 }
 
-describe('optionalBearerAuth', () => {
+describe('requireBearerAuth', () => {
   let next: ReturnType<typeof mock>;
 
   beforeEach(() => {
     next = mock(() => {});
   });
 
-  test('calls next without setting auth when no header', async () => {
+  test('returns 401 with WWW-Authenticate header when no header', async () => {
     const req = createMockReq();
     const res = createMockRes();
     const verifier = createMockVerifier(buildAuthInfo());
-    const handler = optionalBearerAuth(verifier);
+    const handler = requireBearerAuth(verifier, TEST_RESOURCE_METADATA_URL);
 
     await handler(req, res, next);
 
-    expect(next).toHaveBeenCalledTimes(1);
-    expect(req.auth).toBeUndefined();
-    expect(res.status).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.set).toHaveBeenCalledWith(
+      'WWW-Authenticate',
+      `Bearer resource_metadata="${TEST_RESOURCE_METADATA_URL}"`,
+    );
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'Authentication required',
+    });
   });
 
   test('sets req.auth and calls next for valid Bearer token', async () => {
@@ -52,7 +62,7 @@ describe('optionalBearerAuth', () => {
     const req = createMockReq({ authorization: 'Bearer valid-token' });
     const res = createMockRes();
     const verifier = createMockVerifier(authInfo);
-    const handler = optionalBearerAuth(verifier);
+    const handler = requireBearerAuth(verifier, TEST_RESOURCE_METADATA_URL);
 
     await handler(req, res, next);
 
@@ -68,7 +78,7 @@ describe('optionalBearerAuth', () => {
     const req = createMockReq({ authorization: 'Basic abc123' });
     const res = createMockRes();
     const verifier = createMockVerifier(buildAuthInfo());
-    const handler = optionalBearerAuth(verifier);
+    const handler = requireBearerAuth(verifier, TEST_RESOURCE_METADATA_URL);
 
     await handler(req, res, next);
 
@@ -83,7 +93,7 @@ describe('optionalBearerAuth', () => {
     const req = createMockReq({ authorization: 'Bearer ' });
     const res = createMockRes();
     const verifier = createMockVerifier(buildAuthInfo());
-    const handler = optionalBearerAuth(verifier);
+    const handler = requireBearerAuth(verifier, TEST_RESOURCE_METADATA_URL);
 
     await handler(req, res, next);
 
@@ -100,7 +110,7 @@ describe('optionalBearerAuth', () => {
       undefined,
       new Error('Token expired'),
     );
-    const handler = optionalBearerAuth(verifier);
+    const handler = requireBearerAuth(verifier, TEST_RESOURCE_METADATA_URL);
 
     await handler(req, res, next);
 
@@ -116,7 +126,7 @@ describe('optionalBearerAuth', () => {
     const req = createMockReq({ authorization: 'bearer my-token' });
     const res = createMockRes();
     const verifier = createMockVerifier(authInfo);
-    const handler = optionalBearerAuth(verifier);
+    const handler = requireBearerAuth(verifier, TEST_RESOURCE_METADATA_URL);
 
     await handler(req, res, next);
 
