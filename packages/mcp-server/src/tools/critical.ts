@@ -1,8 +1,9 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
-import { requireAuth } from '../auth/types.js';
+import { ensureAuth } from '../auth/ensure-auth.js';
 import { handleToolCall, jsonResult } from '../services/error-handler.js';
 import { executePendingOperation } from '../services/confirmation.js';
+import { getBaseUrl } from '../constants.js';
 
 export function registerCriticalTools(server: McpServer): void {
   server.registerTool(
@@ -21,7 +22,7 @@ export function registerCriticalTools(server: McpServer): void {
     async ({ confirmationToken }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const { type, result } = await executePendingOperation(
             confirmationToken,
             ctx.walletAddress,

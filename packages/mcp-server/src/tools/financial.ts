@@ -1,6 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
-import { requireAuth } from '../auth/types.js';
+import { ensureAuth } from '../auth/ensure-auth.js';
 import { chainSchema } from '../schemas.js';
 import { handleToolCall, jsonResult } from '../services/error-handler.js';
 import {
@@ -8,6 +8,7 @@ import {
   confirmationPayload,
 } from '../services/confirmation.js';
 import { getAgentForSession } from '../services/sdk-factory.js';
+import { getBaseUrl } from '../constants.js';
 
 export function registerFinancialTools(server: McpServer): void {
   server.registerTool(
@@ -29,7 +30,7 @@ export function registerFinancialTools(server: McpServer): void {
     async ({ chain, amount }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           const description = amount
             ? `Withdraw ${amount} from agent on ${chain}`
@@ -57,7 +58,7 @@ export function registerFinancialTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.status();
         },
@@ -76,7 +77,7 @@ export function registerFinancialTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.fees();
         },
@@ -95,7 +96,7 @@ export function registerFinancialTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.limit(ctx.walletAddress);
         },

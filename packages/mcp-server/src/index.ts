@@ -8,10 +8,13 @@ import {
   DEFAULT_PORT,
   ENV_PORT,
   ENV_MCP_DOMAIN,
+  ENV_PRIVY_APP_ID,
   SUPPORTED_SCOPES,
 } from './constants.js';
 import { GizaAuthProvider } from './auth/provider.js';
 import { optionalBearerAuth } from './auth/middleware.js';
+import { buildPrivyLoginUrl } from './auth/authorize-page.js';
+import { clearSessionAuth } from './auth/session-auth-store.js';
 
 const transports: Record<string, StreamableHTTPServerTransport> = {};
 
@@ -36,6 +39,21 @@ function createApp(port: number): express.Express {
 
   app.get('/authorize/callback', provider.handlePrivyCallback());
 
+  app.get('/login', (req, res) => {
+    const mcpSessionId = req.query['session'] as string | undefined;
+    if (!mcpSessionId) {
+      res.status(400).json({ error: 'Missing session parameter' });
+      return;
+    }
+    const callbackUrl = `${issuerBase}/authorize/callback`;
+    const loginUrl = buildPrivyLoginUrl(
+      process.env[ENV_PRIVY_APP_ID]!,
+      callbackUrl,
+      `device:${mcpSessionId}`,
+    );
+    res.redirect(loginUrl);
+  });
+
   const resourceMetadataUrl =
     `${issuerBase}/.well-known/oauth-protected-resource`;
   const authMiddleware = optionalBearerAuth(provider, resourceMetadataUrl);
@@ -59,6 +77,7 @@ function createApp(port: number): express.Express {
       transport.onclose = () => {
         if (transport.sessionId) {
           delete transports[transport.sessionId];
+          clearSessionAuth(transport.sessionId);
         }
       };
 

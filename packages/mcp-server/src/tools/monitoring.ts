@@ -1,10 +1,11 @@
 import { Period } from '@gizatech/agent-sdk';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
-import { requireAuth } from '../auth/types.js';
+import { ensureAuth } from '../auth/ensure-auth.js';
 import { chainSchema } from '../schemas.js';
 import { handleToolCall, jsonResult } from '../services/error-handler.js';
 import { getAgentForSession } from '../services/sdk-factory.js';
+import { getBaseUrl } from '../constants.js';
 
 export function registerMonitoringTools(server: McpServer): void {
   server.registerTool(
@@ -18,7 +19,7 @@ export function registerMonitoringTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.portfolio();
         },
@@ -43,7 +44,7 @@ export function registerMonitoringTools(server: McpServer): void {
     async ({ chain, from }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.performance({ from });
         },
@@ -76,7 +77,7 @@ export function registerMonitoringTools(server: McpServer): void {
     async ({ chain, startDate, endDate, useExactEndDate }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.apr({ startDate, endDate, useExactEndDate });
         },
@@ -101,7 +102,7 @@ export function registerMonitoringTools(server: McpServer): void {
     async ({ chain, period }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.aprByTokens(period);
         },
@@ -120,7 +121,7 @@ export function registerMonitoringTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.deposits();
         },

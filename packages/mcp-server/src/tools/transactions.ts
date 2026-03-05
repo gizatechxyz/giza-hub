@@ -1,9 +1,10 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
-import { requireAuth } from '../auth/types.js';
+import { ensureAuth } from '../auth/ensure-auth.js';
 import { chainSchema, paginationSchema } from '../schemas.js';
 import { handleToolCall, jsonResult } from '../services/error-handler.js';
 import { getAgentForSession } from '../services/sdk-factory.js';
+import { getBaseUrl } from '../constants.js';
 
 export function registerTransactionTools(server: McpServer): void {
   server.registerTool(
@@ -20,7 +21,7 @@ export function registerTransactionTools(server: McpServer): void {
     async ({ chain, page, limit, sort }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.transactions({ sort }).page(page ?? 1, { limit });
         },
@@ -42,7 +43,7 @@ export function registerTransactionTools(server: McpServer): void {
     async ({ chain, page, limit, sort }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.executions({ sort }).page(page ?? 1, { limit });
         },
@@ -65,7 +66,7 @@ export function registerTransactionTools(server: McpServer): void {
     async ({ chain, executionId, page, limit, sort }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent
             .executionLogs(executionId, { sort })
@@ -89,7 +90,7 @@ export function registerTransactionTools(server: McpServer): void {
     async ({ chain, page, limit, sort }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.logs({ sort }).page(page ?? 1, { limit });
         },

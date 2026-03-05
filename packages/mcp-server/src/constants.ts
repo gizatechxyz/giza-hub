@@ -13,3 +13,14 @@ export const AUTH_CODE_TTL_MS = 300_000;
 export const JWT_ISSUER = SERVER_NAME;
 export const CONFIRMATION_TOKEN_TTL_MS = 300_000;
 export const SUPPORTED_SCOPES = ['mcp:tools'] as const;
+
+export const SESSION_AUTH_TTL_MS = 3_600_000;
+export const AUTH_POLL_INTERVAL_MS = 2_000;
+export const AUTH_POLL_TIMEOUT_MS = 300_000;
+
+export function getBaseUrl(): string {
+  return (
+    process.env[ENV_MCP_DOMAIN] ??
+    `http://127.0.0.1:${process.env[ENV_PORT] ?? DEFAULT_PORT}`
+  );
+}

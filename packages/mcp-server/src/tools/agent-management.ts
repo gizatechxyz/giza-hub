@@ -1,9 +1,10 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
-import { requireAuth } from '../auth/types.js';
+import { ensureAuth } from '../auth/ensure-auth.js';
 import { chainSchema } from '../schemas.js';
 import { handleToolCall, jsonResult } from '../services/error-handler.js';
 import { getGizaClient } from '../services/sdk-factory.js';
+import { getBaseUrl } from '../constants.js';
 
 export function registerAgentManagementTools(server: McpServer): void {
   server.registerTool(
@@ -17,7 +18,7 @@ export function registerAgentManagementTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const giza = getGizaClient(chain);
           return giza.createAgent(ctx.walletAddress);
         },
@@ -36,7 +37,7 @@ export function registerAgentManagementTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const giza = getGizaClient(chain);
           return giza.getAgent(ctx.walletAddress);
         },
@@ -55,7 +56,7 @@ export function registerAgentManagementTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const giza = getGizaClient(chain);
           return giza.getSmartAccount(ctx.walletAddress);
         },

@@ -22,7 +22,8 @@ import {
   AUTH_CODE_TTL_MS,
   SUPPORTED_SCOPES,
 } from '../constants.js';
-import type { PendingAuthSession, PendingAuthCode } from './types.js';
+import type { PendingAuthSession, PendingAuthCode, AuthContext } from './types.js';
+import { setSessionAuth } from './session-auth-store.js';
 
 interface TokenPair {
   accessToken: string;
@@ -164,16 +165,37 @@ export class GizaAuthProvider implements OAuthServerProvider {
         const privyToken =
           (req.query['privy_token'] as string | undefined) ??
           (req.query['token'] as string | undefined);
-        const sessionId = req.query['state'] as string | undefined;
+        const stateParam = req.query['state'] as string | undefined;
 
-        if (!privyToken || !sessionId) {
+        if (!privyToken || !stateParam) {
           res
             .status(400)
             .json({ error: 'Missing privy_token or state parameter' });
           return;
         }
 
-        const session = this.pendingSessions.get(sessionId);
+        const { privyUserId, walletAddress } =
+          await verifyPrivyToken(privyToken);
+
+        if (stateParam.startsWith('device:')) {
+          const mcpSessionId = stateParam.slice('device:'.length);
+          const ctx: AuthContext = {
+            walletAddress,
+            privyUserId,
+            scopes: [...SUPPORTED_SCOPES],
+            clientId: 'device',
+          };
+          setSessionAuth(mcpSessionId, ctx);
+          res.setHeader('Content-Type', 'text/html');
+          res.send(
+            '<html><body><h2>Authentication successful!</h2>' +
+              '<p>You can close this tab and return to your terminal.</p>' +
+              '</body></html>',
+          );
+          return;
+        }
+
+        const session = this.pendingSessions.get(stateParam);
         if (!session) {
           res
             .status(400)
@@ -181,10 +203,7 @@ export class GizaAuthProvider implements OAuthServerProvider {
           return;
         }
 
-        this.pendingSessions.delete(sessionId);
-
-        const { privyUserId, walletAddress } =
-          await verifyPrivyToken(privyToken);
+        this.pendingSessions.delete(stateParam);
 
         const code = crypto.randomUUID();
         this.codes.set(code, {

@@ -1,9 +1,10 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
-import { requireAuth } from '../auth/types.js';
+import { ensureAuth } from '../auth/ensure-auth.js';
 import { chainSchema, constraintSchema } from '../schemas.js';
 import { handleToolCall, jsonResult } from '../services/error-handler.js';
 import { getAgentForSession } from '../services/sdk-factory.js';
+import { getBaseUrl } from '../constants.js';
 
 export function registerProtocolTools(server: McpServer): void {
   server.registerTool(
@@ -17,7 +18,7 @@ export function registerProtocolTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.protocols();
         },
@@ -42,7 +43,7 @@ export function registerProtocolTools(server: McpServer): void {
     async ({ chain, protocols }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           await agent.updateProtocols(protocols);
           return { updated: true, protocols };
@@ -62,7 +63,7 @@ export function registerProtocolTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.constraints();
         },
@@ -87,7 +88,7 @@ export function registerProtocolTools(server: McpServer): void {
     async ({ chain, constraints }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           await agent.updateConstraints(constraints);
           return { updated: true, constraints };

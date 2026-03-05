@@ -1,7 +1,7 @@
 import type { Address } from '@gizatech/agent-sdk';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
-import { requireAuth } from '../auth/types.js';
+import { ensureAuth } from '../auth/ensure-auth.js';
 import { chainSchema, addressSchema, constraintSchema } from '../schemas.js';
 import { handleToolCall, jsonResult } from '../services/error-handler.js';
 import {
@@ -9,6 +9,7 @@ import {
   confirmationPayload,
 } from '../services/confirmation.js';
 import { getAgentForSession } from '../services/sdk-factory.js';
+import { getBaseUrl } from '../constants.js';
 
 export function registerLifecycleTools(server: McpServer): void {
   server.registerTool(
@@ -34,7 +35,7 @@ export function registerLifecycleTools(server: McpServer): void {
     async ({ chain, token, protocols, txHash, constraints }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.activate({
             owner: ctx.walletAddress,
@@ -67,7 +68,7 @@ export function registerLifecycleTools(server: McpServer): void {
     async ({ chain, transfer }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           const description = transfer !== false
             ? `Deactivate agent on ${chain} and transfer remaining funds`
@@ -100,7 +101,7 @@ export function registerLifecycleTools(server: McpServer): void {
     async ({ chain, txHash }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.topUp(txHash);
         },
@@ -119,7 +120,7 @@ export function registerLifecycleTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = requireAuth(extra.authInfo);
+          const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.run();
         },
