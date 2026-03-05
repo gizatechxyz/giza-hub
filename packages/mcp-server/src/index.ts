@@ -11,7 +11,7 @@ import {
   SUPPORTED_SCOPES,
 } from './constants.js';
 import { GizaAuthProvider } from './auth/provider.js';
-import { requireBearerAuth } from './auth/middleware.js';
+import { optionalBearerAuth } from './auth/middleware.js';
 
 const transports: Record<string, StreamableHTTPServerTransport> = {};
 
@@ -38,7 +38,7 @@ function createApp(port: number): express.Express {
 
   const resourceMetadataUrl =
     `${issuerBase}/.well-known/oauth-protected-resource`;
-  const authMiddleware = requireBearerAuth(provider, resourceMetadataUrl);
+  const authMiddleware = optionalBearerAuth(provider, resourceMetadataUrl);
 
   app.post('/mcp', authMiddleware, async (req, res) => {
     const sessionId = req.headers['mcp-session-id'] as string | undefined;

@@ -58,16 +58,17 @@ describe('MCP handshake integration', () => {
     expect(body).toEqual({ status: 'ok' });
   });
 
-  test('POST /mcp without auth returns 401 with WWW-Authenticate', async () => {
+  test('POST /mcp without auth passes through to MCP handler', async () => {
     const res = await fetch(`${baseUrl}/mcp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ jsonrpc: '2.0', method: 'tools/list', id: 1 }),
     });
-    expect(res.status).toBe(401);
-    const wwwAuth = res.headers.get('www-authenticate');
-    expect(wwwAuth).toContain('resource_metadata=');
-    expect(wwwAuth).toContain('.well-known/oauth-protected-resource');
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body).toEqual({
+      error: 'Invalid request: missing or invalid session',
+    });
   });
 
   test('POST /mcp without initialize request returns 400', async () => {
