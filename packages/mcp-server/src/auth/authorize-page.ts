@@ -4,7 +4,9 @@ export function buildLoginPageHtml(
   state: string,
 ): string {
   const config = JSON.stringify({ appId: privyAppId, callbackUrl, state })
-    .replace(/</g, '\\u003c');
+    .replace(/</g, '\\u003c')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
   return `<!DOCTYPE html>
 <html><head>
   <meta charset="utf-8">

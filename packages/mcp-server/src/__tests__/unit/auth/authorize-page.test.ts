@@ -49,6 +49,21 @@ describe('buildLoginPageHtml', () => {
     expect(parsed.state).toBe(maliciousState);
   });
 
+  test('escapes Unicode line separators', () => {
+    const stateWithSeparators = `session\u2028line\u2029para`;
+    const html = buildLoginPageHtml(APP_ID, CALLBACK_URL, stateWithSeparators);
+
+    const configMatch = html.match(
+      /window\.__GIZA_LOGIN_CONFIG__=(.+?);<\/script>/,
+    );
+    expect(configMatch).toBeTruthy();
+    expect(configMatch![1]).not.toContain('\u2028');
+    expect(configMatch![1]).not.toContain('\u2029');
+
+    const parsed = JSON.parse(configMatch![1]!);
+    expect(parsed.state).toBe(stateWithSeparators);
+  });
+
   test('returns valid HTML document', () => {
     const html = buildLoginPageHtml(APP_ID, CALLBACK_URL, STATE);
     expect(html).toStartWith('<!DOCTYPE html>');

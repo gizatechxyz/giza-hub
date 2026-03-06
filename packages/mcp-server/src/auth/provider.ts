@@ -243,11 +243,8 @@ export class GizaAuthProvider implements OAuthServerProvider {
 
         res.redirect(redirectUrl.toString());
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : 'Authentication failed';
-        res.status(500).json({ error: message });
+        console.error('Privy callback error:', error);
+        res.status(500).json({ error: 'Authentication failed' });
       }
     };
   }

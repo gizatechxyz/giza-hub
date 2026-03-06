@@ -177,6 +177,27 @@ describe('GizaAuthProvider', () => {
       expect(res.status).toHaveBeenCalledWith(400);
     });
 
+    test('callback returns generic error on internal failure', async () => {
+      mockVerifyPrivyToken.mockImplementationOnce(() => {
+        throw new Error('Detailed internal: DB connection refused at 10.0.0.5');
+      });
+      const callbackHandler = provider.handlePrivyCallback();
+      const req = createMockReq({
+        body: {
+          privy_token: 'valid-privy-token',
+          state: 'some-session-id',
+        },
+      });
+      const res = createMockRes();
+
+      await callbackHandler(req, res, mock());
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      const body = res.json.mock.calls[0]![0];
+      expect(body.error).toBe('Authentication failed');
+      expect(body.error).not.toContain('DB connection');
+    });
+
     test('returns 400 on expired/invalid session', async () => {
       const callbackHandler = provider.handlePrivyCallback();
       const req = createMockReq({
