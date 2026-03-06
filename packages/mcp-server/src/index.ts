@@ -16,7 +16,10 @@ import {
 import { GizaAuthProvider } from './auth/provider.js';
 import { optionalBearerAuth } from './auth/middleware.js';
 import { buildLoginPageHtml } from './auth/authorize-page.js';
-import { clearSessionAuth } from './auth/session-auth-store.js';
+import {
+  clearSessionAuth,
+  createDeviceSession,
+} from './auth/session-auth-store.js';
 
 const transports: Record<string, StreamableHTTPServerTransport> = {};
 
@@ -58,11 +61,12 @@ function createApp(port: number): express.Express {
       res.status(400).json({ error: 'Missing session parameter' });
       return;
     }
+    const nonce = createDeviceSession(mcpSessionId);
     const callbackUrl = `${issuerBase}/authorize/callback`;
     const html = buildLoginPageHtml(
       provider.privyAppId,
       callbackUrl,
-      `device:${mcpSessionId}`,
+      `device:${mcpSessionId}:${nonce}`,
     );
     res.setHeader('Content-Type', 'text/html');
     res.send(html);

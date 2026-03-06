@@ -23,7 +23,7 @@ import {
   SUPPORTED_SCOPES,
 } from '../constants.js';
 import type { PendingAuthSession, PendingAuthCode, AuthContext } from './types.js';
-import { setSessionAuth } from './session-auth-store.js';
+import { completeDeviceSession } from './session-auth-store.js';
 
 interface TokenPair {
   accessToken: string;
@@ -192,14 +192,19 @@ export class GizaAuthProvider implements OAuthServerProvider {
           await verifyPrivyToken(privyToken);
 
         if (stateParam.startsWith('device:')) {
-          const mcpSessionId = stateParam.slice('device:'.length);
+          const parts = stateParam.slice('device:'.length).split(':');
+          if (parts.length !== 2) {
+            res.status(400).json({ error: 'Invalid device state format' });
+            return;
+          }
+          const [mcpSessionId, nonce] = parts;
           const ctx: AuthContext = {
             walletAddress,
             privyUserId,
             scopes: [...SUPPORTED_SCOPES],
             clientId: 'device',
           };
-          setSessionAuth(mcpSessionId, ctx);
+          completeDeviceSession(mcpSessionId!, nonce!, ctx);
           res.setHeader('Content-Type', 'text/html');
           res.send(
             '<html><body><h2>Authentication successful!</h2>' +
