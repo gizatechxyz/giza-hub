@@ -35,6 +35,8 @@ function createMockRes() {
   res.redirect = mock((url: string) => {});
   res.status = mock((code: number) => res);
   res.json = mock((body: any) => res);
+  res.send = mock((body: any) => res);
+  res.setHeader = mock((name: string, value: string) => res);
   return res;
 }
 
@@ -44,6 +46,21 @@ function createMockReq(overrides: Record<string, any> = {}) {
     headers: {},
     ...overrides,
   } as any;
+}
+
+/**
+ * Extracts the session ID (state) from the HTML response body
+ * by parsing the __GIZA_LOGIN_CONFIG__ JSON.
+ */
+function extractStateFromHtml(html: string): string {
+  const match = html.match(
+    /window\.__GIZA_LOGIN_CONFIG__=(.+?);<\/script>/,
+  );
+  if (!match?.[1]) {
+    throw new Error('Could not extract config from HTML');
+  }
+  const config = JSON.parse(match[1]);
+  return config.state as string;
 }
 
 /**
@@ -70,10 +87,8 @@ async function runAuthFlow(
   };
   await provider.authorize(mockClient, authParams, authRes);
 
-  const loginRedirectUrl =
-    authRes.redirect.mock.calls[0]![0] as string;
-  const url = new URL(loginRedirectUrl);
-  const sessionId = url.searchParams.get('state')!;
+  const htmlBody = authRes.send.mock.calls[0]![0] as string;
+  const sessionId = extractStateFromHtml(htmlBody);
 
   const callbackHandler = provider.handlePrivyCallback();
   const callbackReq = createMockReq({
@@ -102,7 +117,7 @@ describe('GizaAuthProvider', () => {
   });
 
   describe('authorize', () => {
-    test('stores pending session and redirects to Privy', async () => {
+    test('stores pending session and sends login HTML page', async () => {
       const res = createMockRes();
       const params = {
         state: 'oauth-state-123',
@@ -113,11 +128,15 @@ describe('GizaAuthProvider', () => {
 
       await provider.authorize(mockClient, params, res);
 
-      expect(res.redirect).toHaveBeenCalledTimes(1);
-      const redirectUrl =
-        res.redirect.mock.calls[0]![0] as string;
-      expect(redirectUrl).toContain('auth.privy.io');
-      expect(redirectUrl).toContain('redirectUrl=');
+      expect(res.send).toHaveBeenCalledTimes(1);
+      expect(res.setHeader).toHaveBeenCalledWith(
+        'Content-Type',
+        'text/html',
+      );
+      const html = res.send.mock.calls[0]![0] as string;
+      expect(html).toContain('<div id="root"></div>');
+      expect(html).toContain('__GIZA_LOGIN_CONFIG__');
+      expect(html).toContain('test-privy-app-id');
     });
   });
 

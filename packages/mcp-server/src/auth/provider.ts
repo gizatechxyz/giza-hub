@@ -16,7 +16,7 @@ import {
   verifyRefreshToken,
 } from './session.js';
 import { verifyPrivyToken } from './privy.js';
-import { buildPrivyLoginUrl } from './authorize-page.js';
+import { buildLoginPageHtml } from './authorize-page.js';
 import {
   ENV_PRIVY_APP_ID,
   AUTH_CODE_TTL_MS,
@@ -48,7 +48,7 @@ export class GizaAuthProvider implements OAuthServerProvider {
   private pendingSessions = new Map<string, PendingAuthSession>();
   private codes = new Map<string, PendingAuthCode>();
   private readonly baseUrl: string;
-  private readonly privyAppId: string;
+  readonly privyAppId: string;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl.replace(/\/$/, '');
@@ -92,12 +92,13 @@ export class GizaAuthProvider implements OAuthServerProvider {
     });
 
     const callbackUrl = `${this.baseUrl}/authorize/callback`;
-    const loginUrl = buildPrivyLoginUrl(
+    const html = buildLoginPageHtml(
       this.privyAppId,
       callbackUrl,
       sessionId,
     );
-    res.redirect(loginUrl);
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
   }
 
   async challengeForAuthorizationCode(

@@ -1,4 +1,7 @@
 import { randomUUID } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+import compression from 'compression';
 import express from 'express';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
@@ -8,18 +11,18 @@ import {
   DEFAULT_PORT,
   ENV_PORT,
   ENV_MCP_DOMAIN,
-  ENV_PRIVY_APP_ID,
   SUPPORTED_SCOPES,
 } from './constants.js';
 import { GizaAuthProvider } from './auth/provider.js';
 import { optionalBearerAuth } from './auth/middleware.js';
-import { buildPrivyLoginUrl } from './auth/authorize-page.js';
+import { buildLoginPageHtml } from './auth/authorize-page.js';
 import { clearSessionAuth } from './auth/session-auth-store.js';
 
 const transports: Record<string, StreamableHTTPServerTransport> = {};
 
 function createApp(port: number): express.Express {
   const app = express();
+  app.use(compression());
   app.use(express.json());
 
   const issuerBase =
@@ -27,6 +30,12 @@ function createApp(port: number): express.Express {
   const issuerUrl = new URL(issuerBase);
 
   const provider = new GizaAuthProvider(issuerBase);
+
+  const publicDir = path.join(
+    path.dirname(fileURLToPath(import.meta.url)),
+    '../dist/public',
+  );
+  app.use('/public', express.static(publicDir));
 
   app.use(
     mcpAuthRouter({
@@ -46,12 +55,13 @@ function createApp(port: number): express.Express {
       return;
     }
     const callbackUrl = `${issuerBase}/authorize/callback`;
-    const loginUrl = buildPrivyLoginUrl(
-      process.env[ENV_PRIVY_APP_ID]!,
+    const html = buildLoginPageHtml(
+      provider.privyAppId,
       callbackUrl,
       `device:${mcpSessionId}`,
     );
-    res.redirect(loginUrl);
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
   });
 
   const resourceMetadataUrl =

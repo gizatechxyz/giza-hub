@@ -9,19 +9,27 @@
     "typecheck": "tsc --noEmit",
     "test": "bun test",
     "test:unit": "bun test src/__tests__/unit",
-    "test:integration": "bun test src/__tests__/integration"
+    "test:integration": "bun test src/__tests__/integration",
+    "build:login": "bun build src/auth/login-entry.tsx --outdir dist/public --minify"
   },
   "dependencies": {
     "@gizatech/agent-sdk": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.27.0",
     "@privy-io/node": "0.8.0",
+    "@privy-io/react-auth": "^3.16.0",
+    "compression": "^1.8.1",
     "express": "^5.1.0",
     "jose": "6.1.3",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "zod": "^3.25.0"
   },
   "devDependencies": {
+    "@types/compression": "^1.8.1",
     "@types/express": "^5.0.0",
     "@types/node": "^22.0.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "bun-types": "^1.3.0",
     "typescript": "^5.3.3"
   }
