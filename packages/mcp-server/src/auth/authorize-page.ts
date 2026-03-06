@@ -5,8 +5,7 @@ export function buildPrivyLoginUrl(
   callbackUrl: string,
   sessionId: string,
 ): string {
-  const url = new URL('/login', PRIVY_AUTH_BASE);
-  url.searchParams.set('appId', privyAppId);
+  const url = new URL(`/apps/${privyAppId}`, PRIVY_AUTH_BASE);
   url.searchParams.set('redirectUrl', callbackUrl);
   url.searchParams.set('state', sessionId);
   return url.toString();
