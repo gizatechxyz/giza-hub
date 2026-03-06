@@ -102,23 +102,29 @@ export class GizaAuthProvider implements OAuthServerProvider {
   }
 
   async challengeForAuthorizationCode(
-    _client: OAuthClientInformationFull,
+    client: OAuthClientInformationFull,
     authorizationCode: string,
   ): Promise<string> {
     const pending = this.codes.get(authorizationCode);
     if (!pending) {
       throw new Error('Invalid authorization code');
     }
+    if (client.client_id !== pending.clientId) {
+      throw new Error('Authorization code was not issued to this client');
+    }
     return pending.codeChallenge;
   }
 
   async exchangeAuthorizationCode(
-    _client: OAuthClientInformationFull,
+    client: OAuthClientInformationFull,
     authorizationCode: string,
   ): Promise<OAuthTokens> {
     const pending = this.codes.get(authorizationCode);
     if (!pending) {
       throw new Error('Invalid authorization code');
+    }
+    if (client.client_id !== pending.clientId) {
+      throw new Error('Authorization code was not issued to this client');
     }
 
     if (Date.now() - pending.createdAt > AUTH_CODE_TTL_MS) {
@@ -144,6 +150,13 @@ export class GizaAuthProvider implements OAuthServerProvider {
     scopes?: string[],
   ): Promise<OAuthTokens> {
     const claims = await verifyRefreshToken(refreshToken);
+    if (scopes) {
+      const allowed = new Set(claims.scopes);
+      const invalid = scopes.filter((s) => !allowed.has(s));
+      if (invalid.length > 0) {
+        throw new Error('Requested scopes exceed original grant');
+      }
+    }
     const effectiveScopes = scopes ?? claims.scopes;
 
     const pair = await createTokenPair({

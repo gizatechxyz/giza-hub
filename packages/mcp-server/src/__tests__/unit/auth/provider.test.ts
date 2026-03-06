@@ -228,6 +228,15 @@ describe('GizaAuthProvider', () => {
         ),
       ).rejects.toThrow('Invalid authorization code');
     });
+
+    test('rejects code from different client', async () => {
+      const { code } = await runAuthFlow(provider);
+      const otherClient = { client_id: 'other-client' } as any;
+
+      await expect(
+        provider.exchangeAuthorizationCode(otherClient, code),
+      ).rejects.toThrow('Authorization code was not issued to this client');
+    });
   });
 
   describe('exchangeRefreshToken', () => {
@@ -250,6 +259,34 @@ describe('GizaAuthProvider', () => {
       expect(tokens.refresh_token).toBeTypeOf('string');
       expect(tokens.token_type).toBe('Bearer');
       expect(tokens.expires_in).toBe(3600);
+    });
+
+    test('rejects scopes exceeding original grant', async () => {
+      const { code } = await runAuthFlow(provider);
+      const initial =
+        await provider.exchangeAuthorizationCode(mockClient, code);
+
+      await expect(
+        provider.exchangeRefreshToken(
+          mockClient,
+          initial.refresh_token!,
+          ['mcp:tools', 'admin:write'],
+        ),
+      ).rejects.toThrow('Requested scopes exceed original grant');
+    });
+
+    test('accepts same scopes', async () => {
+      const { code } = await runAuthFlow(provider);
+      const initial =
+        await provider.exchangeAuthorizationCode(mockClient, code);
+
+      const tokens = await provider.exchangeRefreshToken(
+        mockClient,
+        initial.refresh_token!,
+        ['mcp:tools'],
+      );
+
+      expect(tokens.access_token).toBeTypeOf('string');
     });
   });
 
@@ -294,6 +331,15 @@ describe('GizaAuthProvider', () => {
           'bad-code',
         ),
       ).rejects.toThrow('Invalid authorization code');
+    });
+
+    test('rejects code from different client', async () => {
+      const { code } = await runAuthFlow(provider);
+      const otherClient = { client_id: 'other-client' } as any;
+
+      await expect(
+        provider.challengeForAuthorizationCode(otherClient, code),
+      ).rejects.toThrow('Authorization code was not issued to this client');
     });
   });
 });
