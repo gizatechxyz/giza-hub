@@ -32,11 +32,25 @@ function LoginInner(): React.ReactElement {
             return;
           }
           const { callbackUrl, state } = window.__GIZA_LOGIN_CONFIG__;
-          const url = new URL(callbackUrl);
-          url.searchParams.set('privy_token', token);
-          url.searchParams.set('state', state);
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = callbackUrl;
+
+          const tokenInput = document.createElement('input');
+          tokenInput.type = 'hidden';
+          tokenInput.name = 'privy_token';
+          tokenInput.value = token;
+          form.appendChild(tokenInput);
+
+          const stateInput = document.createElement('input');
+          stateInput.type = 'hidden';
+          stateInput.name = 'state';
+          stateInput.value = state;
+          form.appendChild(stateInput);
+
+          document.body.appendChild(form);
           setStatus('Redirecting...');
-          window.location.href = url.toString();
+          form.submit();
         })
         .catch((err: unknown) => {
           if (!mounted) return;

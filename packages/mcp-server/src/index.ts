@@ -46,7 +46,11 @@ function createApp(port: number): express.Express {
     }),
   );
 
-  app.get('/authorize/callback', provider.handlePrivyCallback());
+  app.post(
+    '/authorize/callback',
+    express.urlencoded({ extended: false }),
+    provider.handlePrivyCallback(),
+  );
 
   app.get('/login', (req, res) => {
     const mcpSessionId = req.query['session'] as string | undefined;

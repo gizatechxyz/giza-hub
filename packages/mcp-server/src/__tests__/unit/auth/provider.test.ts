@@ -92,7 +92,7 @@ async function runAuthFlow(
 
   const callbackHandler = provider.handlePrivyCallback();
   const callbackReq = createMockReq({
-    query: {
+    body: {
       privy_token: params?.privyToken ?? 'valid-privy-token',
       state: sessionId,
     },
@@ -156,7 +156,7 @@ describe('GizaAuthProvider', () => {
     test('returns 400 on missing privy_token', async () => {
       const callbackHandler = provider.handlePrivyCallback();
       const req = createMockReq({
-        query: { state: 'some-state' },
+        body: { state: 'some-state' },
       });
       const res = createMockRes();
 
@@ -168,7 +168,7 @@ describe('GizaAuthProvider', () => {
     test('returns 400 on missing state', async () => {
       const callbackHandler = provider.handlePrivyCallback();
       const req = createMockReq({
-        query: { privy_token: 'token' },
+        body: { privy_token: 'token' },
       });
       const res = createMockRes();
 
@@ -180,7 +180,7 @@ describe('GizaAuthProvider', () => {
     test('returns 400 on expired/invalid session', async () => {
       const callbackHandler = provider.handlePrivyCallback();
       const req = createMockReq({
-        query: {
+        body: {
           privy_token: 'valid-privy-token',
           state: 'nonexistent-session-id',
         },

@@ -177,9 +177,9 @@ export class GizaAuthProvider implements OAuthServerProvider {
     return async (req, res) => {
       try {
         const privyToken =
-          (req.query['privy_token'] as string | undefined) ??
-          (req.query['token'] as string | undefined);
-        const stateParam = req.query['state'] as string | undefined;
+          (req.body?.privy_token as string | undefined) ??
+          (req.body?.token as string | undefined);
+        const stateParam = req.body?.state as string | undefined;
 
         if (!privyToken || !stateParam) {
           res
