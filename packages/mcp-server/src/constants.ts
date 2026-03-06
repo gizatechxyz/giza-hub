@@ -11,6 +11,7 @@ export const ACCESS_TOKEN_TTL_SEC = 3600;
 export const REFRESH_TOKEN_TTL_SEC = 604_800;
 export const AUTH_CODE_TTL_MS = 300_000;
 export const JWT_ISSUER = SERVER_NAME;
+export const JWT_AUDIENCE = 'giza-mcp';
 export const CONFIRMATION_TOKEN_TTL_MS = 300_000;
 export const SUPPORTED_SCOPES = ['mcp:tools'] as const;
 

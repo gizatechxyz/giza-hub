@@ -3,6 +3,7 @@ import { describe, test, expect, beforeAll } from 'bun:test';
 // Set required env vars before importing session module
 process.env.JWT_SECRET = 'test-secret-that-is-at-least-32-chars-long!!';
 
+import * as jose from 'jose';
 import {
   createTokenPair,
   verifyAccessToken,
@@ -70,6 +71,32 @@ describe('verifyAccessToken', () => {
     await expect(
       verifyAccessToken('not-a-real-token'),
     ).rejects.toThrow();
+  });
+});
+
+describe('JWT audience claim', () => {
+  test('access token contains aud claim', async () => {
+    const { accessToken } = await createTokenPair(TOKEN_INPUT);
+    const decoded = jose.decodeJwt(accessToken);
+    expect(decoded.aud).toBe('giza-mcp');
+  });
+
+  test('rejects token with wrong audience', async () => {
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+    const wrongAudToken = await new jose.SignJWT({
+      wallet: TEST_WALLET,
+      clientId: TEST_CLIENT_ID,
+      scopes: TEST_SCOPES,
+    })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setSubject(TEST_PRIVY_USER)
+      .setIssuer('giza-mcp-server')
+      .setAudience('wrong-audience')
+      .setIssuedAt()
+      .setExpirationTime('1h')
+      .sign(secret);
+
+    await expect(verifyAccessToken(wrongAudToken)).rejects.toThrow();
   });
 });
 

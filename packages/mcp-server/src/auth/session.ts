@@ -6,6 +6,7 @@ import {
   ACCESS_TOKEN_TTL_SEC,
   REFRESH_TOKEN_TTL_SEC,
   JWT_ISSUER,
+  JWT_AUDIENCE,
 } from '../constants.js';
 import type { GizaTokenClaims } from './types.js';
 
@@ -52,6 +53,7 @@ function buildJwt(
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(sub)
     .setIssuer(JWT_ISSUER)
+    .setAudience(JWT_AUDIENCE)
     .setIssuedAt(now)
     .setExpirationTime(now + ttl)
     .setJti(crypto.randomUUID())
@@ -87,6 +89,7 @@ async function decodeToken(
   const secret = getSecret();
   const { payload } = await jose.jwtVerify(token, secret, {
     issuer: JWT_ISSUER,
+    audience: JWT_AUDIENCE,
   });
   const claims = payload as unknown as GizaTokenClaims & jose.JWTPayload;
   if (!claims.sub) {
