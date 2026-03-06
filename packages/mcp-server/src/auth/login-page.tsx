@@ -16,6 +16,7 @@ function LoginInner(): React.ReactElement {
   const [status, setStatus] = useState('Initializing...');
   const [error, setError] = useState<string | null>(null);
   const loginTriggered = useRef(false);
+  const submitted = useRef(false);
 
   useEffect(() => {
     let mounted = true;
@@ -26,11 +27,12 @@ function LoginInner(): React.ReactElement {
       setStatus('Retrieving access token...');
       getAccessToken()
         .then((token) => {
-          if (!mounted) return;
+          if (!mounted || submitted.current) return;
           if (!token) {
             setError('Failed to retrieve access token.');
             return;
           }
+          submitted.current = true;
           const { callbackUrl, state } = window.__GIZA_LOGIN_CONFIG__;
           const form = document.createElement('form');
           form.method = 'POST';
