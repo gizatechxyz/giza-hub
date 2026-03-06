@@ -17,7 +17,7 @@ export function jsonResult(value: unknown): CallToolResult {
 }
 
 export async function handleToolCall<T>(
-  operation: () => Promise<T>,
+  operation: () => T | Promise<T>,
   formatResult: (result: T) => CallToolResult,
 ): Promise<CallToolResult> {
   try {
@@ -39,6 +39,9 @@ export async function handleToolCall<T>(
       return errorResult(
         'Unable to reach the Giza API. Please check your network connection and try again.',
       );
+    }
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      return errorResult('Request was cancelled. Please try again.');
     }
     const message =
       error instanceof Error ? error.message : 'An unexpected error occurred';

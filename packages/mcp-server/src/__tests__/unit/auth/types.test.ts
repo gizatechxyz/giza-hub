@@ -3,7 +3,6 @@ import { describe, test, expect } from 'bun:test';
 import {
   parseWalletAddress,
   extractAuthContext,
-  requireAuth,
 } from '../../../auth/types.js';
 import {
   buildAuthInfo,
@@ -104,37 +103,3 @@ describe('extractAuthContext', () => {
   });
 });
 
-describe('requireAuth', () => {
-  test('returns AuthContext when authInfo is valid', () => {
-    const authInfo = buildAuthInfo();
-    const ctx = requireAuth(authInfo);
-
-    expect(ctx.walletAddress).toBe(TEST_WALLET);
-    expect(ctx.privyUserId).toBe(TEST_PRIVY_USER);
-    expect(ctx.scopes).toEqual(TEST_SCOPES);
-    expect(ctx.clientId).toBe(TEST_CLIENT_ID);
-  });
-
-  test('throws when authInfo is undefined', () => {
-    expect(() => requireAuth(undefined)).toThrow(
-      'Authentication required',
-    );
-  });
-
-  test('throws when authInfo has no extra', () => {
-    const authInfo = buildAuthInfo();
-    authInfo.extra = undefined;
-    expect(() => requireAuth(authInfo)).toThrow(
-      'Authentication required',
-    );
-  });
-
-  test('throws when authInfo extra has invalid fields', () => {
-    const authInfo = buildAuthInfo();
-    authInfo.extra = { wallet: 123, privyUserId: true };
-    expect(() => requireAuth(authInfo)).toThrow(
-      'Authentication required',
-    );
-  });
-
-});

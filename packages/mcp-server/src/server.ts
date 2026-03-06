@@ -14,10 +14,10 @@ import { registerFinancialTools } from './tools/financial.js';
 import { registerCriticalTools } from './tools/critical.js';
 
 export function createMcpServer(): McpServer {
-  const server = new McpServer({
-    name: SERVER_NAME,
-    version: SERVER_VERSION,
-  });
+  const server = new McpServer(
+    { name: SERVER_NAME, version: SERVER_VERSION },
+    { capabilities: { logging: {} } },
+  );
 
   registerSystemTools(server);
   registerDiscoveryTools(server);
