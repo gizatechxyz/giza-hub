@@ -48,7 +48,7 @@ export function completeDeviceSession(
     throw new Error('Device session expired');
   }
   pendingDevices.delete(sessionId);
-  store.set(sessionId, { ctx, createdAt: Date.now() });
+  setSessionAuth(sessionId, ctx);
 }
 
 export function setSessionAuth(

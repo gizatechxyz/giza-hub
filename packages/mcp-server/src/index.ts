@@ -12,6 +12,7 @@ import {
   ENV_PORT,
   ENV_MCP_DOMAIN,
   SUPPORTED_SCOPES,
+  DEVICE_STATE_PREFIX,
 } from './constants.js';
 import { GizaAuthProvider } from './auth/provider.js';
 import { optionalBearerAuth } from './auth/middleware.js';
@@ -66,7 +67,7 @@ function createApp(port: number): express.Express {
     const html = buildLoginPageHtml(
       provider.privyAppId,
       callbackUrl,
-      `device:${mcpSessionId}:${nonce}`,
+      `${DEVICE_STATE_PREFIX}${mcpSessionId}:${nonce}`,
     );
     res.setHeader('Content-Type', 'text/html');
     res.send(html);

@@ -16,6 +16,7 @@ export const CONFIRMATION_TOKEN_TTL_MS = 300_000;
 export const SUPPORTED_SCOPES = ['mcp:tools'] as const;
 
 export const SESSION_AUTH_TTL_MS = 3_600_000;
+export const DEVICE_STATE_PREFIX = 'device:';
 
 export function getBaseUrl(): string {
   return (

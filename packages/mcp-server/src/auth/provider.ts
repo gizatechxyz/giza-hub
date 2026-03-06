@@ -24,14 +24,12 @@ import {
 } from '../constants.js';
 import type { PendingAuthSession, PendingAuthCode, AuthContext } from './types.js';
 import { completeDeviceSession } from './session-auth-store.js';
+import { DEVICE_STATE_PREFIX } from '../constants.js';
 
-interface TokenPair {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-}
-
-function toOAuthTokens(pair: TokenPair, scopes: string[]): OAuthTokens {
+function toOAuthTokens(
+  pair: { accessToken: string; refreshToken: string; expiresIn: number },
+  scopes: string[],
+): OAuthTokens {
   return {
     access_token: pair.accessToken,
     token_type: 'Bearer',
@@ -101,10 +99,10 @@ export class GizaAuthProvider implements OAuthServerProvider {
     res.send(html);
   }
 
-  async challengeForAuthorizationCode(
+  private getValidCode(
     client: OAuthClientInformationFull,
     authorizationCode: string,
-  ): Promise<string> {
+  ): PendingAuthCode {
     const pending = this.codes.get(authorizationCode);
     if (!pending) {
       throw new Error('Invalid authorization code');
@@ -112,6 +110,14 @@ export class GizaAuthProvider implements OAuthServerProvider {
     if (client.client_id !== pending.clientId) {
       throw new Error('Authorization code was not issued to this client');
     }
+    return pending;
+  }
+
+  async challengeForAuthorizationCode(
+    client: OAuthClientInformationFull,
+    authorizationCode: string,
+  ): Promise<string> {
+    const pending = this.getValidCode(client, authorizationCode);
     return pending.codeChallenge;
   }
 
@@ -119,13 +125,7 @@ export class GizaAuthProvider implements OAuthServerProvider {
     client: OAuthClientInformationFull,
     authorizationCode: string,
   ): Promise<OAuthTokens> {
-    const pending = this.codes.get(authorizationCode);
-    if (!pending) {
-      throw new Error('Invalid authorization code');
-    }
-    if (client.client_id !== pending.clientId) {
-      throw new Error('Authorization code was not issued to this client');
-    }
+    const pending = this.getValidCode(client, authorizationCode);
 
     if (Date.now() - pending.createdAt > AUTH_CODE_TTL_MS) {
       this.codes.delete(authorizationCode);
@@ -191,20 +191,21 @@ export class GizaAuthProvider implements OAuthServerProvider {
         const { privyUserId, walletAddress } =
           await verifyPrivyToken(privyToken);
 
-        if (stateParam.startsWith('device:')) {
-          const parts = stateParam.slice('device:'.length).split(':');
-          if (parts.length !== 2) {
+        if (stateParam.startsWith(DEVICE_STATE_PREFIX)) {
+          const parts = stateParam.slice(DEVICE_STATE_PREFIX.length).split(':');
+          const mcpSessionId = parts[0];
+          const nonce = parts[1];
+          if (parts.length !== 2 || !mcpSessionId || !nonce) {
             res.status(400).json({ error: 'Invalid device state format' });
             return;
           }
-          const [mcpSessionId, nonce] = parts;
           const ctx: AuthContext = {
             walletAddress,
             privyUserId,
             scopes: [...SUPPORTED_SCOPES],
             clientId: 'device',
           };
-          completeDeviceSession(mcpSessionId!, nonce!, ctx);
+          completeDeviceSession(mcpSessionId, nonce, ctx);
           res.setHeader('Content-Type', 'text/html');
           res.send(
             '<html><body><h2>Authentication successful!</h2>' +
