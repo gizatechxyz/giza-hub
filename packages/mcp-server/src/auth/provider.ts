@@ -16,7 +16,7 @@ import {
   verifyRefreshToken,
 } from './session.js';
 import { verifyPrivyToken } from './privy.js';
-import { buildLoginPageHtml } from './authorize-page.js';
+import { buildLoginPageHtml, buildLoginCsp } from './authorize-page.js';
 import {
   ENV_PRIVY_APP_ID,
   AUTH_CODE_TTL_MS,
@@ -77,13 +77,16 @@ export class GizaAuthProvider implements OAuthServerProvider {
       createdAt: Date.now(),
     });
 
+    const nonce = crypto.randomUUID();
     const callbackUrl = `${this.baseUrl}/authorize/callback`;
     const html = buildLoginPageHtml(
       this.privyAppId,
       callbackUrl,
       sessionId,
+      nonce,
     );
     res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Content-Security-Policy', buildLoginCsp(nonce));
     res.send(html);
   }
 

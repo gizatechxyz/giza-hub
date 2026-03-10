@@ -138,6 +138,12 @@ describe('GizaAuthProvider', () => {
       expect(html).toContain('<div id="root"></div>');
       expect(html).toContain('__GIZA_LOGIN_CONFIG__');
       expect(html).toContain('test-privy-app-id');
+
+      const cspCall = res.setHeader.mock.calls.find(
+        (c: string[]) => c[0] === 'Content-Security-Policy',
+      );
+      expect(cspCall).toBeTruthy();
+      expect(cspCall![1]).toContain("script-src 'self' 'nonce-");
     });
   });
 

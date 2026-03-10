@@ -17,7 +17,7 @@ import {
 } from './constants.js';
 import { GizaAuthProvider } from './auth/provider.js';
 import { optionalBearerAuth } from './auth/middleware.js';
-import { buildLoginPageHtml } from './auth/authorize-page.js';
+import { buildLoginPageHtml, buildLoginCsp } from './auth/authorize-page.js';
 import {
   clearSessionAuth,
   createDeviceSession,
@@ -112,13 +112,16 @@ function createApp(port: number): express.Express {
       return;
     }
     createDeviceSession(mcpSessionId);
+    const nonce = randomUUID();
     const callbackUrl = `${issuerBase}/authorize/callback`;
     const html = buildLoginPageHtml(
       provider.privyAppId,
       callbackUrl,
       `${DEVICE_STATE_PREFIX}${mcpSessionId}`,
+      nonce,
     );
     res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Content-Security-Policy', buildLoginCsp(nonce));
     res.send(html);
   });
 
