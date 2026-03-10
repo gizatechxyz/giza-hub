@@ -8,7 +8,7 @@ import {
   confirmationPayload,
 } from '../services/confirmation.js';
 import { getAgentForSession } from '../services/sdk-factory.js';
-import { getBaseUrl } from '../constants.js';
+import { ANNOTATIONS_DESTRUCTIVE, ANNOTATIONS_READONLY, getBaseUrl } from '../constants.js';
 
 export function registerRewardTools(server: McpServer): void {
   server.registerTool(
@@ -16,11 +16,12 @@ export function registerRewardTools(server: McpServer): void {
     {
       title: 'List Rewards',
       description:
-        'List paginated rewards earned by the agent, including APR breakdown and token amounts.',
+        'List rewards earned by the agent. Use for "how much have I earned" questions.',
       inputSchema: z.object({
         chain: chainSchema,
         ...paginationSchema.shape,
       }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain, page, limit, sort }, extra) =>
       handleToolCall(
@@ -38,11 +39,12 @@ export function registerRewardTools(server: McpServer): void {
     {
       title: 'List Reward History',
       description:
-        'List paginated historical reward data for the agent.',
+        'List historical reward data over time. Use for reward trend questions.',
       inputSchema: z.object({
         chain: chainSchema,
         ...paginationSchema.shape,
       }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain, page, limit, sort }, extra) =>
       handleToolCall(
@@ -60,8 +62,9 @@ export function registerRewardTools(server: McpServer): void {
     {
       title: 'Claim Rewards',
       description:
-        'Claim all pending rewards for the agent. Returns a confirmation token that must be passed to giza_confirm_operation to execute.',
+        'Claim pending rewards. DESTRUCTIVE: returns a confirmationToken — ask the user to confirm, then call giza_confirm_operation.',
       inputSchema: z.object({ chain: chainSchema }),
+      annotations: ANNOTATIONS_DESTRUCTIVE,
     },
     async ({ chain }, extra) =>
       handleToolCall(

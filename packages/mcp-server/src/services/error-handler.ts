@@ -28,7 +28,10 @@ export async function handleToolCall<T>(
       return errorResult(`Invalid input: ${error.message}`);
     }
     if (error instanceof GizaAPIError) {
-      return errorResult(error.friendlyMessage);
+      const detail = error.message !== error.friendlyMessage
+        ? ` (${error.message})`
+        : '';
+      return errorResult(`${error.friendlyMessage}${detail}`);
     }
     if (error instanceof TimeoutError) {
       return errorResult(

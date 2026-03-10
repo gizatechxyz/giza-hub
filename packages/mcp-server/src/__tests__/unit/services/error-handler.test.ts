@@ -64,7 +64,8 @@ describe('handleToolCall', () => {
     );
 
     expect(result.isError).toBe(true);
-    expect(result.content[0]!.text).toBe(apiError.friendlyMessage);
+    expect(result.content[0]!.text).toStartWith(apiError.friendlyMessage);
+    expect(result.content[0]!.text).toContain(apiError.message);
   });
 
   test('catches TimeoutError', async () => {

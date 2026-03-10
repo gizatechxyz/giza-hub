@@ -31,7 +31,7 @@ Edit `.env` with your credentials:
 ```
 GIZA_API_KEY=your-api-key
 GIZA_PARTNER_NAME=your-partner-name
-GIZA_API_URL=https://api.giza.tech
+GIZA_API_URL=https://...
 PORT=3000
 
 PRIVY_APP_ID=your-privy-app-id

@@ -5,6 +5,7 @@ import {
   getDefaultGizaClient,
   getGizaClient,
 } from '../services/sdk-factory.js';
+import { ANNOTATIONS_READONLY } from '../constants.js';
 import { handleToolCall, jsonResult } from '../services/error-handler.js';
 
 export function registerSystemTools(server: McpServer): void {
@@ -12,8 +13,10 @@ export function registerSystemTools(server: McpServer): void {
     'giza_health',
     {
       title: 'Giza Health Check',
-      description: 'Check if the Giza API is healthy and operational.',
+      description:
+        'Check if the Giza API is reachable. Use only as a diagnostic when other calls fail.',
       inputSchema: z.object({}),
+      annotations: ANNOTATIONS_READONLY,
     },
     async () => {
       return handleToolCall(
@@ -28,8 +31,9 @@ export function registerSystemTools(server: McpServer): void {
     {
       title: 'Giza API Config',
       description:
-        'Get the current Giza API configuration and supported features.',
+        'Get API configuration and feature flags. Rarely needed — prefer giza_list_chains or giza_list_tokens.',
       inputSchema: z.object({}),
+      annotations: ANNOTATIONS_READONLY,
     },
     async () => {
       return handleToolCall(
@@ -44,8 +48,9 @@ export function registerSystemTools(server: McpServer): void {
     {
       title: 'Giza Chain Statistics',
       description:
-        'Get statistics for a specific blockchain network, including TVL, active agents, and protocol distribution.',
+        'Get chain-level stats: TVL, active agents, protocol breakdown. Use for market overview questions.',
       inputSchema: z.object({ chain: chainSchema }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain }) => {
       return handleToolCall(
@@ -60,8 +65,9 @@ export function registerSystemTools(server: McpServer): void {
     {
       title: 'Giza TVL',
       description:
-        'Get the total value locked (TVL) on a specific blockchain network.',
+        'Get total value locked on a chain. Use giza_get_stats instead if the user also wants agent counts.',
       inputSchema: z.object({ chain: chainSchema }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain }) => {
       return handleToolCall(

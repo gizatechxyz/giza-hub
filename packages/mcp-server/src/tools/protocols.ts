@@ -4,7 +4,7 @@ import { ensureAuth } from '../auth/ensure-auth.js';
 import { chainSchema, constraintSchema } from '../schemas.js';
 import { handleToolCall, jsonResult } from '../services/error-handler.js';
 import { getAgentForSession } from '../services/sdk-factory.js';
-import { getBaseUrl } from '../constants.js';
+import { ANNOTATIONS_IDEMPOTENT_MUTATING, ANNOTATIONS_READONLY, getBaseUrl } from '../constants.js';
 
 export function registerProtocolTools(server: McpServer): void {
   server.registerTool(
@@ -12,8 +12,9 @@ export function registerProtocolTools(server: McpServer): void {
     {
       title: 'Get Agent Protocols',
       description:
-        'Get the list of DeFi protocols currently configured for the agent.',
+        'Get protocols currently assigned to the agent.',
       inputSchema: z.object({ chain: chainSchema }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain }, extra) =>
       handleToolCall(
@@ -31,7 +32,7 @@ export function registerProtocolTools(server: McpServer): void {
     {
       title: 'Update Agent Protocols',
       description:
-        'Update the list of DeFi protocols the agent is allowed to allocate to.',
+        'Change which protocols the agent allocates to.',
       inputSchema: z.object({
         chain: chainSchema,
         protocols: z
@@ -39,6 +40,7 @@ export function registerProtocolTools(server: McpServer): void {
           .min(1)
           .describe('Protocol names to set for the agent'),
       }),
+      annotations: ANNOTATIONS_IDEMPOTENT_MUTATING,
     },
     async ({ chain, protocols }, extra) =>
       handleToolCall(
@@ -57,8 +59,9 @@ export function registerProtocolTools(server: McpServer): void {
     {
       title: 'Get Agent Constraints',
       description:
-        'Get the current allocation constraints configured for the agent.',
+        'Get the agent\'s allocation constraints (min protocols, max per protocol, etc.).',
       inputSchema: z.object({ chain: chainSchema }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain }, extra) =>
       handleToolCall(
@@ -76,7 +79,7 @@ export function registerProtocolTools(server: McpServer): void {
     {
       title: 'Update Agent Constraints',
       description:
-        'Update the allocation constraints for the agent (e.g. min protocols, max allocation per protocol).',
+        'Update allocation constraints. Use when the user wants to limit exposure or set diversification rules.',
       inputSchema: z.object({
         chain: chainSchema,
         constraints: z
@@ -84,6 +87,7 @@ export function registerProtocolTools(server: McpServer): void {
           .min(1)
           .describe('Constraint configurations to apply'),
       }),
+      annotations: ANNOTATIONS_IDEMPOTENT_MUTATING,
     },
     async ({ chain, constraints }, extra) =>
       handleToolCall(

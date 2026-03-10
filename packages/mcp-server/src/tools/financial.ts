@@ -8,7 +8,7 @@ import {
   confirmationPayload,
 } from '../services/confirmation.js';
 import { getAgentForSession } from '../services/sdk-factory.js';
-import { getBaseUrl } from '../constants.js';
+import { ANNOTATIONS_DESTRUCTIVE, ANNOTATIONS_READONLY, getBaseUrl } from '../constants.js';
 
 export function registerFinancialTools(server: McpServer): void {
   server.registerTool(
@@ -16,7 +16,7 @@ export function registerFinancialTools(server: McpServer): void {
     {
       title: 'Withdraw Funds',
       description:
-        'Withdraw funds from the agent. If no amount is specified, performs a full withdrawal. Provide an amount string for partial withdrawal. Returns a confirmation token that must be passed to giza_confirm_operation to execute.',
+        'Withdraw funds from the agent back to the user\'s wallet. Omit amount for full withdrawal. DESTRUCTIVE: returns a confirmationToken — ask the user to confirm, then call giza_confirm_operation.',
       inputSchema: z.object({
         chain: chainSchema,
         amount: z
@@ -26,6 +26,7 @@ export function registerFinancialTools(server: McpServer): void {
             'Amount to withdraw as a string. Omit for full withdrawal.',
           ),
       }),
+      annotations: ANNOTATIONS_DESTRUCTIVE,
     },
     async ({ chain, amount }, extra) =>
       handleToolCall(
@@ -52,8 +53,9 @@ export function registerFinancialTools(server: McpServer): void {
     {
       title: 'Get Withdrawal Status',
       description:
-        'Get the current withdrawal/deactivation status of the agent.',
+        'Check status of a pending withdrawal or deactivation. Use after giza_withdraw or giza_deactivate_agent.',
       inputSchema: z.object({ chain: chainSchema }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain }, extra) =>
       handleToolCall(
@@ -71,8 +73,9 @@ export function registerFinancialTools(server: McpServer): void {
     {
       title: 'Get Fees',
       description:
-        'Get the current fee structure for the agent, including percentage and absolute fee amounts.',
+        'Get the fee structure (10% performance fee on yield only, no fees on deposits/withdrawals). Use when the user asks about costs.',
       inputSchema: z.object({ chain: chainSchema }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain }, extra) =>
       handleToolCall(
@@ -90,8 +93,9 @@ export function registerFinancialTools(server: McpServer): void {
     {
       title: 'Get Deposit Limit',
       description:
-        'Get the deposit limit for the authenticated wallet on the specified chain.',
+        'Get the maximum deposit allowed for this wallet on a chain. Use before large deposits.',
       inputSchema: z.object({ chain: chainSchema }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain }, extra) =>
       handleToolCall(

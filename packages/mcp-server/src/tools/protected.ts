@@ -2,7 +2,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
 import { handleToolCall, jsonResult } from '../services/error-handler.js';
 import { ensureAuth, checkAuth } from '../auth/ensure-auth.js';
-import { getBaseUrl } from '../constants.js';
+import { ANNOTATIONS_IDEMPOTENT_MUTATING, ANNOTATIONS_READONLY, getBaseUrl } from '../constants.js';
 
 export function registerProtectedTools(server: McpServer): void {
   server.registerTool(
@@ -10,8 +10,9 @@ export function registerProtectedTools(server: McpServer): void {
     {
       title: 'Login',
       description:
-        'Authenticate with Giza. If already authenticated, returns wallet info. Otherwise, returns a login URL for the user to open. Call again after the user has logged in.',
+        'Authenticate the user. Returns a login URL if not yet logged in — show it to the user. Call again after they log in. Try this first when any tool fails with an auth error.',
       inputSchema: z.object({}),
+      annotations: ANNOTATIONS_IDEMPOTENT_MUTATING,
     },
     async (_params, extra) =>
       handleToolCall(
@@ -31,8 +32,9 @@ export function registerProtectedTools(server: McpServer): void {
     {
       title: 'Who Am I',
       description:
-        'Returns the authenticated wallet address and user info. Returns an error if not authenticated — call giza_login first.',
+        'Check current auth status without triggering login. Returns wallet address if authenticated, error if not.',
       inputSchema: z.object({}),
+      annotations: ANNOTATIONS_READONLY,
     },
     async (_params, extra) =>
       handleToolCall(

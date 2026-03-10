@@ -7,6 +7,7 @@ import {
   getDefaultGizaClient,
   getGizaClient,
 } from '../services/sdk-factory.js';
+import { ANNOTATIONS_READONLY } from '../constants.js';
 import { handleToolCall, jsonResult } from '../services/error-handler.js';
 
 export function registerDiscoveryTools(server: McpServer): void {
@@ -15,8 +16,9 @@ export function registerDiscoveryTools(server: McpServer): void {
     {
       title: 'List Chains',
       description:
-        'List all blockchain networks supported by Giza, with their chain IDs and names.',
+        'List supported chains with IDs and names. Call first if the user hasn\'t specified a chain.',
       inputSchema: z.object({}),
+      annotations: ANNOTATIONS_READONLY,
     },
     async () => {
       return handleToolCall(
@@ -37,8 +39,9 @@ export function registerDiscoveryTools(server: McpServer): void {
     {
       title: 'List Tokens',
       description:
-        'List all tokens available for yield optimization on a specific blockchain network.',
+        'List tokens available for yield optimization on a chain. Call before giza_activate_agent.',
       inputSchema: z.object({ chain: chainSchema }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain }) => {
       return handleToolCall(
@@ -53,11 +56,12 @@ export function registerDiscoveryTools(server: McpServer): void {
     {
       title: 'List Protocols',
       description:
-        'List all DeFi protocols available for a specific token on a blockchain network.',
+        'List DeFi protocols for a token on a chain. Needed before giza_activate_agent to pick protocols.',
       inputSchema: z.object({
         chain: chainSchema,
         token: addressSchema.describe('Token contract address'),
       }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain, token }) => {
       return handleToolCall(
@@ -72,11 +76,12 @@ export function registerDiscoveryTools(server: McpServer): void {
     {
       title: 'Protocol Supply',
       description:
-        'Get supply data for all protocols supporting a specific token on a blockchain network.',
+        'Get supply deposited into each protocol for a token. Use for comparing protocol sizes.',
       inputSchema: z.object({
         chain: chainSchema,
         token: addressSchema.describe('Token contract address'),
       }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain, token }) => {
       return handleToolCall(

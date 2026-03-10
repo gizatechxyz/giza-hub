@@ -3,6 +3,7 @@ import type { Address, OptimizerConstraintConfig } from '@gizatech/agent-sdk';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
 import { chainSchema, addressSchema } from '../schemas.js';
+import { ANNOTATIONS_READONLY } from '../constants.js';
 import { handleToolCall, jsonResult } from '../services/error-handler.js';
 import { getGizaClient } from '../services/sdk-factory.js';
 
@@ -12,7 +13,7 @@ export function registerOptimizerTools(server: McpServer): void {
     {
       title: 'Optimize Allocation',
       description:
-        'Run the yield optimizer to find the best protocol allocation for a given token and capital amount. This is a public tool that does not require authentication.',
+        'Simulate optimal capital allocation across DeFi protocols for a token and amount. No auth needed. Use for "where should I put my money" questions before committing funds.',
       inputSchema: z.object({
         chain: chainSchema.optional(),
         token: addressSchema.describe('Token contract address to optimize'),
@@ -45,6 +46,7 @@ export function registerOptimizerTools(server: McpServer): void {
           .optional()
           .describe('Optional wallet address for context'),
       }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({
       chain,

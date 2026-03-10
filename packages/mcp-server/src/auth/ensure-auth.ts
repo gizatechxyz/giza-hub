@@ -28,12 +28,12 @@ export function ensureAuth(
 
   if (!extra.sessionId) {
     throw new Error(
-      'Authentication required. No session ID available for device login.',
+      'You need to log in first, but no session is available for login. Please reconnect with a session-capable client.',
     );
   }
 
   const loginUrl = `${baseUrl}/login?session=${encodeURIComponent(extra.sessionId)}`;
   throw new Error(
-    `Authentication required. Please open this URL to log in:\n${loginUrl}\n\nAfter logging in, call this tool again.`,
+    `You need to log in. Open this link in your browser:\n${loginUrl}\n\nOnce you've logged in, try again.`,
   );
 }

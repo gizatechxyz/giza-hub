@@ -4,7 +4,7 @@ import { ensureAuth } from '../auth/ensure-auth.js';
 import { chainSchema, paginationSchema } from '../schemas.js';
 import { handleToolCall, jsonResult } from '../services/error-handler.js';
 import { getAgentForSession } from '../services/sdk-factory.js';
-import { getBaseUrl } from '../constants.js';
+import { ANNOTATIONS_READONLY, getBaseUrl } from '../constants.js';
 
 export function registerTransactionTools(server: McpServer): void {
   server.registerTool(
@@ -12,11 +12,12 @@ export function registerTransactionTools(server: McpServer): void {
     {
       title: 'List Transactions',
       description:
-        'List paginated transactions for the agent. Returns transaction history with action type, amounts, status, and protocol info.',
+        'List transaction history (rebalances, deposits, withdrawals). Use for "what happened" questions.',
       inputSchema: z.object({
         chain: chainSchema,
         ...paginationSchema.shape,
       }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain, page, limit, sort }, extra) =>
       handleToolCall(
@@ -34,11 +35,12 @@ export function registerTransactionTools(server: McpServer): void {
     {
       title: 'List Executions',
       description:
-        'List paginated optimization executions for the agent, including their status and associated transactions.',
+        'List optimization runs with status. Use for detailed history or debugging.',
       inputSchema: z.object({
         chain: chainSchema,
         ...paginationSchema.shape,
       }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain, page, limit, sort }, extra) =>
       handleToolCall(
@@ -56,12 +58,13 @@ export function registerTransactionTools(server: McpServer): void {
     {
       title: 'List Execution Logs',
       description:
-        'List paginated logs for a specific execution run.',
+        'Get logs for a specific execution. Requires executionId from giza_list_executions. For debugging.',
       inputSchema: z.object({
         chain: chainSchema,
         executionId: z.string().describe('Execution ID to get logs for'),
         ...paginationSchema.shape,
       }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain, executionId, page, limit, sort }, extra) =>
       handleToolCall(
@@ -81,11 +84,12 @@ export function registerTransactionTools(server: McpServer): void {
     {
       title: 'List Agent Logs',
       description:
-        'List paginated logs for the agent across all executions.',
+        'Get all agent logs. For debugging. Prefer giza_list_transactions for user-facing history.',
       inputSchema: z.object({
         chain: chainSchema,
         ...paginationSchema.shape,
       }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain, page, limit, sort }, extra) =>
       handleToolCall(

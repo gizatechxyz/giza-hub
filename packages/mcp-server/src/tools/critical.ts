@@ -3,7 +3,7 @@ import * as z from 'zod/v4';
 import { ensureAuth } from '../auth/ensure-auth.js';
 import { handleToolCall, jsonResult } from '../services/error-handler.js';
 import { executePendingOperation } from '../services/confirmation.js';
-import { getBaseUrl } from '../constants.js';
+import { ANNOTATIONS_DESTRUCTIVE, getBaseUrl } from '../constants.js';
 
 export function registerCriticalTools(server: McpServer): void {
   server.registerTool(
@@ -11,13 +11,14 @@ export function registerCriticalTools(server: McpServer): void {
     {
       title: 'Confirm Critical Operation',
       description:
-        'Confirm and execute a previously initiated critical operation (withdraw, deactivate, or claim rewards). Requires the confirmation token returned by the initiating tool.',
+        'Execute a previously initiated critical operation (withdraw, deactivate, claim rewards). Requires the confirmationToken from the initiating tool. NEVER call without explicit user confirmation.',
       inputSchema: z.object({
         confirmationToken: z
           .string()
           .uuid()
           .describe('The confirmation token from the initiated operation'),
       }),
+      annotations: ANNOTATIONS_DESTRUCTIVE,
     },
     async ({ confirmationToken }, extra) =>
       handleToolCall(

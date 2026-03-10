@@ -4,7 +4,7 @@ import { ensureAuth } from '../auth/ensure-auth.js';
 import { chainSchema } from '../schemas.js';
 import { handleToolCall, jsonResult } from '../services/error-handler.js';
 import { getGizaClient } from '../services/sdk-factory.js';
-import { getBaseUrl } from '../constants.js';
+import { ANNOTATIONS_MUTATING, ANNOTATIONS_READONLY, getBaseUrl } from '../constants.js';
 
 export function registerAgentManagementTools(server: McpServer): void {
   server.registerTool(
@@ -12,8 +12,9 @@ export function registerAgentManagementTools(server: McpServer): void {
     {
       title: 'Create Agent',
       description:
-        'Create a new ERC-4337 smart account agent for the authenticated wallet on the specified chain.',
+        'Create a smart account on a chain. Call giza_get_agent first to check if one exists.',
       inputSchema: z.object({ chain: chainSchema }),
+      annotations: ANNOTATIONS_MUTATING,
     },
     async ({ chain }, extra) =>
       handleToolCall(
@@ -31,8 +32,9 @@ export function registerAgentManagementTools(server: McpServer): void {
     {
       title: 'Get Agent',
       description:
-        'Look up the existing agent (smart account) for the authenticated wallet on the specified chain.',
+        'Look up the user\'s existing agent on a chain. Call before giza_create_agent to avoid duplicates.',
       inputSchema: z.object({ chain: chainSchema }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain }, extra) =>
       handleToolCall(
@@ -50,8 +52,9 @@ export function registerAgentManagementTools(server: McpServer): void {
     {
       title: 'Get Smart Account',
       description:
-        'Get full smart account details (addresses, chain) for the authenticated wallet.',
+        'Get smart account details (addresses, chain). Use when the user asks about their account address.',
       inputSchema: z.object({ chain: chainSchema }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain }, extra) =>
       handleToolCall(

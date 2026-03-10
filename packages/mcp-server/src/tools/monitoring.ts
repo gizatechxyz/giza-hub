@@ -5,7 +5,7 @@ import { ensureAuth } from '../auth/ensure-auth.js';
 import { chainSchema } from '../schemas.js';
 import { handleToolCall, jsonResult } from '../services/error-handler.js';
 import { getAgentForSession } from '../services/sdk-factory.js';
-import { getBaseUrl } from '../constants.js';
+import { ANNOTATIONS_READONLY, getBaseUrl } from '../constants.js';
 
 export function registerMonitoringTools(server: McpServer): void {
   server.registerTool(
@@ -13,8 +13,9 @@ export function registerMonitoringTools(server: McpServer): void {
     {
       title: 'Get Portfolio',
       description:
-        'Get the current portfolio overview for the agent, including deposits, status, and protocol allocations.',
+        'Get the agent\'s current portfolio: value, balances, protocol allocations. Go-to tool for "how is my portfolio" questions.',
       inputSchema: z.object({ chain: chainSchema }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain }, extra) =>
       handleToolCall(
@@ -32,7 +33,7 @@ export function registerMonitoringTools(server: McpServer): void {
     {
       title: 'Get Performance',
       description:
-        'Get historical performance chart data for the agent, with optional start date filter.',
+        'Get historical performance as time-series data. Use giza_get_apr for a single number summary instead.',
       inputSchema: z.object({
         chain: chainSchema,
         from: z
@@ -40,6 +41,7 @@ export function registerMonitoringTools(server: McpServer): void {
           .optional()
           .describe('Start date for performance data (ISO 8601)'),
       }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain, from }, extra) =>
       handleToolCall(
@@ -57,7 +59,7 @@ export function registerMonitoringTools(server: McpServer): void {
     {
       title: 'Get APR',
       description:
-        'Get the annualized percentage return (APR) for the agent, with optional date range filtering.',
+        'Get the agent\'s annualized return rate. Best for "what\'s my yield" questions.',
       inputSchema: z.object({
         chain: chainSchema,
         startDate: z
@@ -73,6 +75,7 @@ export function registerMonitoringTools(server: McpServer): void {
           .optional()
           .describe('Use exact end date instead of rounding'),
       }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain, startDate, endDate, useExactEndDate }, extra) =>
       handleToolCall(
@@ -90,7 +93,7 @@ export function registerMonitoringTools(server: McpServer): void {
     {
       title: 'Get APR by Tokens',
       description:
-        'Get APR data broken down by individual tokens, with optional time period filter.',
+        'Get APR broken down by token. Use when the user has multiple tokens and wants per-token yield.',
       inputSchema: z.object({
         chain: chainSchema,
         period: z
@@ -98,6 +101,7 @@ export function registerMonitoringTools(server: McpServer): void {
           .optional()
           .describe("Time period: 'all' or 'day'"),
       }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain, period }, extra) =>
       handleToolCall(
@@ -115,8 +119,9 @@ export function registerMonitoringTools(server: McpServer): void {
     {
       title: 'Get Deposits',
       description:
-        'Get the list of deposits made to the agent smart account.',
+        'List deposits made to the agent. Use for deposit history questions.',
       inputSchema: z.object({ chain: chainSchema }),
+      annotations: ANNOTATIONS_READONLY,
     },
     async ({ chain }, extra) =>
       handleToolCall(

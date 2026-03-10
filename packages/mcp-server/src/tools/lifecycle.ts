@@ -9,7 +9,7 @@ import {
   confirmationPayload,
 } from '../services/confirmation.js';
 import { getAgentForSession } from '../services/sdk-factory.js';
-import { getBaseUrl } from '../constants.js';
+import { ANNOTATIONS_DESTRUCTIVE, ANNOTATIONS_MUTATING, getBaseUrl } from '../constants.js';
 
 export function registerLifecycleTools(server: McpServer): void {
   server.registerTool(
@@ -17,7 +17,7 @@ export function registerLifecycleTools(server: McpServer): void {
     {
       title: 'Activate Agent',
       description:
-        'Activate an agent by depositing tokens into the smart account. Requires a token address, protocols to allocate to, and the deposit transaction hash.',
+        'Activate an agent by providing the deposit tx hash and choosing DeFi protocols. The user must first send tokens (USDC/USDT0) to the smart account address. Prerequisites: giza_create_agent, giza_list_protocols.',
       inputSchema: z.object({
         chain: chainSchema,
         token: addressSchema.describe('Token contract address to deposit'),
@@ -31,6 +31,7 @@ export function registerLifecycleTools(server: McpServer): void {
           .optional()
           .describe('Optional allocation constraints'),
       }),
+      annotations: ANNOTATIONS_MUTATING,
     },
     async ({ chain, token, protocols, txHash, constraints }, extra) =>
       handleToolCall(
@@ -54,7 +55,7 @@ export function registerLifecycleTools(server: McpServer): void {
     {
       title: 'Deactivate Agent',
       description:
-        'Deactivate the agent and optionally transfer remaining funds back to the owner wallet. Returns a confirmation token that must be passed to giza_confirm_operation to execute.',
+        'Deactivate the agent and optionally return remaining funds to the user\'s wallet. DESTRUCTIVE: returns a confirmationToken — ask the user to confirm, then call giza_confirm_operation.',
       inputSchema: z.object({
         chain: chainSchema,
         transfer: z
@@ -64,6 +65,7 @@ export function registerLifecycleTools(server: McpServer): void {
             'Whether to transfer remaining funds back (defaults to true)',
           ),
       }),
+      annotations: ANNOTATIONS_DESTRUCTIVE,
     },
     async ({ chain, transfer }, extra) =>
       handleToolCall(
@@ -90,13 +92,14 @@ export function registerLifecycleTools(server: McpServer): void {
     {
       title: 'Top Up Agent',
       description:
-        'Top up an active agent with additional funds by providing the deposit transaction hash.',
+        'Add more funds to an already-active agent. The user must send tokens to the smart account and provide the tx hash.',
       inputSchema: z.object({
         chain: chainSchema,
         txHash: z
           .string()
           .describe('Transaction hash of the top-up deposit'),
       }),
+      annotations: ANNOTATIONS_MUTATING,
     },
     async ({ chain, txHash }, extra) =>
       handleToolCall(
@@ -114,8 +117,9 @@ export function registerLifecycleTools(server: McpServer): void {
     {
       title: 'Run Agent',
       description:
-        'Trigger an optimization run for the active agent on the specified chain.',
+        'Trigger a manual rebalance across protocols. The agent also rebalances automatically. Use when the user wants to optimize now.',
       inputSchema: z.object({ chain: chainSchema }),
+      annotations: ANNOTATIONS_MUTATING,
     },
     async ({ chain }, extra) =>
       handleToolCall(
