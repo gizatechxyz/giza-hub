@@ -111,8 +111,9 @@ async function runAuthFlow(
 describe('GizaAuthProvider', () => {
   let provider: InstanceType<typeof GizaAuthProvider>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     provider = new GizaAuthProvider(BASE_URL);
+    await provider.clientsStore.registerClient(mockClient);
     mockVerifyPrivyToken.mockClear();
   });
 
@@ -327,6 +328,48 @@ describe('GizaAuthProvider', () => {
       expect(result.token).toBe(tokens.access_token);
       expect(result.clientId).toBe(TEST_CLIENT_ID);
       expect(result.scopes).toEqual(TEST_SCOPES);
+    });
+  });
+
+  describe('redirect URI validation', () => {
+    test('rejects redirect to unregistered URI', async () => {
+      // Register the client with known redirect URIs
+      await provider.clientsStore.registerClient({
+        client_id: TEST_CLIENT_ID,
+        redirect_uris: ['http://localhost/callback'],
+      } as any);
+
+      // Authorize with a redirect URI not in the registered list
+      const authRes = createMockRes();
+      await provider.authorize(
+        mockClient,
+        {
+          state: 'oauth-state',
+          codeChallenge: 'challenge-value',
+          redirectUri: 'http://evil.example.com/steal',
+          scopes: TEST_SCOPES,
+        },
+        authRes,
+      );
+
+      const htmlBody = authRes.send.mock.calls[0]![0] as string;
+      const sessionId = extractStateFromHtml(htmlBody);
+
+      // Submit the callback with the session state
+      const callbackHandler = provider.handlePrivyCallback();
+      const callbackReq = createMockReq({
+        body: {
+          privy_token: 'valid-privy-token',
+          state: sessionId,
+        },
+      });
+      const callbackRes = createMockRes();
+      await callbackHandler(callbackReq, callbackRes, mock());
+
+      // Should return 400 because the redirect URI is not registered
+      expect(callbackRes.status).toHaveBeenCalledWith(400);
+      const body = callbackRes.json.mock.calls[0]![0];
+      expect(body.error).toBe('Redirect URI not registered for client');
     });
   });
 

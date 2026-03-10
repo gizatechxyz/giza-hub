@@ -175,6 +175,19 @@ describe('Giza', () => {
     });
   });
 
+  describe('config errors', () => {
+    it('should not expose GIZA_API_KEY env var name', () => {
+      clearTestEnv();
+      process.env.GIZA_API_URL = 'https://api.test.giza.example';
+      expect(() => new Giza({ chain: Chain.BASE })).toThrow();
+      try {
+        new Giza({ chain: Chain.BASE });
+      } catch (e: any) {
+        expect(e.message).not.toContain('GIZA_API_KEY');
+      }
+    });
+  });
+
   describe('environment variable edge cases', () => {
     it('should handle whitespace in API key', () => {
       process.env.GIZA_API_KEY = '  test-key  ';

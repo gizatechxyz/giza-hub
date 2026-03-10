@@ -347,6 +347,32 @@ describe('HttpClient', () => {
     });
   });
 
+  describe('setHeaders security', () => {
+    it('should reject Authorization override', () => {
+      expect(() =>
+        client.setHeaders({ Authorization: 'Bearer evil' }),
+      ).toThrow('protected header');
+    });
+
+    it('should reject Content-Type override', () => {
+      expect(() =>
+        client.setHeaders({ 'content-type': 'text/html' }),
+      ).toThrow('protected header');
+    });
+
+    it('should reject CRLF in header values', () => {
+      expect(() =>
+        client.setHeaders({ 'X-Custom': 'value\r\nEvil: header' }),
+      ).toThrow('invalid characters');
+    });
+
+    it('should accept safe custom headers', () => {
+      expect(() =>
+        client.setHeaders({ 'X-Request-ID': '12345' }),
+      ).not.toThrow();
+    });
+  });
+
   describe('request method', () => {
     it('should handle custom config', async () => {
       mockAxios.onGet('/test').reply(200, { success: true });

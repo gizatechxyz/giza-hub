@@ -146,10 +146,11 @@ describe('Agent', () => {
     it('should top up agent', async () => {
       mockHttpClient.post.mockResolvedValue({ message: 'Top-up process started' });
 
-      await agent.topUp('0x1234567890');
+      const validTxHash = '0x' + 'ab'.repeat(32);
+      await agent.topUp(validTxHash);
 
       expect(mockHttpClient.post).toHaveBeenCalledWith(
-        expect.stringContaining(':top-up?tx_hash=0x1234567890')
+        expect.stringContaining(`:top-up?tx_hash=${validTxHash}`)
       );
     });
 
@@ -306,6 +307,57 @@ describe('Agent', () => {
         { amount: 1000000000 }
       );
       expect((result as any).amount).toBe(1000);
+    });
+  });
+
+  describe('withdraw validation', () => {
+    it('should reject NaN amount', async () => {
+      await expect(agent.withdraw('abc')).rejects.toThrow(ValidationError);
+    });
+
+    it('should reject negative amount', async () => {
+      await expect(agent.withdraw('-100')).rejects.toThrow('positive integer');
+    });
+
+    it('should reject decimal amount', async () => {
+      await expect(agent.withdraw('10.5')).rejects.toThrow(ValidationError);
+    });
+
+    it('should reject zero amount', async () => {
+      await expect(agent.withdraw('0')).rejects.toThrow('positive integer');
+    });
+  });
+
+  describe('topUp validation', () => {
+    it('should reject invalid tx hash format', async () => {
+      await expect(agent.topUp('0x123')).rejects.toThrow(
+        'valid transaction hash',
+      );
+    });
+
+    it('should reject tx hash without 0x prefix', async () => {
+      await expect(agent.topUp('abcd'.repeat(16))).rejects.toThrow(
+        'valid transaction hash',
+      );
+    });
+  });
+
+  describe('executionLogs', () => {
+    it('should reject path traversal IDs', () => {
+      expect(() =>
+        agent.executionLogs('../../../etc/passwd'),
+      ).toThrow('invalid characters');
+    });
+
+    it('should reject IDs with slashes', () => {
+      expect(() =>
+        agent.executionLogs('../../secret'),
+      ).toThrow('invalid characters');
+    });
+
+    it('should accept valid execution IDs', () => {
+      mockHttpClient.get.mockResolvedValue({ items: [], total: 0 });
+      expect(() => agent.executionLogs('exec-123_abc')).not.toThrow();
     });
   });
 

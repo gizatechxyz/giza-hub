@@ -14,7 +14,7 @@ function initSecret(): Uint8Array {
   const raw = process.env[ENV_JWT_SECRET];
   if (!raw || raw.length < 32) {
     throw new Error(
-      `${ENV_JWT_SECRET} must be set and at least 32 characters`,
+      'JWT secret not configured or too short. Check environment configuration.',
     );
   }
   return new TextEncoder().encode(raw);
@@ -90,6 +90,7 @@ async function decodeToken(
   const { payload } = await jose.jwtVerify(token, secret, {
     issuer: JWT_ISSUER,
     audience: JWT_AUDIENCE,
+    algorithms: ['HS256'],
   });
   const claims = payload as unknown as GizaTokenClaims & jose.JWTPayload;
   if (!claims.sub) {

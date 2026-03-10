@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { CONFIRMATION_TOKEN_TTL_MS } from '../constants.js';
+import { CONFIRMATION_TOKEN_TTL_MS, MAX_PENDING_OPERATIONS } from '../constants.js';
+import { BoundedMap } from '../utils/bounded-map.js';
 
 export type CriticalOperationType =
   | 'withdraw'
@@ -10,21 +11,11 @@ interface PendingOperation {
   type: CriticalOperationType;
   description: string;
   walletAddress: string;
-  createdAt: number;
   used: boolean;
   execute: () => Promise<unknown>;
 }
 
-const pendingOperations = new Map<string, PendingOperation>();
-
-function sweepExpired(): void {
-  const now = Date.now();
-  for (const [token, op] of pendingOperations) {
-    if (now - op.createdAt > CONFIRMATION_TOKEN_TTL_MS) {
-      pendingOperations.delete(token);
-    }
-  }
-}
+const pendingOperations = new BoundedMap<string, PendingOperation>(MAX_PENDING_OPERATIONS, CONFIRMATION_TOKEN_TTL_MS);
 
 export function createPendingOperation(
   type: CriticalOperationType,
@@ -32,13 +23,11 @@ export function createPendingOperation(
   walletAddress: string,
   execute: () => Promise<unknown>,
 ): string {
-  sweepExpired();
   const token = randomUUID();
   pendingOperations.set(token, {
     type,
     description,
     walletAddress,
-    createdAt: Date.now(),
     used: false,
     execute,
   });
@@ -51,8 +40,7 @@ export async function executePendingOperation(
 ): Promise<{ type: CriticalOperationType; result: unknown }> {
   const op = pendingOperations.get(token);
 
-  if (!op || Date.now() - op.createdAt > CONFIRMATION_TOKEN_TTL_MS) {
-    pendingOperations.delete(token);
+  if (!op) {
     throw new Error(
       'Confirmation token not found or expired. Please initiate the operation again.',
     );

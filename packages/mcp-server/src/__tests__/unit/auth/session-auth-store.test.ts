@@ -13,12 +13,12 @@ const TEST_CTX: AuthContext = {
   clientId: 'device',
 };
 
-describe('device session nonce', () => {
+describe('device session', () => {
   test('createDeviceSession + completeDeviceSession stores auth', () => {
     const sessionId = `ds-store-${crypto.randomUUID()}`;
-    const nonce = createDeviceSession(sessionId);
+    createDeviceSession(sessionId);
 
-    completeDeviceSession(sessionId, nonce, TEST_CTX);
+    completeDeviceSession(sessionId, TEST_CTX);
 
     const result = getSessionAuth(sessionId);
     expect(result).toBeDefined();
@@ -26,18 +26,9 @@ describe('device session nonce', () => {
     expect(result!.privyUserId).toBe(TEST_CTX.privyUserId);
   });
 
-  test('completeDeviceSession rejects wrong nonce', () => {
-    const sessionId = `ds-wrong-${crypto.randomUUID()}`;
-    createDeviceSession(sessionId);
-
-    expect(() =>
-      completeDeviceSession(sessionId, 'wrong-nonce', TEST_CTX),
-    ).toThrow('Device session nonce mismatch');
-  });
-
   test('completeDeviceSession rejects missing pending session', () => {
     expect(() =>
-      completeDeviceSession('nonexistent-session', 'any-nonce', TEST_CTX),
+      completeDeviceSession('nonexistent-session', TEST_CTX),
     ).toThrow('No pending device session');
   });
 });

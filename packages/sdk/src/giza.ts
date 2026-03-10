@@ -95,6 +95,7 @@ export class Giza {
         },
       );
 
+    validateAddress(res.smartAccount, 'API response smart account');
     return new Agent(
       this.httpClient,
       this.config,
@@ -119,6 +120,7 @@ export class Giza {
         `/api/v1/proxy/zerodev/smart-accounts?${params}`,
       );
 
+    validateAddress(res.smartAccount, 'API response smart account');
     return new Agent(
       this.httpClient,
       this.config,
@@ -143,6 +145,9 @@ export class Giza {
       await this.httpClient.get<ZerodevSmartWalletResponse>(
         `/api/v1/proxy/zerodev/smart-accounts?${params}`,
       );
+
+    validateAddress(res.smartAccount, 'API response smart account');
+    validateAddress(res.backendWallet, 'API response backend wallet');
 
     return {
       smartAccountAddress: res.smartAccount as Address,
@@ -292,8 +297,8 @@ export class Giza {
       config.apiKey ?? process.env.GIZA_API_KEY;
     if (!apiKey) {
       throw new ValidationError(
-        'API key is required. Pass apiKey in config or ' +
-          'set GIZA_API_KEY environment variable.',
+        'API key is required. Provide apiKey in config ' +
+          'or via environment.',
       );
     }
 
@@ -301,8 +306,8 @@ export class Giza {
       config.partner ?? process.env.GIZA_PARTNER_NAME;
     if (!partner) {
       throw new ValidationError(
-        'Partner name is required. Pass partner in config or ' +
-          'set GIZA_PARTNER_NAME environment variable.',
+        'Partner name is required. Provide partner in config ' +
+          'or via environment.',
       );
     }
 
@@ -310,8 +315,8 @@ export class Giza {
       config.apiUrl ?? process.env.GIZA_API_URL;
     if (!apiUrl) {
       throw new ValidationError(
-        'API URL is required. Pass apiUrl in config or ' +
-          'set GIZA_API_URL environment variable.',
+        'API URL is required. Provide apiUrl in config ' +
+          'or via environment.',
       );
     }
 

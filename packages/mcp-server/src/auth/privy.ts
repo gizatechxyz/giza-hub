@@ -11,7 +11,7 @@ export function getPrivyClient(): PrivyClient {
     const appSecret = process.env[ENV_PRIVY_APP_SECRET];
     if (!appId || !appSecret) {
       throw new Error(
-        `${ENV_PRIVY_APP_ID} and ${ENV_PRIVY_APP_SECRET} must be set`,
+        'Privy credentials not configured. Check environment configuration.',
       );
     }
     client = new PrivyClient({ appId, appSecret });

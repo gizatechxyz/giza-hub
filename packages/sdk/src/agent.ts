@@ -2,7 +2,12 @@ import { HttpClient } from './http/client';
 import { TimeoutError } from './http/errors';
 import { ResolvedGizaConfig } from './types/config';
 import { Address, ValidationError } from './types/common';
-import { validateAddress } from './validation';
+import {
+  validateAddress,
+  validatePositiveIntString,
+  validateTxHash,
+  validatePathSegment,
+} from './validation';
 import { Paginator, PaginatedResponse } from './paginator';
 import {
   ActivateOptions,
@@ -105,6 +110,7 @@ export class Agent {
     if (!txHash) {
       throw new ValidationError('Transaction hash is required');
     }
+    validateTxHash(txHash, 'transaction hash');
     const params = new URLSearchParams({ tx_hash: txHash });
     return this.httpClient.post<TopUpResponse>(
       `/api/v1/${this.chain}/wallets/${this.wallet}:top-up?${params}`,
@@ -232,6 +238,7 @@ export class Agent {
     executionId: string,
     options?: PaginationOptions,
   ): Paginator<LogDTO> {
+    validatePathSegment(executionId, 'execution ID');
     return new Paginator(async (page, limit) => {
       const params = new URLSearchParams();
       params.append('page', String(page));
@@ -302,6 +309,7 @@ export class Agent {
 
   async withdraw(amount?: string): Promise<WithdrawResponse> {
     if (amount !== undefined) {
+      validatePositiveIntString(amount, 'withdrawal amount');
       return this.httpClient.post<WithdrawResponse>(
         `/api/v1/${this.chain}/wallets/${this.wallet}:withdraw`,
         { amount: parseInt(amount, 10) },
@@ -321,6 +329,7 @@ export class Agent {
       last_reactivation_date?: string;
     }>(`/api/v1/${this.chain}/wallets/${this.wallet}`);
 
+    validateAddress(info.wallet, 'API response wallet');
     return {
       status: info.status,
       wallet: info.wallet as Address,

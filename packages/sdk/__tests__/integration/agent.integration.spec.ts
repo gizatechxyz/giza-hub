@@ -163,7 +163,8 @@ describe('Agent Integration', () => {
         .onPost(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*:top-up`))
         .reply(201, { message: 'Top-up process started' });
 
-      const result = await agent.topUp('0x1234567890');
+      const validTxHash = '0x' + 'ab'.repeat(32);
+      const result = await agent.topUp(validTxHash);
 
       expect(result.message).toBe('Top-up process started');
     });

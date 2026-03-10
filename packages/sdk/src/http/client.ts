@@ -6,6 +6,13 @@ import axios, {
   InternalAxiosRequestConfig,
 } from 'axios';
 import { GizaAPIError, TimeoutError, NetworkError } from './errors';
+import { ValidationError } from '../types/common';
+
+const PROTECTED_HEADERS = new Set([
+  'authorization',
+  'content-type',
+  'host',
+]);
 
 /**
  * Configuration for HTTP client
@@ -73,6 +80,18 @@ export class HttpClient {
    * Update custom headers
    */
   public setHeaders(headers: Record<string, string>): void {
+    for (const [key, value] of Object.entries(headers)) {
+      if (PROTECTED_HEADERS.has(key.toLowerCase())) {
+        throw new ValidationError(
+          `Cannot override protected header: ${key}`,
+        );
+      }
+      if (/[\r\n]/.test(value)) {
+        throw new ValidationError(
+          `Header value for "${key}" contains invalid characters`,
+        );
+      }
+    }
     this.customHeaders = { ...this.customHeaders, ...headers };
     Object.entries(headers).forEach(([key, value]) => {
       this.axiosInstance.defaults.headers.common[key] = value;
@@ -106,6 +125,11 @@ export class HttpClient {
     return GizaAPIError.fromResponse(statusCode, responseData, requestUrl, requestMethod);
   }
 
+  private async retryDelay(): Promise<void> {
+    const base = 1000 + Math.random() * 1000;
+    await new Promise((r) => setTimeout(r, base));
+  }
+
   /**
    * Make a generic request
    */
@@ -116,6 +140,7 @@ export class HttpClient {
     } catch (error) {
       // If retry is enabled and error is retryable, attempt retry once
       if (this.enableRetry && this.isRetryableError(error)) {
+        await this.retryDelay();
         try {
           const response = await this.axiosInstance.request<T>(config);
           return response.data;

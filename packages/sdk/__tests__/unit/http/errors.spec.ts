@@ -195,9 +195,7 @@ describe('GizaAPIError', () => {
         name: 'GizaAPIError',
         message: 'Test error',
         statusCode: 404,
-        requestUrl: '/api/test',
         requestMethod: 'GET',
-        responseData: { detail: 'Not found' },
       });
     });
 
@@ -209,10 +207,23 @@ describe('GizaAPIError', () => {
         name: 'GizaAPIError',
         message: 'Simple error',
         statusCode: 500,
-        requestUrl: undefined,
         requestMethod: undefined,
-        responseData: undefined,
       });
+    });
+
+    it('toJSON should not include responseData or requestUrl', () => {
+      const error = new GizaAPIError(
+        'test',
+        400,
+        { secret: 'data' },
+        'https://api.example.com/secret',
+        'GET'
+      );
+      const json = error.toJSON();
+      expect(json).not.toHaveProperty('responseData');
+      expect(json).not.toHaveProperty('requestUrl');
+      expect(json).toHaveProperty('name');
+      expect(json).toHaveProperty('statusCode');
     });
   });
 });

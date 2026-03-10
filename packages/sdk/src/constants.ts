@@ -16,6 +16,11 @@ export const DEFAULT_TIMEOUT = 45000;
 export const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
 /**
+ * Transaction hash validation regex (0x followed by 64 hex chars)
+ */
+export const TX_HASH_REGEX = /^0x[a-fA-F0-9]{64}$/;
+
+/**
  * Human-readable chain names
  */
 export const CHAIN_NAMES: Record<Chain, string> = {

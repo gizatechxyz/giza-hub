@@ -117,9 +117,7 @@ export class GizaAPIError extends GizaError {
       name: this.name,
       message: this.message,
       statusCode: this.statusCode,
-      requestUrl: this.requestUrl,
       requestMethod: this.requestMethod,
-      responseData: this.responseData,
     };
   }
 }

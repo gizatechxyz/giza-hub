@@ -1,51 +1,24 @@
 import type { AuthContext } from './types.js';
-import { SESSION_AUTH_TTL_MS } from '../constants.js';
+import {
+  SESSION_AUTH_TTL_MS,
+  MAX_SESSION_AUTH_ENTRIES,
+  MAX_PENDING_DEVICES,
+} from '../constants.js';
+import { BoundedMap } from '../utils/bounded-map.js';
 
-interface SessionEntry {
-  ctx: AuthContext;
-  createdAt: number;
-}
+const store = new BoundedMap<string, AuthContext>(MAX_SESSION_AUTH_ENTRIES, SESSION_AUTH_TTL_MS);
+const pendingDevices = new BoundedMap<string, boolean>(MAX_PENDING_DEVICES, SESSION_AUTH_TTL_MS);
 
-interface PendingDevice {
-  nonce: string;
-  createdAt: number;
-}
-
-const store = new Map<string, SessionEntry>();
-const pendingDevices = new Map<string, PendingDevice>();
-
-function sweepExpired(): void {
-  const now = Date.now();
-  for (const [id, entry] of store) {
-    if (now - entry.createdAt > SESSION_AUTH_TTL_MS) {
-      store.delete(id);
-    }
-  }
-  for (const [id, entry] of pendingDevices) {
-    if (now - entry.createdAt > SESSION_AUTH_TTL_MS) {
-      pendingDevices.delete(id);
-    }
-  }
-}
-
-export function createDeviceSession(sessionId: string): string {
-  sweepExpired();
-  const nonce = crypto.randomUUID();
-  pendingDevices.set(sessionId, { nonce, createdAt: Date.now() });
-  return nonce;
+export function createDeviceSession(sessionId: string): void {
+  pendingDevices.set(sessionId, true);
 }
 
 export function completeDeviceSession(
   sessionId: string,
-  nonce: string,
   ctx: AuthContext,
 ): void {
-  const pending = pendingDevices.get(sessionId);
-  if (!pending) throw new Error('No pending device session');
-  if (pending.nonce !== nonce) throw new Error('Device session nonce mismatch');
-  if (Date.now() - pending.createdAt > SESSION_AUTH_TTL_MS) {
-    pendingDevices.delete(sessionId);
-    throw new Error('Device session expired');
+  if (!pendingDevices.has(sessionId)) {
+    throw new Error('No pending device session');
   }
   pendingDevices.delete(sessionId);
   setSessionAuth(sessionId, ctx);
@@ -55,20 +28,13 @@ export function setSessionAuth(
   sessionId: string,
   ctx: AuthContext,
 ): void {
-  sweepExpired();
-  store.set(sessionId, { ctx, createdAt: Date.now() });
+  store.set(sessionId, ctx);
 }
 
 export function getSessionAuth(
   sessionId: string,
 ): AuthContext | undefined {
-  const entry = store.get(sessionId);
-  if (!entry) return undefined;
-  if (Date.now() - entry.createdAt > SESSION_AUTH_TTL_MS) {
-    store.delete(sessionId);
-    return undefined;
-  }
-  return entry.ctx;
+  return store.get(sessionId);
 }
 
 export function clearSessionAuth(sessionId: string): void {

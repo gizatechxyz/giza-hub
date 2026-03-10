@@ -21,10 +21,14 @@ import {
   ENV_PRIVY_APP_ID,
   AUTH_CODE_TTL_MS,
   SUPPORTED_SCOPES,
+  MAX_PENDING_SESSIONS,
+  MAX_AUTH_CODES,
 } from '../constants.js';
+import { BoundedMap } from '../utils/bounded-map.js';
 import type { PendingAuthSession, PendingAuthCode, AuthContext } from './types.js';
 import { completeDeviceSession } from './session-auth-store.js';
 import { DEVICE_STATE_PREFIX } from '../constants.js';
+import { securityLogger } from '../utils/security-logger.js';
 
 function toOAuthTokens(
   pair: { accessToken: string; refreshToken: string; expiresIn: number },
@@ -43,8 +47,8 @@ export class GizaAuthProvider implements OAuthServerProvider {
   readonly clientsStore: OAuthRegisteredClientsStore =
     new InMemoryClientsStore();
 
-  private pendingSessions = new Map<string, PendingAuthSession>();
-  private codes = new Map<string, PendingAuthCode>();
+  private pendingSessions = new BoundedMap<string, PendingAuthSession>(MAX_PENDING_SESSIONS, AUTH_CODE_TTL_MS);
+  private codes = new BoundedMap<string, PendingAuthCode>(MAX_AUTH_CODES, AUTH_CODE_TTL_MS);
   private readonly baseUrl: string;
   readonly privyAppId: string;
 
@@ -52,23 +56,9 @@ export class GizaAuthProvider implements OAuthServerProvider {
     this.baseUrl = baseUrl.replace(/\/$/, '');
     const appId = process.env[ENV_PRIVY_APP_ID];
     if (!appId) {
-      throw new Error(`${ENV_PRIVY_APP_ID} must be set`);
+      throw new Error('Privy app ID not configured. Check environment configuration.');
     }
     this.privyAppId = appId;
-  }
-
-  private sweepExpired(): void {
-    const now = Date.now();
-    for (const [id, session] of this.pendingSessions) {
-      if (now - session.createdAt > AUTH_CODE_TTL_MS) {
-        this.pendingSessions.delete(id);
-      }
-    }
-    for (const [code, data] of this.codes) {
-      if (now - data.createdAt > AUTH_CODE_TTL_MS) {
-        this.codes.delete(code);
-      }
-    }
   }
 
   async authorize(
@@ -76,8 +66,6 @@ export class GizaAuthProvider implements OAuthServerProvider {
     params: AuthorizationParams,
     res: Response,
   ): Promise<void> {
-    this.sweepExpired();
-
     const sessionId = crypto.randomUUID();
 
     this.pendingSessions.set(sessionId, {
@@ -192,10 +180,8 @@ export class GizaAuthProvider implements OAuthServerProvider {
           await verifyPrivyToken(privyToken);
 
         if (stateParam.startsWith(DEVICE_STATE_PREFIX)) {
-          const parts = stateParam.slice(DEVICE_STATE_PREFIX.length).split(':');
-          const mcpSessionId = parts[0];
-          const nonce = parts[1];
-          if (parts.length !== 2 || !mcpSessionId || !nonce) {
+          const mcpSessionId = stateParam.slice(DEVICE_STATE_PREFIX.length);
+          if (!mcpSessionId) {
             res.status(400).json({ error: 'Invalid device state format' });
             return;
           }
@@ -205,7 +191,8 @@ export class GizaAuthProvider implements OAuthServerProvider {
             scopes: [...SUPPORTED_SCOPES],
             clientId: 'device',
           };
-          completeDeviceSession(mcpSessionId, nonce, ctx);
+          completeDeviceSession(mcpSessionId, ctx);
+          securityLogger.authSuccess({ flow: 'device', sessionId: mcpSessionId });
           res.setHeader('Content-Type', 'text/html');
           res.send(
             '<html><body><h2>Authentication successful!</h2>' +
@@ -220,6 +207,18 @@ export class GizaAuthProvider implements OAuthServerProvider {
           res
             .status(400)
             .json({ error: 'Invalid or expired session' });
+          return;
+        }
+
+        const client = await this.clientsStore.getClient(session.clientId);
+        if (!client) {
+          this.pendingSessions.delete(stateParam);
+          res.status(400).json({ error: 'Unknown client' });
+          return;
+        }
+        if (!client.redirect_uris.includes(session.redirectUri)) {
+          this.pendingSessions.delete(stateParam);
+          res.status(400).json({ error: 'Redirect URI not registered for client' });
           return;
         }
 
@@ -242,9 +241,10 @@ export class GizaAuthProvider implements OAuthServerProvider {
           redirectUrl.searchParams.set('state', session.state);
         }
 
+        securityLogger.authSuccess({ flow: 'oauth', clientId: session.clientId });
         res.redirect(redirectUrl.toString());
       } catch (error) {
-        console.error('Privy callback error:', error);
+        securityLogger.authFailure({ reason: error instanceof Error ? error.message : 'Unknown error' });
         res.status(500).json({ error: 'Authentication failed' });
       }
     };
