@@ -13,12 +13,7 @@ import { registerOptimizerTools } from './tools/optimizer.js';
 import { registerFinancialTools } from './tools/financial.js';
 import { registerCriticalTools } from './tools/critical.js';
 
-export function createMcpServer(): McpServer {
-  const server = new McpServer(
-    { name: SERVER_NAME, version: SERVER_VERSION },
-    { capabilities: { logging: {} }, instructions: GIZA_INSTRUCTIONS },
-  );
-
+export function registerAllTools(server: McpServer): void {
   registerSystemTools(server);
   registerDiscoveryTools(server);
   registerProtectedTools(server);
@@ -31,6 +26,15 @@ export function createMcpServer(): McpServer {
   registerOptimizerTools(server);
   registerFinancialTools(server);
   registerCriticalTools(server);
+}
+
+export function createMcpServer(): McpServer {
+  const server = new McpServer(
+    { name: SERVER_NAME, version: SERVER_VERSION },
+    { capabilities: { logging: {} }, instructions: GIZA_INSTRUCTIONS },
+  );
+
+  registerAllTools(server);
 
   return server;
 }
