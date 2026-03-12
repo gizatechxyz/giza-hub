@@ -1,14 +1,7 @@
 import { GizaAuthProvider } from '../../../../src/auth/provider.js';
 import { getBaseUrl } from '../../../../src/constants.js';
 
-let provider: GizaAuthProvider | undefined;
-
-function getProvider(): GizaAuthProvider {
-  if (!provider) {
-    provider = new GizaAuthProvider(getBaseUrl());
-  }
-  return provider;
-}
+const provider = new GizaAuthProvider(getBaseUrl());
 
 export async function POST(req: Request): Promise<Response> {
   const contentType = req.headers.get('content-type') ?? '';
@@ -30,7 +23,7 @@ export async function POST(req: Request): Promise<Response> {
     state = body.state as string | undefined;
   }
 
-  const result = await getProvider().handlePrivyCallback({ privyToken, state });
+  const result = await provider.handlePrivyCallback({ privyToken, state });
 
   switch (result.type) {
     case 'redirect':

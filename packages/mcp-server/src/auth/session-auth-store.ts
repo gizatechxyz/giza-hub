@@ -36,7 +36,3 @@ export function getSessionAuth(
 ): AuthContext | undefined {
   return store.get(sessionId);
 }
-
-export function clearSessionAuth(sessionId: string): void {
-  store.delete(sessionId);
-}
