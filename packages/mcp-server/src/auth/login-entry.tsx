@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { LoginPage } from './login-page.js';
+import { LoginPage } from './login-page';
 
 const config = window.__GIZA_LOGIN_CONFIG__;
 const container = document.getElementById('root');

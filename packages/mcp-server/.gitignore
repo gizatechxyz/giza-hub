@@ -1,0 +1,5 @@
+# Next.js
+.next/
+
+# Login page build artifact
+public/login-entry.js

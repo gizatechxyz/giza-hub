@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'bun:test';
 
-import { verifyPrivyToken } from '../../../auth/privy.js';
+import { verifyPrivyToken } from '../../../auth/privy';
 
 describe('verifyPrivyToken', () => {
   test('returns privyUserId and walletAddress for valid token', async () => {

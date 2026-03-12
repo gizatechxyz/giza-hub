@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'bun:test';
 
-import { buildLoginPageHtml, buildLoginCsp } from '../../../auth/authorize-page.js';
+import { buildLoginPageHtml, buildLoginCsp } from '../../../auth/authorize-page';
 
 describe('buildLoginPageHtml', () => {
   const APP_ID = 'test-app-id';
@@ -30,7 +30,7 @@ describe('buildLoginPageHtml', () => {
 
   test('loads the bundled login entry script with nonce', () => {
     const html = buildLoginPageHtml(APP_ID, CALLBACK_URL, STATE, NONCE);
-    expect(html).toContain(`<script nonce="${NONCE}" src="/public/login-entry.js"></script>`);
+    expect(html).toContain(`<script nonce="${NONCE}" src="/login-entry.js"></script>`);
   });
 
   test('nonce appears on the inline config script tag', () => {

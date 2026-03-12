@@ -1,7 +1,7 @@
 import { describe, test, expect, mock } from 'bun:test';
-import { createTestServer } from '../../helpers/mock-server.js';
-import { createMockGiza } from '../../helpers/mock-sdk.js';
-import { buildExtra, buildUnauthExtra } from '../../helpers/mock-auth.js';
+import { createTestServer } from '../../helpers/mock-server';
+import { createMockGiza } from '../../helpers/mock-sdk';
+import { buildExtra, buildUnauthExtra } from '../../helpers/mock-auth';
 
 const mockGiza = createMockGiza();
 

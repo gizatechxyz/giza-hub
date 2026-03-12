@@ -1,10 +1,10 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
-import { ensureAuth } from '../auth/ensure-auth.js';
-import { chainSchema } from '../schemas.js';
-import { handleToolCall, jsonResult } from '../services/error-handler.js';
-import { getGizaClient } from '../services/sdk-factory.js';
-import { ANNOTATIONS_MUTATING, ANNOTATIONS_READONLY, getBaseUrl } from '../constants.js';
+import { ensureAuth } from '../auth/ensure-auth';
+import { chainSchema } from '../schemas';
+import { handleToolCall, jsonResult } from '../services/error-handler';
+import { getGizaClient } from '../services/sdk-factory';
+import { ANNOTATIONS_MUTATING, ANNOTATIONS_READONLY, getBaseUrl } from '../constants';
 
 export function registerAgentManagementTools(server: McpServer): void {
   server.registerTool(

@@ -29,6 +29,6 @@ export function buildLoginPageHtml(
 </head><body>
   <div id="root"></div>
   <script nonce="${nonce}">window.__GIZA_LOGIN_CONFIG__=${config};</script>
-  <script nonce="${nonce}" src="/public/login-entry.js"></script>
+  <script nonce="${nonce}" src="/login-entry.js"></script>
 </body></html>`;
 }

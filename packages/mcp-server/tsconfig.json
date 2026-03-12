@@ -15,9 +15,35 @@
     "verbatimModuleSyntax": true,
     "declaration": false,
     "noEmit": true,
-    "types": ["bun-types", "node"],
-    "plugins": [{ "name": "next" }]
+    "types": [
+      "bun-types",
+      "node"
+    ],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "incremental": true
   },
-  "include": ["src", "app", "next-env.d.ts", "next.config.ts"],
-  "exclude": ["node_modules", "dist", ".next", "src/__tests__"]
+  "include": [
+    "src",
+    "app",
+    "next-env.d.ts",
+    "next.config.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".next",
+    "src/__tests__"
+  ]
 }

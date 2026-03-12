@@ -8,13 +8,13 @@ import {
   createTokenPair,
   verifyAccessToken,
   verifyRefreshToken,
-} from '../../../auth/session.js';
+} from '../../../auth/session';
 import {
   TEST_WALLET,
   TEST_PRIVY_USER,
   TEST_CLIENT_ID,
   TEST_SCOPES,
-} from '../../helpers/mock-auth.js';
+} from '../../helpers/mock-auth';
 
 const TOKEN_INPUT = {
   privyUserId: TEST_PRIVY_USER,

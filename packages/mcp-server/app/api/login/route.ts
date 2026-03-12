@@ -1,10 +1,10 @@
-import { buildLoginPageHtml, buildLoginCsp } from '../../../src/auth/authorize-page.js';
-import { createDeviceSession } from '../../../src/auth/session-auth-store.js';
+import { buildLoginPageHtml, buildLoginCsp } from '../../../src/auth/authorize-page';
+import { createDeviceSession } from '../../../src/auth/session-auth-store';
 import {
   ENV_PRIVY_APP_ID,
   DEVICE_STATE_PREFIX,
   getBaseUrl,
-} from '../../../src/constants.js';
+} from '../../../src/constants';
 
 export function GET(req: Request): Response {
   const url = new URL(req.url);

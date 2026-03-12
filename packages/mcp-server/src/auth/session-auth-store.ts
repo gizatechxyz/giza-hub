@@ -1,10 +1,10 @@
-import type { AuthContext } from './types.js';
+import type { AuthContext } from './types';
 import {
   SESSION_AUTH_TTL_MS,
   MAX_SESSION_AUTH_ENTRIES,
   MAX_PENDING_DEVICES,
-} from '../constants.js';
-import { BoundedMap } from '../utils/bounded-map.js';
+} from '../constants';
+import { BoundedMap } from '../utils/bounded-map';
 
 const store = new BoundedMap<string, AuthContext>(MAX_SESSION_AUTH_ENTRIES, SESSION_AUTH_TTL_MS);
 const pendingDevices = new BoundedMap<string, boolean>(MAX_PENDING_DEVICES, SESSION_AUTH_TTL_MS);

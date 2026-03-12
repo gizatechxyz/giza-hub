@@ -1,5 +1,5 @@
 import { describe, test, expect, afterEach } from 'bun:test';
-import { BoundedMap } from '../../../utils/bounded-map.js';
+import { BoundedMap } from '../../../utils/bounded-map';
 
 const originalDateNow = Date.now;
 afterEach(() => {

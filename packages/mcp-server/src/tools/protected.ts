@@ -1,8 +1,8 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
-import { handleToolCall, jsonResult } from '../services/error-handler.js';
-import { ensureAuth, checkAuth } from '../auth/ensure-auth.js';
-import { ANNOTATIONS_IDEMPOTENT_MUTATING, ANNOTATIONS_READONLY, getBaseUrl } from '../constants.js';
+import { handleToolCall, jsonResult } from '../services/error-handler';
+import { ensureAuth, checkAuth } from '../auth/ensure-auth';
+import { ANNOTATIONS_IDEMPOTENT_MUTATING, ANNOTATIONS_READONLY, getBaseUrl } from '../constants';
 
 export function registerProtectedTools(server: McpServer): void {
   server.registerTool(

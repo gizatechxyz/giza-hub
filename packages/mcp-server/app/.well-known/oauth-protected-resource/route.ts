@@ -2,7 +2,7 @@ import {
   protectedResourceHandler,
   metadataCorsOptionsRequestHandler,
 } from 'mcp-handler';
-import { getBaseUrl } from '../../../src/constants.js';
+import { getBaseUrl } from '../../../src/constants';
 
 const corsHandler = metadataCorsOptionsRequestHandler();
 

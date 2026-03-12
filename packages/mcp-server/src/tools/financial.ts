@@ -1,14 +1,14 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
-import { ensureAuth } from '../auth/ensure-auth.js';
-import { chainSchema } from '../schemas.js';
-import { handleToolCall, jsonResult } from '../services/error-handler.js';
+import { ensureAuth } from '../auth/ensure-auth';
+import { chainSchema } from '../schemas';
+import { handleToolCall, jsonResult } from '../services/error-handler';
 import {
   createPendingOperation,
   confirmationPayload,
-} from '../services/confirmation.js';
-import { getAgentForSession } from '../services/sdk-factory.js';
-import { ANNOTATIONS_DESTRUCTIVE, ANNOTATIONS_READONLY, getBaseUrl } from '../constants.js';
+} from '../services/confirmation';
+import { getAgentForSession } from '../services/sdk-factory';
+import { ANNOTATIONS_DESTRUCTIVE, ANNOTATIONS_READONLY, getBaseUrl } from '../constants';
 
 export function registerFinancialTools(server: McpServer): void {
   server.registerTool(

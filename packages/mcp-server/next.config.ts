@@ -30,6 +30,12 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        source: '/login-entry.js',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=3600' },
+        ],
+      },
       { source: '/api/:path*', headers: corsHeaders },
       { source: '/.well-known/:path*', headers: corsHeaders },
     ];

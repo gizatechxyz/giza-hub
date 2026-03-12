@@ -1,7 +1,7 @@
 import type { Address } from '@gizatech/agent-sdk';
 import { PrivyClient, type User } from '@privy-io/node';
-import { ENV_PRIVY_APP_ID, ENV_PRIVY_APP_SECRET } from '../constants.js';
-import { parseWalletAddress } from './types.js';
+import { ENV_PRIVY_APP_ID, ENV_PRIVY_APP_SECRET } from '../constants';
+import { parseWalletAddress } from './types';
 
 let client: PrivyClient | undefined;
 

@@ -9,7 +9,7 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import {
   jsonResult,
   handleToolCall,
-} from '../../../services/error-handler.js';
+} from '../../../services/error-handler';
 
 describe('jsonResult', () => {
   test('wraps value in CallToolResult with pretty JSON', () => {

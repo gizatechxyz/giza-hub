@@ -2,13 +2,13 @@ import { CHAIN_NAMES, Chain } from '@gizatech/agent-sdk';
 import type { Address } from '@gizatech/agent-sdk';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
-import { chainSchema, addressSchema } from '../schemas.js';
+import { chainSchema, addressSchema } from '../schemas';
 import {
   getDefaultGizaClient,
   getGizaClient,
-} from '../services/sdk-factory.js';
-import { ANNOTATIONS_READONLY } from '../constants.js';
-import { handleToolCall, jsonResult } from '../services/error-handler.js';
+} from '../services/sdk-factory';
+import { ANNOTATIONS_READONLY } from '../constants';
+import { handleToolCall, jsonResult } from '../services/error-handler';
 
 export function registerDiscoveryTools(server: McpServer): void {
   server.registerTool(

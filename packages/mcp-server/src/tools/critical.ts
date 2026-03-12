@@ -1,9 +1,9 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
-import { ensureAuth } from '../auth/ensure-auth.js';
-import { handleToolCall, jsonResult } from '../services/error-handler.js';
-import { executePendingOperation } from '../services/confirmation.js';
-import { ANNOTATIONS_DESTRUCTIVE, getBaseUrl } from '../constants.js';
+import { ensureAuth } from '../auth/ensure-auth';
+import { handleToolCall, jsonResult } from '../services/error-handler';
+import { executePendingOperation } from '../services/confirmation';
+import { ANNOTATIONS_DESTRUCTIVE, getBaseUrl } from '../constants';
 
 export function registerCriticalTools(server: McpServer): void {
   server.registerTool(

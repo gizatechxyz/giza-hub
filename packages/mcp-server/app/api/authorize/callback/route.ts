@@ -1,5 +1,5 @@
-import { GizaAuthProvider } from '../../../../src/auth/provider.js';
-import { getBaseUrl } from '../../../../src/constants.js';
+import { GizaAuthProvider } from '../../../../src/auth/provider';
+import { getBaseUrl } from '../../../../src/constants';
 
 const provider = new GizaAuthProvider(getBaseUrl());
 

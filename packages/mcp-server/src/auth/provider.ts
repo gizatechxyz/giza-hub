@@ -4,26 +4,26 @@ import type {
   OAuthTokens,
 } from '@modelcontextprotocol/sdk/shared/auth.js';
 import type { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js';
-import { InMemoryClientsStore } from './clients-store.js';
+import { InMemoryClientsStore } from './clients-store';
 import {
   createTokenPair,
   verifyAccessToken,
   verifyRefreshToken,
-} from './session.js';
-import { verifyPrivyToken } from './privy.js';
-import { buildLoginPageHtml, buildLoginCsp } from './authorize-page.js';
+} from './session';
+import { verifyPrivyToken } from './privy';
+import { buildLoginPageHtml, buildLoginCsp } from './authorize-page';
 import {
   ENV_PRIVY_APP_ID,
   AUTH_CODE_TTL_MS,
   SUPPORTED_SCOPES,
   MAX_PENDING_SESSIONS,
   MAX_AUTH_CODES,
-} from '../constants.js';
-import { BoundedMap } from '../utils/bounded-map.js';
-import type { PendingAuthSession, PendingAuthCode, AuthContext } from './types.js';
-import { completeDeviceSession } from './session-auth-store.js';
-import { DEVICE_STATE_PREFIX } from '../constants.js';
-import { securityLogger } from '../utils/security-logger.js';
+} from '../constants';
+import { BoundedMap } from '../utils/bounded-map';
+import type { PendingAuthSession, PendingAuthCode, AuthContext } from './types';
+import { completeDeviceSession } from './session-auth-store';
+import { DEVICE_STATE_PREFIX } from '../constants';
+import { securityLogger } from '../utils/security-logger';
 
 export interface AuthorizeResult {
   html: string;

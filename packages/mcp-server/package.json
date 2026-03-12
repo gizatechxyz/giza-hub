@@ -4,14 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "next build",
+    "build": "bun run build:login && next build",
     "dev": "next dev",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
     "test:unit": "bun test src/__tests__/unit",
     "test:integration": "bun test src/__tests__/integration",
-    "build:login": "bun build src/auth/login-entry.tsx --outdir dist/public --minify --target browser --define import.meta.env.MODE=\\\"production\\\" --define import.meta.env={}"
+    "build:login": "bun build src/auth/login-entry.tsx --outdir public --minify --target browser --define import.meta.env.MODE=\\\"production\\\" --define import.meta.env={}"
   },
   "dependencies": {
     "@gizatech/agent-sdk": "workspace:*",

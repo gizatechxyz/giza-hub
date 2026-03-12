@@ -2,10 +2,10 @@ import { Chain, WalletConstraints } from '@gizatech/agent-sdk';
 import type { Address, OptimizerConstraintConfig } from '@gizatech/agent-sdk';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
-import { chainSchema, addressSchema } from '../schemas.js';
-import { ANNOTATIONS_READONLY } from '../constants.js';
-import { handleToolCall, jsonResult } from '../services/error-handler.js';
-import { getGizaClient } from '../services/sdk-factory.js';
+import { chainSchema, addressSchema } from '../schemas';
+import { ANNOTATIONS_READONLY } from '../constants';
+import { handleToolCall, jsonResult } from '../services/error-handler';
+import { getGizaClient } from '../services/sdk-factory';
 
 export function registerOptimizerTools(server: McpServer): void {
   server.registerTool(

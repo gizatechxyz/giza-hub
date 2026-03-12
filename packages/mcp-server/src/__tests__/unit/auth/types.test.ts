@@ -3,14 +3,14 @@ import { describe, test, expect } from 'bun:test';
 import {
   parseWalletAddress,
   extractAuthContext,
-} from '../../../auth/types.js';
+} from '../../../auth/types';
 import {
   buildAuthInfo,
   TEST_WALLET,
   TEST_PRIVY_USER,
   TEST_CLIENT_ID,
   TEST_SCOPES,
-} from '../../helpers/mock-auth.js';
+} from '../../helpers/mock-auth';
 
 describe('parseWalletAddress', () => {
   test('returns the address when valid', () => {

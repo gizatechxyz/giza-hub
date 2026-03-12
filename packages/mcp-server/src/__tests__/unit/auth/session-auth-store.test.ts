@@ -3,8 +3,8 @@ import {
   createDeviceSession,
   completeDeviceSession,
   getSessionAuth,
-} from '../../../auth/session-auth-store.js';
-import type { AuthContext } from '../../../auth/types.js';
+} from '../../../auth/session-auth-store';
+import type { AuthContext } from '../../../auth/types';
 
 const TEST_CTX: AuthContext = {
   walletAddress: '0x1234567890abcdef1234567890abcdef12345678',

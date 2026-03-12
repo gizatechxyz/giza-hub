@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from 'bun:test';
 import type { OAuthClientInformationFull } from '@modelcontextprotocol/sdk/shared/auth.js';
 
-import { InMemoryClientsStore } from '../../../auth/clients-store.js';
+import { InMemoryClientsStore } from '../../../auth/clients-store';
 
 function createClientMetadata(
   clientId: string,

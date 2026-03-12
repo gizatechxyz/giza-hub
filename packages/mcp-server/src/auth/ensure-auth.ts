@@ -3,9 +3,9 @@ import type {
   ServerRequest,
   ServerNotification,
 } from '@modelcontextprotocol/sdk/types.js';
-import type { AuthContext } from './types.js';
-import { extractAuthContext } from './types.js';
-import { getSessionAuth } from './session-auth-store.js';
+import type { AuthContext } from './types';
+import { extractAuthContext } from './types';
+import { getSessionAuth } from './session-auth-store';
 
 type ToolExtra = RequestHandlerExtra<ServerRequest, ServerNotification>;
 

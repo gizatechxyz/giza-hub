@@ -1,12 +1,12 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
-import { chainSchema } from '../schemas.js';
+import { chainSchema } from '../schemas';
 import {
   getDefaultGizaClient,
   getGizaClient,
-} from '../services/sdk-factory.js';
-import { ANNOTATIONS_READONLY } from '../constants.js';
-import { handleToolCall, jsonResult } from '../services/error-handler.js';
+} from '../services/sdk-factory';
+import { ANNOTATIONS_READONLY } from '../constants';
+import { handleToolCall, jsonResult } from '../services/error-handler';
 
 export function registerSystemTools(server: McpServer): void {
   server.registerTool(

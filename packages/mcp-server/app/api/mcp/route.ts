@@ -4,10 +4,10 @@ import {
   SERVER_NAME,
   SERVER_VERSION,
   GIZA_INSTRUCTIONS,
-} from '../../../src/constants.js';
-import { registerAllTools } from '../../../src/server.js';
-import { verifyAccessToken } from '../../../src/auth/session.js';
-import { securityLogger } from '../../../src/utils/security-logger.js';
+} from '../../../src/constants';
+import { registerAllTools } from '../../../src/server';
+import { verifyAccessToken } from '../../../src/auth/session';
+import { securityLogger } from '../../../src/utils/security-logger';
 
 const handler = createMcpHandler(
   registerAllTools,

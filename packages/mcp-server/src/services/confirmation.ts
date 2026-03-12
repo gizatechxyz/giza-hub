@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { CONFIRMATION_TOKEN_TTL_MS, MAX_PENDING_OPERATIONS } from '../constants.js';
-import { BoundedMap } from '../utils/bounded-map.js';
+import { CONFIRMATION_TOKEN_TTL_MS, MAX_PENDING_OPERATIONS } from '../constants';
+import { BoundedMap } from '../utils/bounded-map';
 
 export type CriticalOperationType =
   | 'withdraw'

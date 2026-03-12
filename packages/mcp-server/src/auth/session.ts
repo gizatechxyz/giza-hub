@@ -7,8 +7,8 @@ import {
   REFRESH_TOKEN_TTL_SEC,
   JWT_ISSUER,
   JWT_AUDIENCE,
-} from '../constants.js';
-import type { GizaTokenClaims } from './types.js';
+} from '../constants';
+import type { GizaTokenClaims } from './types';
 
 function initSecret(): Uint8Array {
   const raw = process.env[ENV_JWT_SECRET];
