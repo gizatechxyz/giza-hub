@@ -5,13 +5,11 @@ import compression from 'compression';
 import express from 'express';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
-import { mcpAuthRouter } from '@modelcontextprotocol/sdk/server/auth/router.js';
 import { createMcpServer } from './server.js';
 import {
   DEFAULT_PORT,
   ENV_PORT,
   ENV_MCP_DOMAIN,
-  SUPPORTED_SCOPES,
   DEVICE_STATE_PREFIX,
   MAX_MCP_TRANSPORTS,
 } from './constants.js';
@@ -59,7 +57,6 @@ function createApp(port: number): express.Express {
 
   const issuerBase =
     process.env[ENV_MCP_DOMAIN] ?? `http://127.0.0.1:${port}`;
-  const issuerUrl = new URL(issuerBase);
 
   app.use((_req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -89,20 +86,35 @@ function createApp(port: number): express.Express {
   );
   app.use('/public', express.static(publicDir));
 
-  app.use(
-    mcpAuthRouter({
-      provider,
-      issuerUrl,
-      scopesSupported: [...SUPPORTED_SCOPES],
-      resourceServerUrl: new URL(`${issuerBase}/mcp`),
-    }),
-  );
 
   app.post(
     '/authorize/callback',
     express.urlencoded({ extended: false, limit: '10kb' }),
     rateLimit(authRateLimiter, '/authorize/callback'),
-    provider.handlePrivyCallback(),
+    async (req, res) => {
+      const privyToken =
+        (req.body?.privy_token as string | undefined) ??
+        (req.body?.token as string | undefined);
+      const stateParam = req.body?.state as string | undefined;
+      const result = await provider.handlePrivyCallback({
+        privyToken,
+        state: stateParam,
+      });
+      switch (result.type) {
+        case 'redirect':
+          res.redirect(result.url);
+          break;
+        case 'html':
+          for (const [key, value] of Object.entries(result.headers)) {
+            res.setHeader(key, value);
+          }
+          res.send(result.html);
+          break;
+        case 'error':
+          res.status(result.status).json(result.body);
+          break;
+      }
+    },
   );
 
   app.get('/login', rateLimit(authRateLimiter, '/login'), (req, res) => {

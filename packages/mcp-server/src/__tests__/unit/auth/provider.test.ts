@@ -30,24 +30,6 @@ const mockClient = {
   redirect_uris: ['http://localhost/callback'],
 } as any;
 
-function createMockRes() {
-  const res: any = {};
-  res.redirect = mock((url: string) => {});
-  res.status = mock((code: number) => res);
-  res.json = mock((body: any) => res);
-  res.send = mock((body: any) => res);
-  res.setHeader = mock((name: string, value: string) => res);
-  return res;
-}
-
-function createMockReq(overrides: Record<string, any> = {}) {
-  return {
-    query: {},
-    headers: {},
-    ...overrides,
-  } as any;
-}
-
 /**
  * Extracts the session ID (state) from the HTML response body
  * by parsing the __GIZA_LOGIN_CONFIG__ JSON.
@@ -77,7 +59,6 @@ async function runAuthFlow(
     privyToken: string;
   }>,
 ): Promise<{ code: string; redirectUrl: string }> {
-  const authRes = createMockRes();
   const authParams = {
     state: params?.state ?? 'oauth-state',
     codeChallenge: params?.codeChallenge ?? 'challenge-value',
@@ -85,27 +66,23 @@ async function runAuthFlow(
       params?.redirectUri ?? 'http://localhost/callback',
     scopes: params?.scopes ?? TEST_SCOPES,
   };
-  await provider.authorize(mockClient, authParams, authRes);
+  const authorizeResult = await provider.authorize(mockClient, authParams);
 
-  const htmlBody = authRes.send.mock.calls[0]![0] as string;
-  const sessionId = extractStateFromHtml(htmlBody);
+  const sessionId = extractStateFromHtml(authorizeResult.html);
 
-  const callbackHandler = provider.handlePrivyCallback();
-  const callbackReq = createMockReq({
-    body: {
-      privy_token: params?.privyToken ?? 'valid-privy-token',
-      state: sessionId,
-    },
+  const callbackResult = await provider.handlePrivyCallback({
+    privyToken: params?.privyToken ?? 'valid-privy-token',
+    state: sessionId,
   });
-  const callbackRes = createMockRes();
-  await callbackHandler(callbackReq, callbackRes, mock());
 
-  const finalRedirect =
-    callbackRes.redirect.mock.calls[0]![0] as string;
-  const finalUrl = new URL(finalRedirect);
+  if (callbackResult.type !== 'redirect') {
+    throw new Error(`Expected redirect, got ${callbackResult.type}`);
+  }
+
+  const finalUrl = new URL(callbackResult.url);
   const code = finalUrl.searchParams.get('code')!;
 
-  return { code, redirectUrl: finalRedirect };
+  return { code, redirectUrl: callbackResult.url };
 }
 
 describe('GizaAuthProvider', () => {
@@ -118,8 +95,7 @@ describe('GizaAuthProvider', () => {
   });
 
   describe('authorize', () => {
-    test('stores pending session and sends login HTML page', async () => {
-      const res = createMockRes();
+    test('stores pending session and returns login HTML page', async () => {
       const params = {
         state: 'oauth-state-123',
         codeChallenge: 'challenge-value',
@@ -127,23 +103,15 @@ describe('GizaAuthProvider', () => {
         scopes: TEST_SCOPES,
       };
 
-      await provider.authorize(mockClient, params, res);
+      const result = await provider.authorize(mockClient, params);
 
-      expect(res.send).toHaveBeenCalledTimes(1);
-      expect(res.setHeader).toHaveBeenCalledWith(
-        'Content-Type',
-        'text/html',
+      expect(result.headers['Content-Type']).toBe('text/html');
+      expect(result.headers['Content-Security-Policy']).toContain(
+        "script-src 'self' 'nonce-",
       );
-      const html = res.send.mock.calls[0]![0] as string;
-      expect(html).toContain('<div id="root"></div>');
-      expect(html).toContain('__GIZA_LOGIN_CONFIG__');
-      expect(html).toContain('test-privy-app-id');
-
-      const cspCall = res.setHeader.mock.calls.find(
-        (c: string[]) => c[0] === 'Content-Security-Policy',
-      );
-      expect(cspCall).toBeTruthy();
-      expect(cspCall![1]).toContain("script-src 'self' 'nonce-");
+      expect(result.html).toContain('<div id="root"></div>');
+      expect(result.html).toContain('__GIZA_LOGIN_CONFIG__');
+      expect(result.html).toContain('test-privy-app-id');
     });
   });
 
@@ -160,64 +128,56 @@ describe('GizaAuthProvider', () => {
       expect(redirectUrl).toContain('state=oauth-state-456');
     });
 
-    test('returns 400 on missing privy_token', async () => {
-      const callbackHandler = provider.handlePrivyCallback();
-      const req = createMockReq({
-        body: { state: 'some-state' },
+    test('returns error on missing privy_token', async () => {
+      const result = await provider.handlePrivyCallback({
+        state: 'some-state',
       });
-      const res = createMockRes();
 
-      await callbackHandler(req, res, mock());
-
-      expect(res.status).toHaveBeenCalledWith(400);
+      expect(result.type).toBe('error');
+      if (result.type === 'error') {
+        expect(result.status).toBe(400);
+      }
     });
 
-    test('returns 400 on missing state', async () => {
-      const callbackHandler = provider.handlePrivyCallback();
-      const req = createMockReq({
-        body: { privy_token: 'token' },
+    test('returns error on missing state', async () => {
+      const result = await provider.handlePrivyCallback({
+        privyToken: 'token',
       });
-      const res = createMockRes();
 
-      await callbackHandler(req, res, mock());
-
-      expect(res.status).toHaveBeenCalledWith(400);
+      expect(result.type).toBe('error');
+      if (result.type === 'error') {
+        expect(result.status).toBe(400);
+      }
     });
 
     test('callback returns generic error on internal failure', async () => {
       mockVerifyPrivyToken.mockImplementationOnce(() => {
         throw new Error('Detailed internal: DB connection refused at 10.0.0.5');
       });
-      const callbackHandler = provider.handlePrivyCallback();
-      const req = createMockReq({
-        body: {
-          privy_token: 'valid-privy-token',
-          state: 'some-session-id',
-        },
+
+      const result = await provider.handlePrivyCallback({
+        privyToken: 'valid-privy-token',
+        state: 'some-session-id',
       });
-      const res = createMockRes();
 
-      await callbackHandler(req, res, mock());
-
-      expect(res.status).toHaveBeenCalledWith(500);
-      const body = res.json.mock.calls[0]![0];
-      expect(body.error).toBe('Authentication failed');
-      expect(body.error).not.toContain('DB connection');
+      expect(result.type).toBe('error');
+      if (result.type === 'error') {
+        expect(result.status).toBe(500);
+        expect(result.body.error).toBe('Authentication failed');
+        expect(result.body.error).not.toContain('DB connection');
+      }
     });
 
-    test('returns 400 on expired/invalid session', async () => {
-      const callbackHandler = provider.handlePrivyCallback();
-      const req = createMockReq({
-        body: {
-          privy_token: 'valid-privy-token',
-          state: 'nonexistent-session-id',
-        },
+    test('returns error on expired/invalid session', async () => {
+      const result = await provider.handlePrivyCallback({
+        privyToken: 'valid-privy-token',
+        state: 'nonexistent-session-id',
       });
-      const res = createMockRes();
 
-      await callbackHandler(req, res, mock());
-
-      expect(res.status).toHaveBeenCalledWith(400);
+      expect(result.type).toBe('error');
+      if (result.type === 'error') {
+        expect(result.status).toBe(400);
+      }
     });
   });
 
@@ -339,15 +299,12 @@ describe('GizaAuthProvider', () => {
 
   describe('redirect URI validation', () => {
     test('rejects redirect to unregistered URI', async () => {
-      // Register the client with known redirect URIs
       await provider.clientsStore.registerClient({
         client_id: TEST_CLIENT_ID,
         redirect_uris: ['http://localhost/callback'],
       } as any);
 
-      // Authorize with a redirect URI not in the registered list
-      const authRes = createMockRes();
-      await provider.authorize(
+      const authorizeResult = await provider.authorize(
         mockClient,
         {
           state: 'oauth-state',
@@ -355,27 +312,22 @@ describe('GizaAuthProvider', () => {
           redirectUri: 'http://evil.example.com/steal',
           scopes: TEST_SCOPES,
         },
-        authRes,
       );
 
-      const htmlBody = authRes.send.mock.calls[0]![0] as string;
-      const sessionId = extractStateFromHtml(htmlBody);
+      const sessionId = extractStateFromHtml(authorizeResult.html);
 
-      // Submit the callback with the session state
-      const callbackHandler = provider.handlePrivyCallback();
-      const callbackReq = createMockReq({
-        body: {
-          privy_token: 'valid-privy-token',
-          state: sessionId,
-        },
+      const callbackResult = await provider.handlePrivyCallback({
+        privyToken: 'valid-privy-token',
+        state: sessionId,
       });
-      const callbackRes = createMockRes();
-      await callbackHandler(callbackReq, callbackRes, mock());
 
-      // Should return 400 because the redirect URI is not registered
-      expect(callbackRes.status).toHaveBeenCalledWith(400);
-      const body = callbackRes.json.mock.calls[0]![0];
-      expect(body.error).toBe('Redirect URI not registered for client');
+      expect(callbackResult.type).toBe('error');
+      if (callbackResult.type === 'error') {
+        expect(callbackResult.status).toBe(400);
+        expect(callbackResult.body.error).toBe(
+          'Redirect URI not registered for client',
+        );
+      }
     });
   });
 

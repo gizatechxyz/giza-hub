@@ -1,8 +1,3 @@
-import type { Response, RequestHandler } from 'express';
-import type {
-  AuthorizationParams,
-  OAuthServerProvider,
-} from '@modelcontextprotocol/sdk/server/auth/provider.js';
 import type { OAuthRegisteredClientsStore } from '@modelcontextprotocol/sdk/server/auth/clients.js';
 import type {
   OAuthClientInformationFull,
@@ -30,6 +25,16 @@ import { completeDeviceSession } from './session-auth-store.js';
 import { DEVICE_STATE_PREFIX } from '../constants.js';
 import { securityLogger } from '../utils/security-logger.js';
 
+export interface AuthorizeResult {
+  html: string;
+  headers: Record<string, string>;
+}
+
+export type CallbackResult =
+  | { type: 'redirect'; url: string }
+  | { type: 'html'; html: string; headers: Record<string, string> }
+  | { type: 'error'; status: number; body: { error: string } };
+
 function toOAuthTokens(
   pair: { accessToken: string; refreshToken: string; expiresIn: number },
   scopes: string[],
@@ -43,7 +48,14 @@ function toOAuthTokens(
   };
 }
 
-export class GizaAuthProvider implements OAuthServerProvider {
+export interface AuthorizationParams {
+  state?: string;
+  scopes?: string[];
+  codeChallenge: string;
+  redirectUri: string;
+}
+
+export class GizaAuthProvider {
   readonly clientsStore: OAuthRegisteredClientsStore =
     new InMemoryClientsStore();
 
@@ -64,8 +76,7 @@ export class GizaAuthProvider implements OAuthServerProvider {
   async authorize(
     client: OAuthClientInformationFull,
     params: AuthorizationParams,
-    res: Response,
-  ): Promise<void> {
+  ): Promise<AuthorizeResult> {
     const sessionId = crypto.randomUUID();
 
     this.pendingSessions.set(sessionId, {
@@ -78,16 +89,21 @@ export class GizaAuthProvider implements OAuthServerProvider {
     });
 
     const nonce = crypto.randomUUID();
-    const callbackUrl = `${this.baseUrl}/authorize/callback`;
+    const callbackUrl = `${this.baseUrl}/api/authorize/callback`;
     const html = buildLoginPageHtml(
       this.privyAppId,
       callbackUrl,
       sessionId,
       nonce,
     );
-    res.setHeader('Content-Type', 'text/html');
-    res.setHeader('Content-Security-Policy', buildLoginCsp(nonce));
-    res.send(html);
+
+    return {
+      html,
+      headers: {
+        'Content-Type': 'text/html',
+        'Content-Security-Policy': buildLoginCsp(nonce),
+      },
+    };
   }
 
   private getValidCode(
@@ -164,92 +180,115 @@ export class GizaAuthProvider implements OAuthServerProvider {
     return verifyAccessToken(token);
   }
 
-  handlePrivyCallback(): RequestHandler {
-    return async (req, res) => {
-      try {
-        const privyToken =
-          (req.body?.privy_token as string | undefined) ??
-          (req.body?.token as string | undefined);
-        const stateParam = req.body?.state as string | undefined;
+  async handlePrivyCallback(input: {
+    privyToken?: string;
+    state?: string;
+  }): Promise<CallbackResult> {
+    try {
+      const { privyToken, state: stateParam } = input;
 
-        if (!privyToken || !stateParam) {
-          res
-            .status(400)
-            .json({ error: 'Missing privy_token or state parameter' });
-          return;
-        }
-
-        const { privyUserId, walletAddress } =
-          await verifyPrivyToken(privyToken);
-
-        if (stateParam.startsWith(DEVICE_STATE_PREFIX)) {
-          const mcpSessionId = stateParam.slice(DEVICE_STATE_PREFIX.length);
-          if (!mcpSessionId) {
-            res.status(400).json({ error: 'Invalid device state format' });
-            return;
-          }
-          const ctx: AuthContext = {
-            walletAddress,
-            privyUserId,
-            scopes: [...SUPPORTED_SCOPES],
-            clientId: 'device',
-          };
-          completeDeviceSession(mcpSessionId, ctx);
-          securityLogger.authSuccess({ flow: 'device', sessionId: mcpSessionId });
-          res.setHeader('Content-Type', 'text/html');
-          res.send(
-            '<html><body><h2>Authentication successful!</h2>' +
-              '<p>You can close this tab and return to your terminal.</p>' +
-              '</body></html>',
-          );
-          return;
-        }
-
-        const session = this.pendingSessions.get(stateParam);
-        if (!session) {
-          res
-            .status(400)
-            .json({ error: 'Invalid or expired session' });
-          return;
-        }
-
-        const client = await this.clientsStore.getClient(session.clientId);
-        if (!client) {
-          this.pendingSessions.delete(stateParam);
-          res.status(400).json({ error: 'Unknown client' });
-          return;
-        }
-        if (!client.redirect_uris.includes(session.redirectUri)) {
-          this.pendingSessions.delete(stateParam);
-          res.status(400).json({ error: 'Redirect URI not registered for client' });
-          return;
-        }
-
-        this.pendingSessions.delete(stateParam);
-
-        const code = crypto.randomUUID();
-        this.codes.set(code, {
-          clientId: session.clientId,
-          redirectUri: session.redirectUri,
-          codeChallenge: session.codeChallenge,
-          scopes: session.scopes,
-          privyUserId,
-          walletAddress,
-          createdAt: Date.now(),
-        });
-
-        const redirectUrl = new URL(session.redirectUri);
-        redirectUrl.searchParams.set('code', code);
-        if (session.state) {
-          redirectUrl.searchParams.set('state', session.state);
-        }
-
-        securityLogger.authSuccess({ flow: 'oauth', clientId: session.clientId });
-        res.redirect(redirectUrl.toString());
-      } catch (error) {
-        securityLogger.authFailure({ reason: error instanceof Error ? error.message : 'Unknown error' });
-        res.status(500).json({ error: 'Authentication failed' });
+      if (!privyToken || !stateParam) {
+        return {
+          type: 'error',
+          status: 400,
+          body: { error: 'Missing privy_token or state parameter' },
+        };
       }
-    };
+
+      const { privyUserId, walletAddress } =
+        await verifyPrivyToken(privyToken);
+
+      if (stateParam.startsWith(DEVICE_STATE_PREFIX)) {
+        const mcpSessionId = stateParam.slice(DEVICE_STATE_PREFIX.length);
+        if (!mcpSessionId) {
+          return {
+            type: 'error',
+            status: 400,
+            body: { error: 'Invalid device state format' },
+          };
+        }
+        const ctx: AuthContext = {
+          walletAddress,
+          privyUserId,
+          scopes: [...SUPPORTED_SCOPES],
+          clientId: 'device',
+        };
+        completeDeviceSession(mcpSessionId, ctx);
+        securityLogger.authSuccess({
+          flow: 'device',
+          sessionId: mcpSessionId,
+        });
+        return {
+          type: 'html',
+          html:
+            '<html><body><h2>Authentication successful!</h2>' +
+            '<p>You can close this tab and return to your terminal.</p>' +
+            '</body></html>',
+          headers: { 'Content-Type': 'text/html' },
+        };
+      }
+
+      const session = this.pendingSessions.get(stateParam);
+      if (!session) {
+        return {
+          type: 'error',
+          status: 400,
+          body: { error: 'Invalid or expired session' },
+        };
+      }
+
+      const client = await this.clientsStore.getClient(session.clientId);
+      if (!client) {
+        this.pendingSessions.delete(stateParam);
+        return {
+          type: 'error',
+          status: 400,
+          body: { error: 'Unknown client' },
+        };
+      }
+      if (!client.redirect_uris.includes(session.redirectUri)) {
+        this.pendingSessions.delete(stateParam);
+        return {
+          type: 'error',
+          status: 400,
+          body: { error: 'Redirect URI not registered for client' },
+        };
+      }
+
+      this.pendingSessions.delete(stateParam);
+
+      const code = crypto.randomUUID();
+      this.codes.set(code, {
+        clientId: session.clientId,
+        redirectUri: session.redirectUri,
+        codeChallenge: session.codeChallenge,
+        scopes: session.scopes,
+        privyUserId,
+        walletAddress,
+        createdAt: Date.now(),
+      });
+
+      const redirectUrl = new URL(session.redirectUri);
+      redirectUrl.searchParams.set('code', code);
+      if (session.state) {
+        redirectUrl.searchParams.set('state', session.state);
+      }
+
+      securityLogger.authSuccess({
+        flow: 'oauth',
+        clientId: session.clientId,
+      });
+      return { type: 'redirect', url: redirectUrl.toString() };
+    } catch (error) {
+      securityLogger.authFailure({
+        reason:
+          error instanceof Error ? error.message : 'Unknown error',
+      });
+      return {
+        type: 'error',
+        status: 500,
+        body: { error: 'Authentication failed' },
+      };
+    }
   }
 }
