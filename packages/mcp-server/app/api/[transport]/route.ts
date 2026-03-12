@@ -1,9 +1,12 @@
 import type { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js';
+import { randomUUID } from 'node:crypto';
 import { createMcpHandler, withMcpAuth } from 'mcp-handler';
 import {
   SERVER_NAME,
   SERVER_VERSION,
   GIZA_INSTRUCTIONS,
+  ENV_REDIS_URL,
+  getBaseUrl,
 } from '../../../src/constants';
 import { registerAllTools } from '../../../src/server';
 import { verifyAccessToken } from '../../../src/auth/session';
@@ -17,7 +20,12 @@ const handler = createMcpHandler(
     instructions: GIZA_INSTRUCTIONS,
   },
   {
-    basePath: '/api/mcp',
+    basePath: '/api',
+    redisUrl: process.env[ENV_REDIS_URL],
+    // @ts-expect-error — mcp-handler@1.0.7 types restrict sessionIdGenerator
+    // to `undefined`, but the runtime accepts a generator; required by
+    // @modelcontextprotocol/sdk ≥1.26 which disallows stateless transport reuse.
+    sessionIdGenerator: randomUUID,
   },
 );
 
@@ -36,9 +44,22 @@ async function verifyToken(
   }
 }
 
-const authHandler = withMcpAuth(handler, verifyToken, {
+const wrappedHandler = withMcpAuth(handler, verifyToken, {
   required: false,
   resourceMetadataPath: '/.well-known/oauth-protected-resource',
+  resourceUrl: getBaseUrl(),
 });
+
+async function authHandler(req: Request): Promise<Response> {
+  try {
+    return await wrappedHandler(req);
+  } catch (error) {
+    console.error('[MCP Route Error]', error);
+    return Response.json(
+      { error: 'Internal server error' },
+      { status: 500 },
+    );
+  }
+}
 
 export { authHandler as GET, authHandler as POST, authHandler as DELETE };

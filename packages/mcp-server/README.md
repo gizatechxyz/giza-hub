@@ -61,7 +61,7 @@ bun run dev
 bun run start
 ```
 
-The server starts at `http://127.0.0.1:<PORT>/mcp`.
+The server starts at `http://127.0.0.1:<PORT>/api/mcp`.
 
 Verify with:
 
@@ -80,7 +80,7 @@ Add to `claude_desktop_config.json`:
 {
   "mcpServers": {
     "giza": {
-      "url": "http://127.0.0.1:3000/mcp"
+      "url": "http://127.0.0.1:3000/api/mcp"
     }
   }
 }
@@ -94,7 +94,7 @@ Add to `.claude/settings.json`:
 {
   "mcpServers": {
     "giza": {
-      "url": "http://127.0.0.1:3000/mcp"
+      "url": "http://127.0.0.1:3000/api/mcp"
     }
   }
 }

@@ -32,7 +32,7 @@ export function ensureAuth(
     );
   }
 
-  const loginUrl = `${baseUrl}/login?session=${encodeURIComponent(extra.sessionId)}`;
+  const loginUrl = `${baseUrl}/api/login?session=${encodeURIComponent(extra.sessionId)}`;
   throw new Error(
     `You need to log in. Open this link in your browser:\n${loginUrl}\n\nOnce you've logged in, try again.`,
   );
