@@ -5,3 +5,5 @@ dist/
 coverage/
 .serena/
 MAIN_PLAN.md
+.claude/
+openspec/
