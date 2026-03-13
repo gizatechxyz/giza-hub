@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "bun run build:login && next build",
+    "build": "cd ../sdk && bun run build && cd ../mcp-server && bun run build:login && next build",
     "dev": "next dev",
     "start": "next start",
     "typecheck": "tsc --noEmit",
