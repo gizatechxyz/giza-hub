@@ -9,21 +9,28 @@ import { getSessionAuth } from './session-auth-store';
 
 type ToolExtra = RequestHandlerExtra<ServerRequest, ServerNotification>;
 
-export function checkAuth(extra: ToolExtra): AuthContext | null {
+export async function checkAuth(extra: ToolExtra): Promise<AuthContext | null> {
   const fromToken = extractAuthContext(extra.authInfo);
   if (fromToken) return fromToken;
   if (extra.sessionId) {
-    const fromSession = getSessionAuth(extra.sessionId);
-    if (fromSession) return fromSession;
+    try {
+      const fromSession = await getSessionAuth(extra.sessionId);
+      if (fromSession) return fromSession;
+    } catch (cause) {
+      throw new Error(
+        'Temporary service error — unable to verify session. Please try again shortly.',
+        { cause },
+      );
+    }
   }
   return null;
 }
 
-export function ensureAuth(
+export async function ensureAuth(
   extra: ToolExtra,
   baseUrl: string,
-): AuthContext {
-  const ctx = checkAuth(extra);
+): Promise<AuthContext> {
+  const ctx = await checkAuth(extra);
   if (ctx) return ctx;
 
   if (!extra.sessionId) {

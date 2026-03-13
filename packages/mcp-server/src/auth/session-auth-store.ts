@@ -4,35 +4,46 @@ import {
   MAX_SESSION_AUTH_ENTRIES,
   MAX_PENDING_DEVICES,
 } from '../constants';
-import { BoundedMap } from '../utils/bounded-map';
+import { RedisAuthStore } from '../utils/redis-auth-store';
 
-const store = new BoundedMap<string, AuthContext>(MAX_SESSION_AUTH_ENTRIES, SESSION_AUTH_TTL_MS);
-const pendingDevices = new BoundedMap<string, boolean>(MAX_PENDING_DEVICES, SESSION_AUTH_TTL_MS);
+const SESSION_TTL_SEC = Math.floor(SESSION_AUTH_TTL_MS / 1000);
 
-export function createDeviceSession(sessionId: string): void {
-  pendingDevices.set(sessionId, true);
+const store = new RedisAuthStore<AuthContext>(
+  'giza:session:',
+  SESSION_TTL_SEC,
+  MAX_SESSION_AUTH_ENTRIES,
+);
+const pendingDevices = new RedisAuthStore<boolean>(
+  'giza:device:',
+  SESSION_TTL_SEC,
+  MAX_PENDING_DEVICES,
+);
+
+export async function createDeviceSession(sessionId: string): Promise<void> {
+  await pendingDevices.set(sessionId, true);
 }
 
-export function completeDeviceSession(
+export async function completeDeviceSession(
   sessionId: string,
   ctx: AuthContext,
-): void {
-  if (!pendingDevices.has(sessionId)) {
+): Promise<void> {
+  const hasPending = await pendingDevices.has(sessionId);
+  if (!hasPending) {
     throw new Error('No pending device session');
   }
-  pendingDevices.delete(sessionId);
-  setSessionAuth(sessionId, ctx);
+  await pendingDevices.delete(sessionId);
+  await setSessionAuth(sessionId, ctx);
 }
 
-export function setSessionAuth(
+export async function setSessionAuth(
   sessionId: string,
   ctx: AuthContext,
-): void {
-  store.set(sessionId, ctx);
+): Promise<void> {
+  await store.set(sessionId, ctx);
 }
 
-export function getSessionAuth(
+export async function getSessionAuth(
   sessionId: string,
-): AuthContext | undefined {
+): Promise<AuthContext | undefined> {
   return store.get(sessionId);
 }

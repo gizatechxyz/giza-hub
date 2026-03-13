@@ -14,21 +14,21 @@ const TEST_CTX: AuthContext = {
 };
 
 describe('device session', () => {
-  test('createDeviceSession + completeDeviceSession stores auth', () => {
+  test('createDeviceSession + completeDeviceSession stores auth', async () => {
     const sessionId = `ds-store-${crypto.randomUUID()}`;
-    createDeviceSession(sessionId);
+    await createDeviceSession(sessionId);
 
-    completeDeviceSession(sessionId, TEST_CTX);
+    await completeDeviceSession(sessionId, TEST_CTX);
 
-    const result = getSessionAuth(sessionId);
+    const result = await getSessionAuth(sessionId);
     expect(result).toBeDefined();
     expect(result!.walletAddress).toBe(TEST_CTX.walletAddress);
     expect(result!.privyUserId).toBe(TEST_CTX.privyUserId);
   });
 
-  test('completeDeviceSession rejects missing pending session', () => {
-    expect(() =>
+  test('completeDeviceSession rejects missing pending session', async () => {
+    await expect(
       completeDeviceSession('nonexistent-session', TEST_CTX),
-    ).toThrow('No pending device session');
+    ).rejects.toThrow('No pending device session');
   });
 });

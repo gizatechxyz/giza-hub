@@ -4,9 +4,10 @@ TypeScript SDK and tooling for [Giza Agents](https://www.gizatech.xyz/) — auto
 
 ## Packages
 
-| Package                                 | Description                                                                                       |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| [`@gizatech/agent-sdk`](./packages/sdk) | SDK for smart account creation, agent lifecycle, portfolio monitoring, and stateless optimization |
+| Package                                              | Description                                                                                       |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| [`@gizatech/agent-sdk`](./packages/sdk)              | SDK for smart account creation, agent lifecycle, portfolio monitoring, and stateless optimization |
+| [`@gizatech/mcp-server`](./packages/mcp-server)      | MCP server exposing Giza tools for AI assistants (OAuth, Redis-backed sessions, Vercel-ready)     |
 
 ## Quick Start
 

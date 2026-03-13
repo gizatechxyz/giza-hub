@@ -5,7 +5,7 @@ MCP (Model Context Protocol) server that exposes the Giza Agent SDK as tools for
 ## Architecture
 
 - **Transport**: Streamable HTTP (`/mcp` endpoint) with per-session state
-- **Auth**: OAuth 2.1 via Privy (social/wallet login) with JWT session tokens
+- **Auth**: OAuth 2.1 via Privy (social/wallet login) with JWT session tokens and Redis-backed session storage
 - **Runtime**: Bun + Express
 - **SDK**: Uses `@gizatech/agent-sdk` (workspace dependency) for all Giza API calls
 
@@ -38,6 +38,7 @@ PRIVY_APP_ID=your-privy-app-id
 PRIVY_APP_SECRET=your-privy-app-secret
 JWT_SECRET=your-jwt-secret-min-32-chars
 MCP_DOMAIN=http://127.0.0.1:3000
+REDIS_URL=redis://localhost:6379    # optional for local dev
 ```
 
 | Variable | Description |
@@ -50,6 +51,7 @@ MCP_DOMAIN=http://127.0.0.1:3000
 | `PRIVY_APP_SECRET` | Privy application secret |
 | `JWT_SECRET` | Secret for signing session JWTs (min 32 characters) |
 | `MCP_DOMAIN` | Public base URL of this server (used as OAuth issuer) |
+| `REDIS_URL` | Redis connection URL (e.g. `redis://localhost:6379`). Required for serverless deployments (Vercel). Omit for local dev to use in-memory fallback. |
 
 ## Running
 
@@ -213,6 +215,15 @@ bun run test:unit     # unit tests only
 bun run test:integration  # integration / handshake tests
 ```
 
+## Redis and serverless
+
+Auth state (pending sessions, auth codes, device sessions) is stored in Redis via `RedisAuthStore`. This is required for serverless environments like Vercel where each API route runs in an isolated function with its own memory.
+
+- **With `REDIS_URL`**: All auth stores use Redis with key prefixes (`giza:session:`, `giza:device:`, `giza:pending:`, `giza:code:`) and TTL expiration.
+- **Without `REDIS_URL`**: Falls back to in-memory `BoundedMap` with a warning log. Suitable for local development only.
+
+Redis connection is lazy (connects on first use) and cached for the process lifetime.
+
 ## Project structure
 
 ```
@@ -223,12 +234,18 @@ src/
   schemas.ts            # Shared Zod schemas
   auth/
     provider.ts         # OAuth 2.1 provider (Privy integration)
+    session-auth-store.ts # Device/session auth (Redis-backed)
+    ensure-auth.ts      # Auth check + login redirect helpers
     middleware.ts       # Bearer token middleware
     privy.ts            # Privy token verification
     session.ts          # JWT session management
     clients-store.ts    # OAuth client registration store
     authorize-page.ts   # Login redirect builder
     types.ts            # Auth type definitions
+  utils/
+    redis-client.ts     # Lazy Redis connection singleton
+    redis-auth-store.ts # Redis-backed key-value store with TTL (BoundedMap fallback)
+    bounded-map.ts      # In-memory TTL map (local dev fallback)
   services/
     sdk-factory.ts      # Giza SDK instance factory
     confirmation.ts     # Critical operation confirmation flow

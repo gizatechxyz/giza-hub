@@ -38,8 +38,8 @@ export function registerProtectedTools(server: McpServer): void {
     },
     async (_params, extra) =>
       handleToolCall(
-        () => {
-          const ctx = checkAuth(extra);
+        async () => {
+          const ctx = await checkAuth(extra);
           if (!ctx) {
             throw new Error(
               'Not authenticated. Please call giza_login first.',

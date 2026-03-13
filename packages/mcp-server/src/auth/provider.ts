@@ -24,7 +24,7 @@ import {
   MAX_PENDING_SESSIONS,
   MAX_AUTH_CODES,
 } from '../constants';
-import { BoundedMap } from '../utils/bounded-map';
+import { RedisAuthStore } from '../utils/redis-auth-store';
 import type { PendingAuthSession, PendingAuthCode, AuthContext } from './types';
 import { completeDeviceSession } from './session-auth-store';
 import { DEVICE_STATE_PREFIX } from '../constants';
@@ -64,8 +64,16 @@ export class GizaAuthProvider {
   readonly clientsStore: OAuthRegisteredClientsStore =
     new InMemoryClientsStore();
 
-  private pendingSessions = new BoundedMap<string, PendingAuthSession>(MAX_PENDING_SESSIONS, AUTH_CODE_TTL_MS);
-  private codes = new BoundedMap<string, PendingAuthCode>(MAX_AUTH_CODES, AUTH_CODE_TTL_MS);
+  private pendingSessions = new RedisAuthStore<PendingAuthSession>(
+    'giza:pending:',
+    Math.floor(AUTH_CODE_TTL_MS / 1000),
+    MAX_PENDING_SESSIONS,
+  );
+  private codes = new RedisAuthStore<PendingAuthCode>(
+    'giza:code:',
+    Math.floor(AUTH_CODE_TTL_MS / 1000),
+    MAX_AUTH_CODES,
+  );
   private readonly baseUrl: string;
   readonly privyAppId: string;
 
@@ -84,7 +92,7 @@ export class GizaAuthProvider {
   ): Promise<AuthorizeResult> {
     const sessionId = crypto.randomUUID();
 
-    this.pendingSessions.set(sessionId, {
+    await this.pendingSessions.set(sessionId, {
       clientId: client.client_id,
       redirectUri: params.redirectUri,
       state: params.state,
@@ -111,11 +119,11 @@ export class GizaAuthProvider {
     };
   }
 
-  private getValidCode(
+  private async getValidCode(
     client: OAuthClientInformationFull,
     authorizationCode: string,
-  ): PendingAuthCode {
-    const pending = this.codes.get(authorizationCode);
+  ): Promise<PendingAuthCode> {
+    const pending = await this.codes.get(authorizationCode);
     if (!pending) {
       throw new Error('Invalid authorization code');
     }
@@ -129,7 +137,7 @@ export class GizaAuthProvider {
     client: OAuthClientInformationFull,
     authorizationCode: string,
   ): Promise<string> {
-    const pending = this.getValidCode(client, authorizationCode);
+    const pending = await this.getValidCode(client, authorizationCode);
     return pending.codeChallenge;
   }
 
@@ -137,14 +145,14 @@ export class GizaAuthProvider {
     client: OAuthClientInformationFull,
     authorizationCode: string,
   ): Promise<OAuthTokens> {
-    const pending = this.getValidCode(client, authorizationCode);
+    const pending = await this.getValidCode(client, authorizationCode);
 
     if (Date.now() - pending.createdAt > AUTH_CODE_TTL_MS) {
-      this.codes.delete(authorizationCode);
+      await this.codes.delete(authorizationCode);
       throw new Error('Authorization code expired');
     }
 
-    this.codes.delete(authorizationCode);
+    await this.codes.delete(authorizationCode);
 
     const pair = await createTokenPair({
       privyUserId: pending.privyUserId,
@@ -218,7 +226,7 @@ export class GizaAuthProvider {
           scopes: [...SUPPORTED_SCOPES],
           clientId: 'device',
         };
-        completeDeviceSession(mcpSessionId, ctx);
+        await completeDeviceSession(mcpSessionId, ctx);
         securityLogger.authSuccess({
           flow: 'device',
           sessionId: mcpSessionId,
@@ -233,7 +241,7 @@ export class GizaAuthProvider {
         };
       }
 
-      const session = this.pendingSessions.get(stateParam);
+      const session = await this.pendingSessions.get(stateParam);
       if (!session) {
         return {
           type: 'error',
@@ -244,7 +252,7 @@ export class GizaAuthProvider {
 
       const client = await this.clientsStore.getClient(session.clientId);
       if (!client) {
-        this.pendingSessions.delete(stateParam);
+        await this.pendingSessions.delete(stateParam);
         return {
           type: 'error',
           status: 400,
@@ -252,7 +260,7 @@ export class GizaAuthProvider {
         };
       }
       if (!client.redirect_uris.includes(session.redirectUri)) {
-        this.pendingSessions.delete(stateParam);
+        await this.pendingSessions.delete(stateParam);
         return {
           type: 'error',
           status: 400,
@@ -260,10 +268,10 @@ export class GizaAuthProvider {
         };
       }
 
-      this.pendingSessions.delete(stateParam);
+      await this.pendingSessions.delete(stateParam);
 
       const code = crypto.randomUUID();
-      this.codes.set(code, {
+      await this.codes.set(code, {
         clientId: session.clientId,
         redirectUri: session.redirectUri,
         codeChallenge: session.codeChallenge,

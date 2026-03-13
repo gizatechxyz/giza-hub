@@ -6,13 +6,22 @@ import {
   getBaseUrl,
 } from '../../../src/constants';
 
-export function GET(req: Request): Response {
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function GET(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const mcpSessionId = url.searchParams.get('session');
 
   if (!mcpSessionId) {
     return Response.json(
       { error: 'Missing session parameter' },
+      { status: 400 },
+    );
+  }
+
+  if (!UUID_RE.test(mcpSessionId)) {
+    return Response.json(
+      { error: 'Invalid session format' },
       { status: 400 },
     );
   }
@@ -25,7 +34,7 @@ export function GET(req: Request): Response {
     );
   }
 
-  createDeviceSession(mcpSessionId);
+  await createDeviceSession(mcpSessionId);
 
   const nonce = crypto.randomUUID();
   const baseUrl = getBaseUrl();
