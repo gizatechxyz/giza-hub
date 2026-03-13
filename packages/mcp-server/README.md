@@ -38,7 +38,7 @@ PRIVY_APP_ID=your-privy-app-id
 PRIVY_APP_SECRET=your-privy-app-secret
 JWT_SECRET=your-jwt-secret-min-32-chars
 MCP_DOMAIN=http://127.0.0.1:3000
-REDIS_URL=redis://localhost:6379    # optional for local dev
+mcp_REDIS_URL=redis://localhost:6379    # optional for local dev
 ```
 
 | Variable | Description |
@@ -51,7 +51,7 @@ REDIS_URL=redis://localhost:6379    # optional for local dev
 | `PRIVY_APP_SECRET` | Privy application secret |
 | `JWT_SECRET` | Secret for signing session JWTs (min 32 characters) |
 | `MCP_DOMAIN` | Public base URL of this server (used as OAuth issuer) |
-| `REDIS_URL` | Redis connection URL (e.g. `redis://localhost:6379`). Required for serverless deployments (Vercel). Omit for local dev to use in-memory fallback. |
+| `mcp_REDIS_URL` | Redis connection URL (e.g. `redis://localhost:6379`). Required for serverless deployments (Vercel). Omit for local dev to use in-memory fallback. |
 
 ## Running
 
@@ -218,8 +218,8 @@ bun run test:integration  # integration / handshake tests
 
 Auth state (pending sessions, auth codes, device sessions) is stored in Redis via `RedisAuthStore`. This is required for serverless environments like Vercel where each API route runs in an isolated function with its own memory.
 
-- **With `REDIS_URL`**: All auth stores use Redis with key prefixes (`giza:session:`, `giza:device:`, `giza:pending:`, `giza:code:`) and TTL expiration.
-- **Without `REDIS_URL`**: Falls back to in-memory `BoundedMap` with a warning log. Suitable for local development only.
+- **With `mcp_REDIS_URL`**: All auth stores use Redis with key prefixes (`giza:session:`, `giza:device:`, `giza:pending:`, `giza:code:`) and TTL expiration.
+- **Without `mcp_REDIS_URL`**: Falls back to in-memory `BoundedMap` with a warning log. Suitable for local development only.
 
 Redis connection is lazy (connects on first use) and cached for the process lifetime.
 

@@ -11,7 +11,7 @@ export function getRedisClient(): Promise<RedisClientType | null> {
   if (!url) {
     if (!warned) {
       console.warn(
-        '[giza-mcp] REDIS_URL not set — using in-memory store. Auth state will not survive across serverless invocations.',
+        `[giza-mcp] ${ENV_REDIS_URL} not set — using in-memory store. Auth state will not survive across serverless invocations.`,
       );
       warned = true;
     }
