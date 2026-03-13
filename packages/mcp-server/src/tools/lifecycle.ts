@@ -111,24 +111,4 @@ export function registerLifecycleTools(server: McpServer): void {
         jsonResult,
       ),
   );
-
-  server.registerTool(
-    'giza_run_agent',
-    {
-      title: 'Run Agent',
-      description:
-        'Trigger a manual rebalance across protocols. The agent also rebalances automatically. Use when the user wants to optimize now.',
-      inputSchema: z.object({ chain: chainSchema }),
-      annotations: ANNOTATIONS_MUTATING,
-    },
-    async ({ chain }, extra) =>
-      handleToolCall(
-        async () => {
-          const ctx = await ensureAuth(extra, getBaseUrl());
-          const agent = await getAgentForSession(chain, ctx.walletAddress);
-          return agent.run();
-        },
-        jsonResult,
-      ),
-  );
 }

@@ -139,34 +139,4 @@ describe('lifecycle tools', () => {
       expect(result.isError).toBe(true);
     });
   });
-
-  describe('giza_run_agent', () => {
-    test('succeeds with auth', async () => {
-      const server = createTestServer();
-      registerLifecycleTools(server as any);
-
-      const result = await server.invokeTool(
-        'giza_run_agent',
-        { chain: 8453 },
-        buildExtra(),
-      );
-
-      expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0].text);
-      expect(parsed).toBeDefined();
-    });
-
-    test('returns isError without auth', async () => {
-      const server = createTestServer();
-      registerLifecycleTools(server as any);
-
-      const result = await server.invokeTool(
-        'giza_run_agent',
-        { chain: 8453 },
-        buildUnauthExtra(),
-      );
-
-      expect(result.isError).toBe(true);
-    });
-  });
 });

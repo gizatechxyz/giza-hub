@@ -136,7 +136,6 @@ Add to `.claude/settings.json`:
 |---|---|
 | `giza_activate_agent` | Activate an agent with protocols |
 | `giza_deactivate_agent` | Deactivate an agent (requires confirmation) |
-| `giza_run_agent` | Trigger an agent execution |
 | `giza_top_up` | Top up agent wallet |
 
 ### Monitoring

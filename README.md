@@ -57,7 +57,7 @@ const { apr } = await agent.apr();
 | Wallet    | `connect_wallet`, `disconnect_wallet`                               |
 | Account   | `create_smart_account`, `get_smart_account`                         |
 | Protocol  | `get_protocols`, `get_tokens`, `get_stats`, `get_tvl`               |
-| Lifecycle | `activate_agent`, `deactivate_agent`, `top_up`, `run_agent`         |
+| Lifecycle | `activate_agent`, `deactivate_agent`, `top_up`                      |
 | Portfolio | `get_portfolio`, `get_performance`, `get_apr`, `get_deposits`       |
 | Financial | `withdraw`, `get_withdrawal_status`, `get_transactions`, `get_fees` |
 | Rewards   | `claim_rewards`                                                     |
