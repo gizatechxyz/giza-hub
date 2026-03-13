@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { PrivyProvider, usePrivy } from '@privy-io/react-auth';
+import type { PrivyClientConfig } from '@privy-io/react-auth';
 
 function GizaAppLogo(): React.ReactElement {
   return (
@@ -187,10 +188,10 @@ interface LoginPageProps {
 const PRIVY_CONFIG = {
   appearance: {
     accentColor: '#BDEE63',
-    theme: '#121113' as const,
+    theme: '#121113',
     showWalletLoginFirst: true,
     logo: '/icon.png',
-    walletChainType: 'ethereum-only' as const,
+    walletChainType: 'ethereum-only',
     walletList: [
       'detected_ethereum_wallets',
       'metamask',
@@ -202,11 +203,11 @@ const PRIVY_CONFIG = {
       'wallet_connect',
     ],
   },
-  loginMethods: ['wallet'] as const,
+  loginMethods: ['wallet'],
   embeddedWallets: {
-    ethereum: { createOnLogin: 'users-without-wallets' as const },
+    ethereum: { createOnLogin: 'users-without-wallets' },
   },
-};
+} as const satisfies PrivyClientConfig;
 
 export function LoginPage({ appId }: LoginPageProps): React.ReactElement {
   return (
