@@ -1,6 +1,11 @@
 import { describe, test, expect } from 'bun:test';
 
-import { buildLoginPageHtml, buildLoginCsp } from '../../../auth/authorize-page';
+import {
+  buildLoginPageHtml,
+  buildLoginCsp,
+  SUCCESS_PAGE_HTML,
+  SUCCESS_CSP,
+} from '../../../auth/authorize-page';
 
 describe('buildLoginPageHtml', () => {
   const APP_ID = 'test-app-id';
@@ -82,6 +87,16 @@ describe('buildLoginPageHtml', () => {
     expect(html).toContain('<html>');
     expect(html).toContain('</html>');
   });
+
+  test('links to login.css stylesheet', () => {
+    const html = buildLoginPageHtml(APP_ID, CALLBACK_URL, STATE, NONCE);
+    expect(html).toContain('<link rel="stylesheet" href="/login.css">');
+  });
+
+  test('contains dark color-scheme meta tag', () => {
+    const html = buildLoginPageHtml(APP_ID, CALLBACK_URL, STATE, NONCE);
+    expect(html).toContain('<meta name="color-scheme" content="dark">');
+  });
 });
 
 describe('buildLoginCsp', () => {
@@ -117,5 +132,27 @@ describe('buildLoginCsp', () => {
   test('blocks frame ancestors', () => {
     const csp = buildLoginCsp(NONCE);
     expect(csp).toContain("frame-ancestors 'none'");
+  });
+});
+
+describe('SUCCESS_PAGE_HTML', () => {
+  test('returns valid HTML document', () => {
+    expect(SUCCESS_PAGE_HTML).toStartWith('<!DOCTYPE html>');
+    expect(SUCCESS_PAGE_HTML).toContain('</html>');
+  });
+
+  test('contains Authenticated text', () => {
+    expect(SUCCESS_PAGE_HTML).toContain('Authenticated');
+  });
+
+  test('links to login.css stylesheet', () => {
+    expect(SUCCESS_PAGE_HTML).toContain('<link rel="stylesheet" href="/login.css">');
+  });
+});
+
+describe('SUCCESS_CSP', () => {
+  test('returns minimal CSP with style-src self', () => {
+    expect(SUCCESS_CSP).toContain("default-src 'none'");
+    expect(SUCCESS_CSP).toContain("style-src 'self'");
   });
 });

@@ -36,6 +36,12 @@ const nextConfig: NextConfig = {
           { key: 'Cache-Control', value: 'public, max-age=3600' },
         ],
       },
+      {
+        source: '/login.css',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=3600' },
+        ],
+      },
       { source: '/api/:path*', headers: corsHeaders },
       { source: '/.well-known/:path*', headers: corsHeaders },
     ];

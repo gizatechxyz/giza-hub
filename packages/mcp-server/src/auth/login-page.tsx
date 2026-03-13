@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { PrivyProvider, usePrivy } from '@privy-io/react-auth';
 
+const CARD_CLASSES =
+  'mx-auto max-w-sm rounded-xl border border-border bg-card p-6 shadow-lg animate-fade-in text-center';
+
 declare global {
   interface Window {
     __GIZA_LOGIN_CONFIG__: {
@@ -80,22 +83,45 @@ function LoginInner(): React.ReactElement {
     return () => { mounted = false; };
   }, [ready, authenticated, login, getAccessToken]);
 
-  if (error) {
-    return (
-      <div style={{ textAlign: 'center', marginTop: '20vh' }}>
-        <h2>Login Error</h2>
-        <p style={{ color: 'red' }}>{error}</p>
-        <button onClick={() => window.location.reload()}>
-          Try Again
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div style={{ textAlign: 'center', marginTop: '20vh' }}>
-      <h2>Giza Login</h2>
-      <p>{status}</p>
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className={CARD_CLASSES}>
+        {error ? (
+          <>
+            <h2 className="text-lg font-semibold text-card-foreground">
+              Login Error
+            </h2>
+            <p className="mt-3 text-sm text-destructive">{error}</p>
+            <button
+              className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+              onClick={() => window.location.reload()}
+            >
+              Try Again
+            </button>
+          </>
+        ) : (
+          <>
+            <h2 className="text-xl font-bold tracking-widest text-card-foreground">
+              GIZA
+            </h2>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Connect your wallet...
+            </p>
+            <svg
+              className="mx-auto mt-4 h-5 w-5 animate-spin text-muted-foreground"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+            </svg>
+            <p className="mt-3 text-xs text-muted-foreground">{status}</p>
+            <p className="mt-4 text-xs text-muted-foreground/50">
+              Secured by Privy
+            </p>
+          </>
+        )}
+      </div>
     </div>
   );
 }

@@ -11,7 +11,9 @@
     "test": "bun test",
     "test:unit": "bun test src/__tests__/unit",
     "test:integration": "bun test src/__tests__/integration",
-    "build:login": "bun build src/auth/login-entry.tsx --outdir public --minify --target browser --define import.meta.env.MODE=\\\"production\\\" --define import.meta.env={}"
+    "build:login": "bun run build:login:css && bun run build:login:js",
+    "build:login:css": "bunx @tailwindcss/cli -i src/auth/login.css -o public/login.css --minify",
+    "build:login:js": "bun build src/auth/login-entry.tsx --outdir public --minify --target browser --define import.meta.env.MODE=\\\"production\\\" --define import.meta.env={}"
   },
   "dependencies": {
     "@gizatech/agent-sdk": "workspace:*",
@@ -26,10 +28,12 @@
     "zod": "^3.25.0"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "4.2.1",
     "@types/node": "^22.0.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "bun-types": "^1.3.0",
+    "tailwindcss": "4.2.1",
     "typescript": "^5.3.3"
   }
 }

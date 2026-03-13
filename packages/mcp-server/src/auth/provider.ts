@@ -11,7 +11,12 @@ import {
   verifyRefreshToken,
 } from './session';
 import { verifyPrivyToken } from './privy';
-import { buildLoginPageHtml, buildLoginCsp } from './authorize-page';
+import {
+  buildLoginPageHtml,
+  buildLoginCsp,
+  SUCCESS_PAGE_HTML,
+  SUCCESS_CSP,
+} from './authorize-page';
 import {
   ENV_PRIVY_APP_ID,
   AUTH_CODE_TTL_MS,
@@ -220,11 +225,11 @@ export class GizaAuthProvider {
         });
         return {
           type: 'html',
-          html:
-            '<html><body><h2>Authentication successful!</h2>' +
-            '<p>You can close this tab and return to your terminal.</p>' +
-            '</body></html>',
-          headers: { 'Content-Type': 'text/html' },
+          html: SUCCESS_PAGE_HTML,
+          headers: {
+            'Content-Type': 'text/html',
+            'Content-Security-Policy': SUCCESS_CSP,
+          },
         };
       }
 
