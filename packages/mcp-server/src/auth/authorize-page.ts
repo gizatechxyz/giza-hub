@@ -10,12 +10,15 @@ function htmlHead(title: string): string {
 export function buildLoginCsp(nonce: string): string {
   return [
     "default-src 'none'",
-    `script-src 'self' 'nonce-${nonce}'`,
+    `script-src 'self' 'nonce-${nonce}' https://challenges.cloudflare.com`,
     "style-src 'self' 'unsafe-inline'",
-    "connect-src 'self' https://auth.privy.io https://*.privy.io",
-    "frame-src https://auth.privy.io https://*.privy.io",
-    "img-src 'self' https: data:",
+    "connect-src 'self' https://auth.privy.io https://*.privy.io wss://relay.walletconnect.com wss://relay.walletconnect.org wss://www.walletlink.org https://*.rpc.privy.systems https://explorer-api.walletconnect.com",
+    "child-src https://auth.privy.io https://verify.walletconnect.com https://verify.walletconnect.org",
+    "frame-src https://auth.privy.io https://*.privy.io https://verify.walletconnect.com https://verify.walletconnect.org https://challenges.cloudflare.com",
+    "img-src 'self' https: data: blob:",
     "font-src 'self' https:",
+    "worker-src 'self'",
+    "manifest-src 'self'",
     "frame-ancestors 'none'",
   ].join('; ');
 }
