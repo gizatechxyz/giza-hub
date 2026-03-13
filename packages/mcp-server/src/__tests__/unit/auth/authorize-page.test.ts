@@ -145,14 +145,15 @@ describe('SUCCESS_PAGE_HTML', () => {
     expect(SUCCESS_PAGE_HTML).toContain('Authenticated');
   });
 
-  test('links to login.css stylesheet', () => {
-    expect(SUCCESS_PAGE_HTML).toContain('<link rel="stylesheet" href="/login.css">');
+  test('uses inline styles instead of external stylesheet', () => {
+    expect(SUCCESS_PAGE_HTML).toContain('<style>');
+    expect(SUCCESS_PAGE_HTML).not.toContain('<link rel="stylesheet"');
   });
 });
 
 describe('SUCCESS_CSP', () => {
-  test('returns minimal CSP with style-src self', () => {
+  test('returns minimal CSP allowing inline styles', () => {
     expect(SUCCESS_CSP).toContain("default-src 'none'");
-    expect(SUCCESS_CSP).toContain("style-src 'self'");
+    expect(SUCCESS_CSP).toContain("style-src 'unsafe-inline'");
   });
 });
