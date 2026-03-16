@@ -1,16 +1,11 @@
 ---
 name: giza
 description: >
-  DeFi yield management on Giza -- onboarding, portfolio reviews, withdrawals,
+  Autonomous DeFi yield management on Giza -- onboarding, portfolio reviews, withdrawals,
   rewards, optimization, and education. Connects to the Giza MCP server for
   autonomous stablecoin yield across Base, Arbitrum, Plasma, and HyperEVM.
 user-invocable: true
 disable-model-invocation: false
-metadata:
-  openclaw:
-    requires:
-      env:
-        - GIZA_API_KEY
 ---
 
 # Giza -- DeFi Yield Management
