@@ -1,7 +1,7 @@
 {
   "name": "giza-skills",
   "description": "Skills for managing DeFi yield on Giza — portfolio reviews, onboarding, withdrawals, rewards, and optimization",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": { "name": "Giza" },
   "repository": "https://github.com/gizatechxyz/giza-hub",
   "license": "MIT"
