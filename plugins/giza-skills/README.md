@@ -4,6 +4,14 @@ A Claude plugin for managing DeFi yield on Giza. Provides guided workflows for o
 
 ## Installation
 
+### For OpenClaw
+
+```bash
+npx clawhub@latest install giza
+```
+
+### For Claude
+
 Add the marketplace (one-time):
 
 ```bash
@@ -16,7 +24,7 @@ Install the plugin:
 /plugin install giza-skills
 ```
 
-Local development:
+### Local development
 
 ```bash
 claude --plugin-dir ./plugins/giza-skills
@@ -24,18 +32,14 @@ claude --plugin-dir ./plugins/giza-skills
 
 ## What's Included
 
-This plugin bundles both the Giza MCP server and the skills. When installed, the MCP server at `https://mcp.gizatech.xyz/api/mcp` is automatically registered -- no manual configuration needed.
+This plugin bundles both the Giza MCP server and a single comprehensive skill. When installed, the MCP server at `https://mcp.gizatech.xyz/api/mcp` is automatically registered.
 
-## Available Skills
-
-| Skill | Invocable | Description |
-|---|---|---|
-| `giza` | Model only | Core personality, tone calibration, and tool routing |
-| `giza-get-started` | `/giza-get-started` | Guided onboarding: login, create account, deposit, activate |
-| `giza-portfolio` | `/giza-portfolio` | Check balance, yield, allocations, and pending rewards |
-| `giza-actions` | `/giza-actions` | Withdraw, claim rewards, top up, change protocols, deactivate |
-| `giza-learn` | `/giza-learn` | Learn about Giza, fees, risks, APR, stablecoins, and protocols |
-| `giza-optimize` | `/giza-optimize` | Compare current vs optimal allocation and apply improvements |
+The `giza` skill covers:
+- **Onboarding** -- guided account setup: login, create account, deposit, activate
+- **Portfolio** -- check balance, yield, allocations, and pending rewards
+- **Actions** -- withdraw, claim rewards, top up, change protocols, deactivate
+- **Optimization** -- compare current vs optimal allocation and apply improvements
+- **Education** -- learn about Giza, fees, risks, APR, stablecoins, and protocols
 
 ## Supported Networks
 

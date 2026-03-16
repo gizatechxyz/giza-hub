@@ -68,14 +68,22 @@ Connect any MCP-compatible client (Claude Desktop, Claude Code, Cursor) to the h
 
 See the [MCP server README](./packages/mcp-server) for self-hosting and local development.
 
-### Install the Claude Code plugin
+### Install the skill
+
+From [ClawHub](https://clawhub.ai):
+
+```bash
+npx clawhub@latest install giza
+```
+
+Or as a Claude Code plugin:
 
 ```bash
 /plugin marketplace add gizatechxyz/giza-hub
 /plugin install giza-skills
 ```
 
-See the [plugin README](./plugins/giza-skills) for available skills and supported networks.
+See the [plugin README](./plugins/giza-skills) for details and supported networks.
 
 ## SDK tools
 
