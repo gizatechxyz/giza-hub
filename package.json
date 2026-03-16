@@ -1,5 +1,5 @@
 {
-  "name": "agent-sdk",
+  "name": "giza-hub",
   "private": true,
   "workspaces": ["packages/*"]
 }

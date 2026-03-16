@@ -3,7 +3,7 @@
   "description": "Skills for managing DeFi yield on Giza — portfolio reviews, onboarding, withdrawals, rewards, and optimization",
   "version": "1.0.0",
   "author": { "name": "Giza" },
-  "repository": { "type": "git", "url": "https://github.com/gizatechxyz/agent-sdk" },
+  "repository": { "type": "git", "url": "https://github.com/gizatechxyz/giza-hub" },
   "license": "MIT",
   "mcpServers": {
     "giza": {

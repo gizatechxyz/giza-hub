@@ -1,0 +1,9 @@
+{
+  "plugins": [
+    {
+      "name": "giza-skills",
+      "description": "Skills for managing DeFi yield on Giza — portfolio reviews, onboarding, withdrawals, rewards, and optimization",
+      "source": "./plugins/giza-skills"
+    }
+  ]
+}

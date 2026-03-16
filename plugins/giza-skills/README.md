@@ -4,16 +4,22 @@ A Claude plugin for managing DeFi yield on Giza. Provides guided workflows for o
 
 ## Installation
 
-**Local development:**
+Add the marketplace (one-time):
+
+```bash
+/plugin marketplace add gizatechxyz/giza-hub
+```
+
+Install the plugin:
+
+```bash
+/plugin install giza-skills
+```
+
+Local development:
 
 ```bash
 claude --plugin-dir ./plugins/giza-skills
-```
-
-**From the plugin marketplace** (when published):
-
-```bash
-claude plugin install giza-skills
 ```
 
 ## What's Included
