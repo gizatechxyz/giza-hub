@@ -1,8 +1,15 @@
 {
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "giza",
+  "description": "Skills for autonomous DeFi with Giza",
+  "owner": {
+    "name": "Giza",
+    "email": "support@gizatech.xyz"
+  },
   "plugins": [
     {
       "name": "giza-skills",
-      "description": "Skills for managing DeFi yield on Giza — portfolio reviews, onboarding, withdrawals, rewards, and optimization",
+      "description": "Skills for autonomous DeFi with Giza",
       "source": "./plugins/giza-skills"
     }
   ]
