@@ -1,7 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
 import { ensureAuth } from '../auth/ensure-auth';
-import { chainSchema } from '../schemas';
+import { chainSchema, chainDisplayName } from '../schemas';
 import { handleToolCall, jsonResult } from '../services/error-handler';
 import {
   createPendingOperation,
@@ -16,7 +16,7 @@ export function registerFinancialTools(server: McpServer): void {
     {
       title: 'Withdraw Funds',
       description:
-        'Withdraw funds from the agent back to the user\'s wallet. Omit amount for full withdrawal. DESTRUCTIVE: returns a confirmationToken — ask the user to confirm, then call giza_confirm_operation.',
+        'Withdraw funds from your Giza account to your wallet. Omit amount for full withdrawal. Requires user confirmation before proceeding.',
       inputSchema: z.object({
         chain: chainSchema,
         amount: z
@@ -34,8 +34,8 @@ export function registerFinancialTools(server: McpServer): void {
           const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           const description = amount
-            ? `Withdraw ${amount} from agent on ${chain}`
-            : `Full withdrawal from agent on ${chain}`;
+            ? `Withdraw ${amount} from your Giza account on ${chainDisplayName(chain)} to your wallet`
+            : `Full withdrawal from your Giza account on ${chainDisplayName(chain)} to your wallet`;
           const token = createPendingOperation(
             'withdraw',
             description,
@@ -53,7 +53,7 @@ export function registerFinancialTools(server: McpServer): void {
     {
       title: 'Get Withdrawal Status',
       description:
-        'Check status of a pending withdrawal or deactivation. Use after giza_withdraw or giza_deactivate_agent.',
+        'Check the status of a pending withdrawal or deactivation.',
       inputSchema: z.object({ chain: chainSchema }),
       annotations: ANNOTATIONS_READONLY,
     },

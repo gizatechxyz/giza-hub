@@ -32,7 +32,7 @@ export function registerProtectedTools(server: McpServer): void {
     {
       title: 'Who Am I',
       description:
-        'Check current auth status without triggering login. Returns wallet address if authenticated, error if not.',
+        'Check if you\'re logged in and see your account details.',
       inputSchema: z.object({}),
       annotations: ANNOTATIONS_READONLY,
     },
@@ -42,7 +42,7 @@ export function registerProtectedTools(server: McpServer): void {
           const ctx = await checkAuth(extra);
           if (!ctx) {
             throw new Error(
-              'Not authenticated. Please call giza_login first.',
+              'You\'re not logged in yet. Please log in first.',
             );
           }
           return ctx;

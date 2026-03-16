@@ -13,7 +13,7 @@ export function registerMonitoringTools(server: McpServer): void {
     {
       title: 'Get Portfolio',
       description:
-        'Get the agent\'s current portfolio: value, balances, protocol allocations. Go-to tool for "how is my portfolio" questions.',
+        'Get your current portfolio: total value, balances, and how your funds are allocated across protocols.',
       inputSchema: z.object({ chain: chainSchema }),
       annotations: ANNOTATIONS_READONLY,
     },
@@ -33,7 +33,7 @@ export function registerMonitoringTools(server: McpServer): void {
     {
       title: 'Get Performance',
       description:
-        'Get historical performance as time-series data. Use giza_get_apr for a single number summary instead.',
+        'Get historical performance data over time. Use the APR tool for a simple summary instead.',
       inputSchema: z.object({
         chain: chainSchema,
         from: z
@@ -59,7 +59,7 @@ export function registerMonitoringTools(server: McpServer): void {
     {
       title: 'Get APR',
       description:
-        'Get the agent\'s annualized return rate. Best for "what\'s my yield" questions.',
+        'Get your annualized return rate (APR). Best for yield and return questions.',
       inputSchema: z.object({
         chain: chainSchema,
         startDate: z
@@ -93,7 +93,7 @@ export function registerMonitoringTools(server: McpServer): void {
     {
       title: 'Get APR by Tokens',
       description:
-        'Get APR broken down by token. Use when the user has multiple tokens and wants per-token yield.',
+        'Get your return rate broken down by token.',
       inputSchema: z.object({
         chain: chainSchema,
         period: z
@@ -119,7 +119,7 @@ export function registerMonitoringTools(server: McpServer): void {
     {
       title: 'Get Deposits',
       description:
-        'List deposits made to the agent. Use for deposit history questions.',
+        'See your deposit history.',
       inputSchema: z.object({ chain: chainSchema }),
       annotations: ANNOTATIONS_READONLY,
     },

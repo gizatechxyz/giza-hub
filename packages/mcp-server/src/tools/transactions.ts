@@ -12,7 +12,7 @@ export function registerTransactionTools(server: McpServer): void {
     {
       title: 'List Transactions',
       description:
-        'List transaction history (rebalances, deposits, withdrawals). Use for "what happened" questions.',
+        'See your transaction history including rebalances, deposits, and withdrawals.',
       inputSchema: z.object({
         chain: chainSchema,
         ...paginationSchema.shape,
@@ -35,7 +35,7 @@ export function registerTransactionTools(server: McpServer): void {
     {
       title: 'List Executions',
       description:
-        'List optimization runs with status. Use for detailed history or debugging.',
+        'See optimization runs and their status. Useful for detailed activity history.',
       inputSchema: z.object({
         chain: chainSchema,
         ...paginationSchema.shape,
@@ -58,7 +58,7 @@ export function registerTransactionTools(server: McpServer): void {
     {
       title: 'List Execution Logs',
       description:
-        'Get logs for a specific execution. Requires executionId from giza_list_executions. For debugging.',
+        'Get detailed logs for a specific optimization run.',
       inputSchema: z.object({
         chain: chainSchema,
         executionId: z.string().describe('Execution ID to get logs for'),
@@ -84,7 +84,7 @@ export function registerTransactionTools(server: McpServer): void {
     {
       title: 'List Agent Logs',
       description:
-        'Get all agent logs. For debugging. Prefer giza_list_transactions for user-facing history.',
+        'Get all account activity logs. For detailed debugging.',
       inputSchema: z.object({
         chain: chainSchema,
         ...paginationSchema.shape,

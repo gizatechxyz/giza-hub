@@ -35,12 +35,12 @@ export async function handleToolCall<T>(
     }
     if (error instanceof TimeoutError) {
       return errorResult(
-        'Request timed out. The Giza API may be experiencing high load. Please try again.',
+        'This is taking longer than usual. Please try again in a moment.',
       );
     }
     if (error instanceof NetworkError) {
       return errorResult(
-        'Unable to reach the Giza API. Please check your network connection and try again.',
+        "Can't connect to Giza right now. Please check your internet connection and try again.",
       );
     }
     if (error instanceof DOMException && error.name === 'AbortError') {

@@ -42,7 +42,7 @@ export async function executePendingOperation(
 
   if (!op) {
     throw new Error(
-      'Confirmation token not found or expired. Please initiate the operation again.',
+      'That confirmation has expired. Please start the operation again.',
     );
   }
 
@@ -54,7 +54,7 @@ export async function executePendingOperation(
 
   if (op.walletAddress !== walletAddress) {
     throw new Error(
-      'This confirmation token is bound to a different wallet address.',
+      'This confirmation belongs to a different account.',
     );
   }
 
@@ -81,6 +81,6 @@ export function confirmationPayload(
     confirmationToken: token,
     expiresInSeconds: CONFIRMATION_TOKEN_TTL_MS / 1000,
     instruction:
-      'Call giza_confirm_operation with the confirmationToken to execute this operation.',
+      'Tell the user what will happen and ask them to confirm. Only proceed if they say yes.',
   };
 }

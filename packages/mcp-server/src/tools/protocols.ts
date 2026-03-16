@@ -12,7 +12,7 @@ export function registerProtocolTools(server: McpServer): void {
     {
       title: 'Get Agent Protocols',
       description:
-        'Get protocols currently assigned to the agent.',
+        'See which DeFi protocols your account is currently using.',
       inputSchema: z.object({ chain: chainSchema }),
       annotations: ANNOTATIONS_READONLY,
     },
@@ -32,7 +32,7 @@ export function registerProtocolTools(server: McpServer): void {
     {
       title: 'Update Agent Protocols',
       description:
-        'Change which protocols the agent allocates to.',
+        'Change which DeFi protocols your account uses for yield optimization.',
       inputSchema: z.object({
         chain: chainSchema,
         protocols: z
@@ -59,7 +59,7 @@ export function registerProtocolTools(server: McpServer): void {
     {
       title: 'Get Agent Constraints',
       description:
-        'Get the agent\'s allocation constraints (min protocols, max per protocol, etc.).',
+        'See your allocation rules (minimum protocols, maximum per protocol, etc.).',
       inputSchema: z.object({ chain: chainSchema }),
       annotations: ANNOTATIONS_READONLY,
     },
@@ -79,7 +79,7 @@ export function registerProtocolTools(server: McpServer): void {
     {
       title: 'Update Agent Constraints',
       description:
-        'Update allocation constraints. Use when the user wants to limit exposure or set diversification rules.',
+        'Update your allocation rules to limit exposure or set diversification preferences.',
       inputSchema: z.object({
         chain: chainSchema,
         constraints: z

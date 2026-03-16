@@ -1,8 +1,7 @@
-import { CHAIN_NAMES, Chain } from '@gizatech/agent-sdk';
 import type { Address } from '@gizatech/agent-sdk';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
-import { chainSchema, addressSchema } from '../schemas';
+import { chainSchema, addressSchema, chainDisplayName } from '../schemas';
 import {
   getDefaultGizaClient,
   getGizaClient,
@@ -16,7 +15,7 @@ export function registerDiscoveryTools(server: McpServer): void {
     {
       title: 'List Chains',
       description:
-        'List supported chains with IDs and names. Call first if the user hasn\'t specified a chain.',
+        'List supported networks. Use when the user hasn\'t specified which network to use.',
       inputSchema: z.object({}),
       annotations: ANNOTATIONS_READONLY,
     },
@@ -26,7 +25,7 @@ export function registerDiscoveryTools(server: McpServer): void {
         (result) => {
           const enriched = result.chain_ids.map((chainId: number) => ({
             chainId,
-            name: CHAIN_NAMES[chainId as Chain] ?? `Chain ${chainId}`,
+            name: chainDisplayName(chainId),
           }));
           return jsonResult(enriched);
         },
@@ -39,7 +38,7 @@ export function registerDiscoveryTools(server: McpServer): void {
     {
       title: 'List Tokens',
       description:
-        'List tokens available for yield optimization on a chain. Call before giza_activate_agent.',
+        'List tokens available for yield optimization on a network.',
       inputSchema: z.object({ chain: chainSchema }),
       annotations: ANNOTATIONS_READONLY,
     },
@@ -56,7 +55,7 @@ export function registerDiscoveryTools(server: McpServer): void {
     {
       title: 'List Protocols',
       description:
-        'List DeFi protocols for a token on a chain. Needed before giza_activate_agent to pick protocols.',
+        'List DeFi protocols available for a token on a network.',
       inputSchema: z.object({
         chain: chainSchema,
         token: addressSchema.describe('Token contract address'),
@@ -76,7 +75,7 @@ export function registerDiscoveryTools(server: McpServer): void {
     {
       title: 'Protocol Supply',
       description:
-        'Get supply deposited into each protocol for a token. Use for comparing protocol sizes.',
+        'See how much is deposited into each protocol for a token. Useful for comparing protocol sizes.',
       inputSchema: z.object({
         chain: chainSchema,
         token: addressSchema.describe('Token contract address'),

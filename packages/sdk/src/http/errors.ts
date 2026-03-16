@@ -92,18 +92,18 @@ export class GizaAPIError extends GizaError {
       case 400:
         return 'Invalid request. Please check your parameters.';
       case 401:
-        return 'Authentication failed. Please check your API key.';
+        return 'You need to log in first. Please sign in and try again.';
       case 403:
         return 'Access denied. You do not have permission to perform this action.';
       case 404:
-        return 'Resource not found. Please check the address or parameters.';
+        return "Couldn't find what you're looking for. You may not have an account on this network yet.";
       case 429:
         return 'Too many requests. Please wait and try again.';
       case 500:
       case 502:
       case 503:
       case 504:
-        return 'Server error. Please try again later.';
+        return 'Giza is having a temporary issue. Please try again in a moment.';
       default:
         return this.message;
     }

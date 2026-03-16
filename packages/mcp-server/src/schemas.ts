@@ -1,10 +1,10 @@
-import { Chain, SortOrder } from '@gizatech/agent-sdk';
+import { Chain, CHAIN_NAMES, SortOrder } from '@gizatech/agent-sdk';
 import * as z from 'zod/v4';
 
 export const chainSchema = z
   .nativeEnum(Chain)
   .describe(
-    'Blockchain chain ID. Common values: 1 (Ethereum), 137 (Polygon), 8453 (Base), 42161 (Arbitrum), 11155111 (Sepolia)',
+    'Network to use: 8453 (Base), 42161 (Arbitrum), or another supported network ID',
   );
 
 export const addressSchema = z
@@ -20,6 +20,11 @@ export const constraintSchema = z.object({
     .record(z.string(), z.unknown())
     .describe('Constraint parameters'),
 });
+
+export function chainDisplayName(chainId: number): string {
+  // Cast is safe: unknown chain IDs fall through to the ?? fallback
+  return CHAIN_NAMES[chainId as Chain] ?? `Chain ${chainId}`;
+}
 
 export const paginationSchema = z.object({
   page: z

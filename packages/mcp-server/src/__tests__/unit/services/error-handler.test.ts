@@ -77,7 +77,7 @@ describe('handleToolCall', () => {
     );
 
     expect(result.isError).toBe(true);
-    expect(result.content[0]!.text).toContain('timed out');
+    expect(result.content[0]!.text).toContain('taking longer than usual');
   });
 
   test('catches NetworkError', async () => {
@@ -89,7 +89,7 @@ describe('handleToolCall', () => {
     );
 
     expect(result.isError).toBe(true);
-    expect(result.content[0]!.text).toContain('Unable to reach');
+    expect(result.content[0]!.text).toContain("Can't connect");
   });
 
   test('catches unknown Error and uses its message', async () => {

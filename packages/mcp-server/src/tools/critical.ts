@@ -11,7 +11,7 @@ export function registerCriticalTools(server: McpServer): void {
     {
       title: 'Confirm Critical Operation',
       description:
-        'Execute a previously initiated critical operation (withdraw, deactivate, claim rewards). Requires the confirmationToken from the initiating tool. NEVER call without explicit user confirmation.',
+        'Confirm and execute a pending operation (withdraw, deactivate, or claim rewards). Only call after the user explicitly confirms.',
       inputSchema: z.object({
         confirmationToken: z
           .string()

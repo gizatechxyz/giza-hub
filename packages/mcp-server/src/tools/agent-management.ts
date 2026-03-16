@@ -12,7 +12,7 @@ export function registerAgentManagementTools(server: McpServer): void {
     {
       title: 'Create Agent',
       description:
-        'Create a smart account on a chain. Call giza_get_agent first to check if one exists.',
+        'Set up a new Giza account on a network. Checks for existing accounts first.',
       inputSchema: z.object({ chain: chainSchema }),
       annotations: ANNOTATIONS_MUTATING,
     },
@@ -32,7 +32,7 @@ export function registerAgentManagementTools(server: McpServer): void {
     {
       title: 'Get Agent',
       description:
-        'Look up the user\'s existing agent on a chain. Call before giza_create_agent to avoid duplicates.',
+        'Check if you already have a Giza account on a network.',
       inputSchema: z.object({ chain: chainSchema }),
       annotations: ANNOTATIONS_READONLY,
     },
@@ -52,7 +52,7 @@ export function registerAgentManagementTools(server: McpServer): void {
     {
       title: 'Get Smart Account',
       description:
-        'Get smart account details (addresses, chain). Use when the user asks about their account address.',
+        'Get your Giza account details including addresses and network info.',
       inputSchema: z.object({ chain: chainSchema }),
       annotations: ANNOTATIONS_READONLY,
     },

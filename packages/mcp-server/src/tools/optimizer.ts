@@ -13,7 +13,7 @@ export function registerOptimizerTools(server: McpServer): void {
     {
       title: 'Optimize Allocation',
       description:
-        'Simulate optimal capital allocation across DeFi protocols for a token and amount. No auth needed. Use for "where should I put my money" questions before committing funds.',
+        'Find the best allocation of funds across DeFi protocols. No login needed. Use to compare current vs optimal allocation before making changes.',
       inputSchema: z.object({
         chain: chainSchema.optional(),
         token: addressSchema.describe('Token contract address to optimize'),

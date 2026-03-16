@@ -14,7 +14,7 @@ export function registerSystemTools(server: McpServer): void {
     {
       title: 'Giza Health Check',
       description:
-        'Check if the Giza API is reachable. Use only as a diagnostic when other calls fail.',
+        'Check if Giza is online. Use as a diagnostic when other operations fail.',
       inputSchema: z.object({}),
       annotations: ANNOTATIONS_READONLY,
     },
@@ -31,7 +31,7 @@ export function registerSystemTools(server: McpServer): void {
     {
       title: 'Giza API Config',
       description:
-        'Get API configuration and feature flags. Rarely needed — prefer giza_list_chains or giza_list_tokens.',
+        'Get Giza configuration and feature flags. Rarely needed.',
       inputSchema: z.object({}),
       annotations: ANNOTATIONS_READONLY,
     },
@@ -48,7 +48,7 @@ export function registerSystemTools(server: McpServer): void {
     {
       title: 'Giza Chain Statistics',
       description:
-        'Get chain-level stats: TVL, active agents, protocol breakdown. Use for market overview questions.',
+        'Get network statistics: total value deposited, active accounts, and protocol breakdown.',
       inputSchema: z.object({ chain: chainSchema }),
       annotations: ANNOTATIONS_READONLY,
     },
@@ -65,7 +65,7 @@ export function registerSystemTools(server: McpServer): void {
     {
       title: 'Giza TVL',
       description:
-        'Get total value locked on a chain. Use giza_get_stats instead if the user also wants agent counts.',
+        'Get total value deposited on a network.',
       inputSchema: z.object({ chain: chainSchema }),
       annotations: ANNOTATIONS_READONLY,
     },

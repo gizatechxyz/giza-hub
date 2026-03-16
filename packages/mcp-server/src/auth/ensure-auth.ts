@@ -35,7 +35,7 @@ export async function ensureAuth(
 
   if (!extra.sessionId) {
     throw new Error(
-      'You need to log in first, but no session is available for login. Please reconnect with a session-capable client.',
+      'You need to log in first, but no session is available for login. Please try reconnecting.',
     );
   }
 

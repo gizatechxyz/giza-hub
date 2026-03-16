@@ -66,7 +66,7 @@ async function executePendingOperation(
   if (!op || Date.now() - op.createdAt > CONFIRMATION_TOKEN_TTL_MS) {
     pendingOperations.delete(token);
     throw new Error(
-      'Confirmation token not found or expired. Please initiate the operation again.',
+      'That confirmation has expired. Please start the operation again.',
     );
   }
   if (op.used) {
@@ -76,7 +76,7 @@ async function executePendingOperation(
   }
   if (op.walletAddress !== walletAddress) {
     throw new Error(
-      'This confirmation token is bound to a different wallet address.',
+      'This confirmation belongs to a different account.',
     );
   }
   op.used = true;
@@ -102,7 +102,7 @@ function confirmationPayload(
     confirmationToken: token,
     expiresInSeconds: CONFIRMATION_TOKEN_TTL_MS / 1000,
     instruction:
-      'Call giza_confirm_operation with the confirmationToken to execute this operation.',
+      'Tell the user what will happen and ask them to confirm. Only proceed if they say yes.',
   };
 }
 
@@ -145,7 +145,7 @@ describe('executePendingOperation', () => {
   test('throws on invalid token', async () => {
     await expect(
       executePendingOperation('nonexistent-token', WALLET),
-    ).rejects.toThrow('not found or expired');
+    ).rejects.toThrow('expired');
   });
 
   test('throws on expired token', async () => {
@@ -163,7 +163,7 @@ describe('executePendingOperation', () => {
 
     await expect(
       executePendingOperation(token, WALLET),
-    ).rejects.toThrow('not found or expired');
+    ).rejects.toThrow('expired');
   });
 
   test('throws on wrong wallet address', async () => {
@@ -176,7 +176,7 @@ describe('executePendingOperation', () => {
 
     await expect(
       executePendingOperation(token, OTHER_WALLET),
-    ).rejects.toThrow('different wallet address');
+    ).rejects.toThrow('different account');
   });
 
   test('throws already-used when concurrent call in flight', async () => {
@@ -240,7 +240,7 @@ describe('executePendingOperation', () => {
 
     await expect(
       executePendingOperation(token, WALLET),
-    ).rejects.toThrow('not found or expired');
+    ).rejects.toThrow('expired');
   });
 });
 
@@ -259,7 +259,7 @@ describe('confirmationPayload', () => {
       confirmationToken: 'test-token-123',
       expiresInSeconds: CONFIRMATION_TOKEN_TTL_MS / 1000,
       instruction:
-        'Call giza_confirm_operation with the confirmationToken to execute this operation.',
+        'Tell the user what will happen and ask them to confirm. Only proceed if they say yes.',
     });
   });
 });
