@@ -1,0 +1,6 @@
+{
+  "giza": {
+    "type": "http",
+    "url": "https://mcp.gizatech.xyz/api/mcp"
+  }
+}

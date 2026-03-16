@@ -1,7 +1,7 @@
 node_modules/
 dist/
 .env
-.mcp.json
+/.mcp.json
 coverage/
 .serena/
 MAIN_PLAN.md
