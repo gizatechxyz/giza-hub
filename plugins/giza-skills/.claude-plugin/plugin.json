@@ -4,5 +4,6 @@
   "version": "1.0.1",
   "author": { "name": "Giza" },
   "repository": "https://github.com/gizatechxyz/giza-hub",
-  "license": "MIT"
+  "license": "MIT",
+  "mcpServers": "./.mcp.json"
 }
