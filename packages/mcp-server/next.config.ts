@@ -1,13 +1,17 @@
 import type { NextConfig } from 'next';
 
-const mcpDomain = process.env.MCP_DOMAIN ?? '*';
+const corsOrigin = process.env.CORS_ORIGIN ?? '*';
 
 const corsHeaders = [
-  { key: 'Access-Control-Allow-Origin', value: mcpDomain },
+  { key: 'Access-Control-Allow-Origin', value: corsOrigin },
   { key: 'Access-Control-Allow-Methods', value: 'GET, POST, DELETE, OPTIONS' },
   {
     key: 'Access-Control-Allow-Headers',
     value: 'Content-Type, Authorization, mcp-session-id',
+  },
+  {
+    key: 'Access-Control-Expose-Headers',
+    value: 'mcp-session-id',
   },
 ];
 
