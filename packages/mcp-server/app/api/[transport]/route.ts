@@ -62,4 +62,13 @@ async function authHandler(req: Request): Promise<Response> {
   }
 }
 
-export { authHandler as GET, authHandler as POST, authHandler as DELETE };
+function optionsHandler(): Response {
+  return new Response(null, { status: 204 });
+}
+
+export {
+  authHandler as GET,
+  authHandler as POST,
+  authHandler as DELETE,
+  optionsHandler as OPTIONS,
+};
