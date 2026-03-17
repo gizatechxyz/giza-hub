@@ -16,12 +16,24 @@ export function getDefaultGizaClient(): Giza {
   return getGizaClient(Chain.BASE);
 }
 
+export function getAuthenticatedGizaClient(
+  chain: Chain,
+  privyIdToken: string,
+): Giza {
+  return new Giza({ chain, bearerToken: privyIdToken });
+}
+
 const agentCache = new Map<string, Agent>();
 
 export async function getAgentForSession(
   chain: Chain,
   eoa: Address,
+  privyIdToken?: string,
 ): Promise<Agent> {
+  if (privyIdToken) {
+    const giza = getAuthenticatedGizaClient(chain, privyIdToken);
+    return giza.getAgent(eoa);
+  }
   const key = `${chain}:${eoa}`;
   let agent = agentCache.get(key);
   if (!agent) {

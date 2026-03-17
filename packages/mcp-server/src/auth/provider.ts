@@ -159,6 +159,7 @@ export class GizaAuthProvider {
       walletAddress: pending.walletAddress,
       clientId: pending.clientId,
       scopes: pending.scopes,
+      privyIdToken: pending.privyIdToken,
     });
 
     return toOAuthTokens(pair, pending.scopes);
@@ -195,21 +196,22 @@ export class GizaAuthProvider {
 
   async handlePrivyCallback(input: {
     privyToken?: string;
+    privyIdToken?: string;
     state?: string;
   }): Promise<CallbackResult> {
     try {
-      const { privyToken, state: stateParam } = input;
+      const { privyIdToken, state: stateParam } = input;
 
-      if (!privyToken || !stateParam) {
+      if (!privyIdToken || !stateParam) {
         return {
           type: 'error',
           status: 400,
-          body: { error: 'Missing privy_token or state parameter' },
+          body: { error: 'Missing identity token or state parameter' },
         };
       }
 
       const { privyUserId, walletAddress } =
-        await verifyPrivyToken(privyToken);
+        await verifyPrivyToken(privyIdToken);
 
       if (stateParam.startsWith(DEVICE_STATE_PREFIX)) {
         const mcpSessionId = stateParam.slice(DEVICE_STATE_PREFIX.length);
@@ -225,6 +227,7 @@ export class GizaAuthProvider {
           privyUserId,
           scopes: [...SUPPORTED_SCOPES],
           clientId: 'device',
+          privyIdToken,
         };
         await completeDeviceSession(mcpSessionId, ctx);
         securityLogger.authSuccess({
@@ -278,6 +281,7 @@ export class GizaAuthProvider {
         scopes: session.scopes,
         privyUserId,
         walletAddress,
+        privyIdToken,
         createdAt: Date.now(),
       });
 

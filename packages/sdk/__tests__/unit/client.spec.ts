@@ -17,12 +17,21 @@ describe('Giza', () => {
       expect(giza).toBeInstanceOf(Giza);
     });
 
-    it('should throw ValidationError when GIZA_API_KEY is missing', () => {
+    it('should allow no-auth mode when apiKey and partner are both missing', () => {
       clearTestEnv();
       process.env.GIZA_API_URL = 'https://api.test.giza.example';
 
+      const giza = new Giza({ chain: Chain.BASE });
+      expect(giza).toBeInstanceOf(Giza);
+    });
+
+    it('should throw ValidationError when apiKey is set but partner is missing', () => {
+      clearTestEnv();
+      process.env.GIZA_API_KEY = 'test-key';
+      process.env.GIZA_API_URL = 'https://api.test.giza.example';
+
       expect(() => new Giza({ chain: Chain.BASE })).toThrow(ValidationError);
-      expect(() => new Giza({ chain: Chain.BASE })).toThrow('API key is required');
+      expect(() => new Giza({ chain: Chain.BASE })).toThrow('Partner name is required');
     });
 
     it('should throw ValidationError when GIZA_PARTNER_NAME is missing', () => {
@@ -176,15 +185,37 @@ describe('Giza', () => {
   });
 
   describe('config errors', () => {
-    it('should not expose GIZA_API_KEY env var name', () => {
+    it('should not expose GIZA_API_KEY env var name in partial partner errors', () => {
       clearTestEnv();
       process.env.GIZA_API_URL = 'https://api.test.giza.example';
+      process.env.GIZA_API_KEY = 'test-key';
       expect(() => new Giza({ chain: Chain.BASE })).toThrow();
       try {
         new Giza({ chain: Chain.BASE });
       } catch (e: any) {
         expect(e.message).not.toContain('GIZA_API_KEY');
       }
+    });
+  });
+
+  describe('bearer token auth', () => {
+    it('should accept bearerToken without apiKey or partner', () => {
+      clearTestEnv();
+      process.env.GIZA_API_URL = 'https://api.test.giza.example';
+      const giza = new Giza({
+        chain: Chain.BASE,
+        bearerToken: 'test-bearer-token',
+      });
+      expect(giza).toBeInstanceOf(Giza);
+    });
+
+    it('should skip apiKey/partner validation with bearerToken', () => {
+      clearTestEnv();
+      process.env.GIZA_API_URL = 'https://api.test.giza.example';
+      expect(() => new Giza({
+        chain: Chain.BASE,
+        bearerToken: 'test-token',
+      })).not.toThrow();
     });
   });
 

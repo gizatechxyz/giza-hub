@@ -1,7 +1,7 @@
 import type { Address } from '@gizatech/agent-sdk';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
-import { ensureAuth } from '../auth/ensure-auth';
+import { ensureAuthWithToken } from '../auth/ensure-auth';
 import { chainSchema, addressSchema, constraintSchema, chainDisplayName } from '../schemas';
 import { handleToolCall, jsonResult } from '../services/error-handler';
 import {
@@ -36,8 +36,8 @@ export function registerLifecycleTools(server: McpServer): void {
     async ({ chain, token, protocols, txHash, constraints }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = await ensureAuth(extra, getBaseUrl());
-          const agent = await getAgentForSession(chain, ctx.walletAddress);
+          const ctx = await ensureAuthWithToken(extra, getBaseUrl());
+          const agent = await getAgentForSession(chain, ctx.walletAddress, ctx.privyIdToken);
           return agent.activate({
             owner: ctx.walletAddress,
             token: token as Address,
@@ -70,8 +70,8 @@ export function registerLifecycleTools(server: McpServer): void {
     async ({ chain, transfer }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = await ensureAuth(extra, getBaseUrl());
-          const agent = await getAgentForSession(chain, ctx.walletAddress);
+          const ctx = await ensureAuthWithToken(extra, getBaseUrl());
+          const agent = await getAgentForSession(chain, ctx.walletAddress, ctx.privyIdToken);
           const description = transfer !== false
             ? `Stop your Giza agent on ${chainDisplayName(chain)} and return all remaining funds to your wallet`
             : `Stop your Giza agent on ${chainDisplayName(chain)} without transferring funds`;
@@ -104,8 +104,8 @@ export function registerLifecycleTools(server: McpServer): void {
     async ({ chain, txHash }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = await ensureAuth(extra, getBaseUrl());
-          const agent = await getAgentForSession(chain, ctx.walletAddress);
+          const ctx = await ensureAuthWithToken(extra, getBaseUrl());
+          const agent = await getAgentForSession(chain, ctx.walletAddress, ctx.privyIdToken);
           return agent.topUp(txHash);
         },
         jsonResult,

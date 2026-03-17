@@ -34,6 +34,7 @@ interface TokenInput {
   walletAddress: Address;
   clientId: string;
   scopes: string[];
+  privyIdToken?: string;
 }
 
 interface TokenPair {
@@ -68,6 +69,7 @@ export async function createTokenPair(
     wallet: input.walletAddress,
     clientId: input.clientId,
     scopes: input.scopes,
+    privyIdToken: input.privyIdToken,
   };
 
   const [accessToken, refreshToken] = await Promise.all([
@@ -113,6 +115,7 @@ export async function verifyAccessToken(token: string): Promise<AuthInfo> {
     extra: {
       wallet: claims.wallet,
       privyUserId: claims.sub,
+      privyIdToken: claims.privyIdToken,
     },
   };
 }

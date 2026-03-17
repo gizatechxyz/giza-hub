@@ -6,6 +6,7 @@ const provider = new GizaAuthProvider(getBaseUrl());
 export async function POST(req: Request): Promise<Response> {
   const contentType = req.headers.get('content-type') ?? '';
   let privyToken: string | undefined;
+  let privyIdToken: string | undefined;
   let state: string | undefined;
 
   if (contentType.includes('application/x-www-form-urlencoded')) {
@@ -14,16 +15,23 @@ export async function POST(req: Request): Promise<Response> {
       (formData.get('privy_token') as string | null) ??
       (formData.get('token') as string | null) ??
       undefined;
+    privyIdToken =
+      (formData.get('privy_id_token') as string | null) ?? undefined;
     state = (formData.get('state') as string | null) ?? undefined;
   } else {
     const body = (await req.json()) as Record<string, unknown>;
     privyToken =
       (body.privy_token as string | undefined) ??
       (body.token as string | undefined);
+    privyIdToken = body.privy_id_token as string | undefined;
     state = body.state as string | undefined;
   }
 
-  const result = await provider.handlePrivyCallback({ privyToken, state });
+  const result = await provider.handlePrivyCallback({
+    privyToken,
+    privyIdToken,
+    state,
+  });
 
   switch (result.type) {
     case 'redirect':

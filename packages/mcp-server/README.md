@@ -12,8 +12,7 @@ MCP (Model Context Protocol) server that exposes the Giza Agent SDK as tools for
 ## Prerequisites
 
 - [Bun](https://bun.sh) >= 1.0
-- A Giza partner API key
-- Privy app credentials (for OAuth authentication)
+- Privy app ID (for OAuth authentication)
 
 ## Setup
 
@@ -29,13 +28,10 @@ cp .env.example .env
 Edit `.env` with your credentials:
 
 ```
-GIZA_API_KEY=your-api-key
-GIZA_PARTNER_NAME=your-partner-name
 GIZA_API_URL=https://...
 PORT=3000
 
 PRIVY_APP_ID=your-privy-app-id
-PRIVY_APP_SECRET=your-privy-app-secret
 JWT_SECRET=your-jwt-secret-min-32-chars
 MCP_DOMAIN=http://127.0.0.1:3000
 mcp_REDIS_URL=redis://localhost:6379    # optional for local dev
@@ -43,12 +39,9 @@ mcp_REDIS_URL=redis://localhost:6379    # optional for local dev
 
 | Variable | Description |
 |---|---|
-| `GIZA_API_KEY` | Partner API key for the Giza platform |
-| `GIZA_PARTNER_NAME` | Partner identifier |
 | `GIZA_API_URL` | Giza API base URL |
 | `PORT` | Server port (default: `3000`) |
 | `PRIVY_APP_ID` | Privy application ID for OAuth |
-| `PRIVY_APP_SECRET` | Privy application secret |
 | `JWT_SECRET` | Secret for signing session JWTs (min 32 characters) |
 | `MCP_DOMAIN` | Public base URL of this server (used as OAuth issuer) |
 | `mcp_REDIS_URL` | Redis connection URL (e.g. `redis://localhost:6379`). Required for serverless deployments (Vercel). Omit for local dev to use in-memory fallback. |

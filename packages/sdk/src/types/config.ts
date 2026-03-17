@@ -14,6 +14,8 @@ export interface GizaConfig {
   apiKey?: string;
   /** Partner name. Falls back to GIZA_PARTNER_NAME env var. */
   partner?: string;
+  /** Bearer token for direct authentication. */
+  bearerToken?: string;
   /** Backend API URL. Falls back to GIZA_API_URL env var. */
   apiUrl?: string;
   /** HTTP request timeout in ms (default 45 000). */
@@ -27,8 +29,9 @@ export interface GizaConfig {
  */
 export interface ResolvedGizaConfig {
   chain: Chain;
-  apiKey: string;
-  partner: string;
+  apiKey?: string;
+  partner?: string;
+  bearerToken?: string;
   apiUrl: string;
   agentId: string;
   timeout: number;

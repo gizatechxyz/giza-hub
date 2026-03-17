@@ -6,6 +6,19 @@ export const TEST_PRIVY_USER = 'privy-user-123';
 export const TEST_CLIENT_ID = 'test-client-id';
 export const TEST_SCOPES = ['mcp:tools'];
 
+function makeFakePrivyIdToken(): string {
+  const header = Buffer.from(JSON.stringify({ alg: 'ES256', typ: 'JWT' })).toString('base64url');
+  const payload = Buffer.from(JSON.stringify({
+    sub: TEST_PRIVY_USER,
+    iss: 'privy.io',
+    exp: Math.floor(Date.now() / 1000) + 3600,
+    iat: Math.floor(Date.now() / 1000),
+  })).toString('base64url');
+  return `${header}.${payload}.fake-signature`;
+}
+
+export const TEST_PRIVY_ID_TOKEN = makeFakePrivyIdToken();
+
 export function buildAuthInfo(
   overrides?: Partial<AuthInfo>,
 ): AuthInfo {
@@ -16,6 +29,7 @@ export function buildAuthInfo(
     extra: {
       wallet: TEST_WALLET,
       privyUserId: TEST_PRIVY_USER,
+      privyIdToken: TEST_PRIVY_ID_TOKEN,
     },
     ...overrides,
   };

@@ -17,6 +17,7 @@ export interface PendingAuthCode {
   scopes: string[];
   privyUserId: string;
   walletAddress: Address;
+  privyIdToken?: string;
   createdAt: number;
 }
 
@@ -25,6 +26,7 @@ export interface GizaTokenClaims {
   wallet: Address;
   clientId: string;
   scopes: string[];
+  privyIdToken?: string;
   type?: 'refresh';
 }
 
@@ -33,6 +35,7 @@ export interface AuthContext {
   privyUserId: string;
   scopes: string[];
   clientId: string;
+  privyIdToken?: string;
 }
 
 const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
@@ -49,7 +52,10 @@ export function extractAuthContext(
 ): AuthContext | undefined {
   if (!authInfo?.extra) return undefined;
 
-  const { wallet, privyUserId } = authInfo.extra as Record<string, unknown>;
+  const { wallet, privyUserId, privyIdToken } = authInfo.extra as Record<
+    string,
+    unknown
+  >;
   if (typeof wallet !== 'string' || typeof privyUserId !== 'string') {
     return undefined;
   }
@@ -59,5 +65,7 @@ export function extractAuthContext(
     privyUserId,
     scopes: authInfo.scopes,
     clientId: authInfo.clientId,
+    privyIdToken:
+      typeof privyIdToken === 'string' ? privyIdToken : undefined,
   };
 }
