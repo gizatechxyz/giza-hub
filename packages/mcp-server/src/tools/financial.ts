@@ -1,6 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
-import { ensureAuth } from '../auth/ensure-auth';
+import { ensureAuth, ensureAuthWithToken } from '../auth/ensure-auth';
 import { chainSchema, chainDisplayName } from '../schemas';
 import { handleToolCall, jsonResult } from '../services/error-handler';
 import {
@@ -31,8 +31,8 @@ export function registerFinancialTools(server: McpServer): void {
     async ({ chain, amount }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = await ensureAuth(extra, getBaseUrl());
-          const agent = await getAgentForSession(chain, ctx.walletAddress);
+          const ctx = await ensureAuthWithToken(extra, getBaseUrl());
+          const agent = await getAgentForSession(chain, ctx.walletAddress, ctx.privyIdToken);
           const description = amount
             ? `Withdraw ${amount} from your Giza account on ${chainDisplayName(chain)} to your wallet`
             : `Full withdrawal from your Giza account on ${chainDisplayName(chain)} to your wallet`;

@@ -8,7 +8,6 @@ import { registerMonitoringTools } from './tools/monitoring';
 import { registerTransactionTools } from './tools/transactions';
 import { registerRewardTools } from './tools/rewards';
 import { registerProtocolTools } from './tools/protocols';
-import { registerOptimizerTools } from './tools/optimizer';
 import { registerFinancialTools } from './tools/financial';
 import { registerCriticalTools } from './tools/critical';
 
@@ -22,7 +21,6 @@ export function registerAllTools(server: McpServer): void {
   registerTransactionTools(server);
   registerRewardTools(server);
   registerProtocolTools(server);
-  registerOptimizerTools(server);
   registerFinancialTools(server);
   registerCriticalTools(server);
 }

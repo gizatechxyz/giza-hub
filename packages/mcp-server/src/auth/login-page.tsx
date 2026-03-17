@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { PrivyProvider, usePrivy } from '@privy-io/react-auth';
+import { PrivyProvider, usePrivy, getIdentityToken } from '@privy-io/react-auth';
 import type { PrivyClientConfig } from '@privy-io/react-auth';
 
 function GizaAppLogo(): React.ReactElement {
@@ -41,6 +41,18 @@ declare global {
   }
 }
 
+function addHiddenInput(
+  form: HTMLFormElement,
+  name: string,
+  value: string,
+): void {
+  const input = document.createElement('input');
+  input.type = 'hidden';
+  input.name = name;
+  input.value = value;
+  form.appendChild(input);
+}
+
 function LoginInner(): React.ReactElement {
   const { ready, authenticated, login, getAccessToken } = usePrivy();
   const [status, setStatus] = useState('Initializing...');
@@ -54,12 +66,16 @@ function LoginInner(): React.ReactElement {
     if (!ready) return;
 
     if (authenticated) {
-      setStatus('Retrieving access token...');
-      getAccessToken()
-        .then((token) => {
+      setStatus('Retrieving tokens...');
+      Promise.all([getAccessToken(), getIdentityToken()])
+        .then(([token, idToken]) => {
           if (!mounted || submitted.current) return;
           if (!token) {
             setError('Failed to retrieve access token.');
+            return;
+          }
+          if (!idToken) {
+            setError('Failed to retrieve identity token.');
             return;
           }
           submitted.current = true;
@@ -67,19 +83,9 @@ function LoginInner(): React.ReactElement {
           const form = document.createElement('form');
           form.method = 'POST';
           form.action = callbackUrl;
-
-          const tokenInput = document.createElement('input');
-          tokenInput.type = 'hidden';
-          tokenInput.name = 'privy_token';
-          tokenInput.value = token;
-          form.appendChild(tokenInput);
-
-          const stateInput = document.createElement('input');
-          stateInput.type = 'hidden';
-          stateInput.name = 'state';
-          stateInput.value = state;
-          form.appendChild(stateInput);
-
+          addHiddenInput(form, 'privy_token', token);
+          addHiddenInput(form, 'privy_id_token', idToken);
+          addHiddenInput(form, 'state', state);
           document.body.appendChild(form);
           setStatus('Redirecting...');
           form.submit();

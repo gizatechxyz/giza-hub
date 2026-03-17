@@ -54,16 +54,17 @@ export class Giza {
   constructor(config: GizaConfig) {
     this.config = this.resolveConfig(config);
 
-    const auth = new PartnerAuth(
-      this.config.apiKey,
-      this.config.partner,
-    );
+    const headers = this.config.bearerToken
+      ? { Authorization: `Bearer ${this.config.bearerToken}` }
+      : this.config.apiKey && this.config.partner
+        ? new PartnerAuth(this.config.apiKey, this.config.partner).getHeaders()
+        : {};
 
     this.httpClient = new HttpClient({
       baseURL: this.config.apiUrl,
       timeout: this.config.timeout,
       enableRetry: this.config.enableRetry,
-      headers: auth.getHeaders(),
+      headers,
     });
   }
 
@@ -293,22 +294,23 @@ export class Giza {
   // ================================================================
 
   private resolveConfig(config: GizaConfig): ResolvedGizaConfig {
-    const apiKey =
-      config.apiKey ?? process.env.GIZA_API_KEY;
-    if (!apiKey) {
-      throw new ValidationError(
-        'API key is required. Provide apiKey in config ' +
-          'or via environment.',
-      );
-    }
+    const bearerToken = config.bearerToken;
+    const apiKey = config.apiKey ?? process.env.GIZA_API_KEY;
+    const partner = config.partner ?? process.env.GIZA_PARTNER_NAME;
 
-    const partner =
-      config.partner ?? process.env.GIZA_PARTNER_NAME;
-    if (!partner) {
-      throw new ValidationError(
-        'Partner name is required. Provide partner in config ' +
-          'or via environment.',
-      );
+    if (!bearerToken && (apiKey || partner)) {
+      if (!apiKey) {
+        throw new ValidationError(
+          'API key is required. Provide apiKey in config ' +
+            'or via environment.',
+        );
+      }
+      if (!partner) {
+        throw new ValidationError(
+          'Partner name is required. Provide partner in config ' +
+            'or via environment.',
+        );
+      }
     }
 
     const apiUrl =
@@ -341,8 +343,9 @@ export class Giza {
 
     return {
       chain: config.chain,
-      apiKey,
-      partner,
+      apiKey: apiKey ?? undefined,
+      partner: partner ?? undefined,
+      bearerToken,
       apiUrl: apiUrl.replace(/\/$/, ''),
       agentId: DEFAULT_AGENT_ID,
       timeout: config.timeout ?? DEFAULT_TIMEOUT,
