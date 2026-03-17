@@ -1,6 +1,6 @@
 import type { Address } from '@gizatech/agent-sdk';
 import { PrivyClient, type User } from '@privy-io/node';
-import { ENV_PRIVY_APP_ID, ENV_PRIVY_APP_SECRET } from '../constants';
+import { ENV_PRIVY_APP_ID } from '../constants';
 import { parseWalletAddress } from './types';
 
 let client: PrivyClient | undefined;
@@ -8,13 +8,14 @@ let client: PrivyClient | undefined;
 export function getPrivyClient(): PrivyClient {
   if (!client) {
     const appId = process.env[ENV_PRIVY_APP_ID];
-    const appSecret = process.env[ENV_PRIVY_APP_SECRET];
-    if (!appId || !appSecret) {
+    if (!appId) {
       throw new Error(
-        'Privy credentials not configured. Check environment configuration.',
+        'Privy app ID not configured. Check environment configuration.',
       );
     }
-    client = new PrivyClient({ appId, appSecret });
+    // appSecret is required by the type but unused for identity token
+    // verification via users().get({ id_token }), which uses JWKS.
+    client = new PrivyClient({ appId, appSecret: '' });
   }
   return client;
 }
@@ -25,12 +26,11 @@ interface PrivyVerification {
 }
 
 export async function verifyPrivyToken(
-  accessToken: string,
+  identityToken: string,
 ): Promise<PrivyVerification> {
   const privy = getPrivyClient();
 
-  const claims = await privy.utils().auth().verifyAccessToken(accessToken);
-  const user = await privy.users()._get(claims.user_id);
+  const user = await privy.users().get({ id_token: identityToken });
 
   const wallet = user.linked_accounts.find(
     (account: User['linked_accounts'][number]) =>
@@ -43,7 +43,7 @@ export async function verifyPrivyToken(
   }
 
   return {
-    privyUserId: claims.user_id,
+    privyUserId: user.id,
     walletAddress: parseWalletAddress(wallet.address),
   };
 }

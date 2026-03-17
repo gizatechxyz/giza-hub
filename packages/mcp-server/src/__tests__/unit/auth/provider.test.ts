@@ -56,7 +56,7 @@ async function runAuthFlow(
     codeChallenge: string;
     redirectUri: string;
     scopes: string[];
-    privyToken: string;
+    privyIdToken: string;
   }>,
 ): Promise<{ code: string; redirectUrl: string }> {
   const authParams = {
@@ -71,7 +71,7 @@ async function runAuthFlow(
   const sessionId = extractStateFromHtml(authorizeResult.html);
 
   const callbackResult = await provider.handlePrivyCallback({
-    privyToken: params?.privyToken ?? 'valid-privy-token',
+    privyIdToken: params?.privyIdToken ?? 'valid-identity-token',
     state: sessionId,
   });
 
@@ -122,13 +122,13 @@ describe('GizaAuthProvider', () => {
       });
 
       expect(mockVerifyPrivyToken).toHaveBeenCalledWith(
-        'valid-privy-token',
+        'valid-identity-token',
       );
       expect(redirectUrl).toContain('code=');
       expect(redirectUrl).toContain('state=oauth-state-456');
     });
 
-    test('returns error on missing privy_token', async () => {
+    test('returns error on missing identity token', async () => {
       const result = await provider.handlePrivyCallback({
         state: 'some-state',
       });
@@ -141,7 +141,7 @@ describe('GizaAuthProvider', () => {
 
     test('returns error on missing state', async () => {
       const result = await provider.handlePrivyCallback({
-        privyToken: 'token',
+        privyIdToken: 'identity-token',
       });
 
       expect(result.type).toBe('error');
@@ -156,7 +156,7 @@ describe('GizaAuthProvider', () => {
       });
 
       const result = await provider.handlePrivyCallback({
-        privyToken: 'valid-privy-token',
+        privyIdToken: 'valid-identity-token',
         state: 'some-session-id',
       });
 
@@ -170,7 +170,7 @@ describe('GizaAuthProvider', () => {
 
     test('returns error on expired/invalid session', async () => {
       const result = await provider.handlePrivyCallback({
-        privyToken: 'valid-privy-token',
+        privyIdToken: 'valid-identity-token',
         state: 'nonexistent-session-id',
       });
 
@@ -317,7 +317,7 @@ describe('GizaAuthProvider', () => {
       const sessionId = extractStateFromHtml(authorizeResult.html);
 
       const callbackResult = await provider.handlePrivyCallback({
-        privyToken: 'valid-privy-token',
+        privyIdToken: 'valid-identity-token',
         state: sessionId,
       });
 

@@ -4,7 +4,6 @@ export const DEFAULT_PORT = 3000;
 export const ENV_PORT = 'PORT';
 
 export const ENV_PRIVY_APP_ID = 'PRIVY_APP_ID';
-export const ENV_PRIVY_APP_SECRET = 'PRIVY_APP_SECRET';
 export const ENV_JWT_SECRET = 'JWT_SECRET';
 export const ENV_MCP_DOMAIN = 'MCP_DOMAIN';
 export const ENV_REDIS_URL = 'mcp_REDIS_URL';

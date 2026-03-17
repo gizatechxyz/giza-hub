@@ -200,18 +200,18 @@ export class GizaAuthProvider {
     state?: string;
   }): Promise<CallbackResult> {
     try {
-      const { privyToken, privyIdToken, state: stateParam } = input;
+      const { privyIdToken, state: stateParam } = input;
 
-      if (!privyToken || !stateParam) {
+      if (!privyIdToken || !stateParam) {
         return {
           type: 'error',
           status: 400,
-          body: { error: 'Missing privy_token or state parameter' },
+          body: { error: 'Missing identity token or state parameter' },
         };
       }
 
       const { privyUserId, walletAddress } =
-        await verifyPrivyToken(privyToken);
+        await verifyPrivyToken(privyIdToken);
 
       if (stateParam.startsWith(DEVICE_STATE_PREFIX)) {
         const mcpSessionId = stateParam.slice(DEVICE_STATE_PREFIX.length);
