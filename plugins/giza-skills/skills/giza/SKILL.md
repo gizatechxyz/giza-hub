@@ -86,8 +86,7 @@ Never retry without waiting for user confirmation.
 For these actions, always get explicit confirmation before executing:
 
 - **Withdrawals** (giza_withdraw): State the amount, destination, and that funds will leave the earning pool. Ask for "yes" to proceed.
-- **Deactivation** (giza_deactivate_agent): Warn that the account will stop earning yield. Recommend claiming any pending rewards first. Ask for "yes" to proceed.
-- **Claiming rewards** (giza_claim_rewards): State the reward amount and where they will be sent. Ask for "yes" to proceed.
+- **Deactivation** (giza_deactivate_agent): Warn that the account will stop earning yield. Ask for "yes" to proceed.
 
 After receiving confirmation, call giza_confirm_operation to finalize. Never auto-confirm any of these actions.
 
@@ -110,7 +109,6 @@ When the user expresses an intent, route to the appropriate MCP tool:
 | "What's my yield?" / "What's my return?" / "What APR am I getting?" | giza_get_apr |
 | "What have I earned?" / "Show my rewards" / "Any rewards?" | giza_list_rewards |
 | "Withdraw" / "Take out money" / "Cash out" | giza_withdraw |
-| "Claim rewards" / "Collect my rewards" | giza_claim_rewards |
 | "What chains are available?" / "What networks?" | giza_list_chains |
 | "What tokens can I use?" / "Which stablecoins?" | giza_list_tokens |
 | "Am I logged in?" / "Who am I?" | giza_whoami |
@@ -131,7 +129,6 @@ After every completed interaction, suggest 1-2 relevant next actions. Keep sugge
 Examples:
 - After showing portfolio: "Want me to check if you could be earning a better rate? Or would you like to see your reward history?"
 - After a withdrawal: "I can check the withdrawal status for you in a few minutes. Want me to show your remaining balance?"
-- After claiming rewards: "Your rewards are on the way. Want to see your updated portfolio?"
 - After onboarding: "Your account is set up and earning. Want me to walk you through how to check your earnings?"
 - After showing APR: "Want to see your full portfolio or check your transaction history?"
 
@@ -334,20 +331,6 @@ For all actions: if the user hasn't specified a network, default to Base (8453).
 **If withdrawal fails**: Explain the error in plain language. Common issues:
 - Insufficient balance: "You only have $X,XXX.XX available. Would you like to withdraw that amount instead?"
 - Minimum not met: "The minimum withdrawal is $XX.XX."
-
-## Claim Rewards
-
-**Intent signals**: "claim rewards", "collect rewards", "get my rewards", "redeem"
-
-### Flow
-
-1. Call **giza_list_rewards** to check pending rewards
-2. If no rewards pending: "You don't have any rewards to claim right now. Your rewards accumulate as your funds earn yield."
-3. If rewards available, show the amount: "You have $XX.XX in rewards ready to claim. These will be sent to your wallet."
-4. Ask for confirmation: "Would you like to claim your $XX.XX in rewards? (yes/no)"
-5. On "yes": Call **giza_claim_rewards**, then call **giza_confirm_operation**
-6. Show the result: "Your rewards of $XX.XX have been claimed and are being sent to your wallet."
-7. Suggest: "Want to see your updated portfolio?"
 
 ## Top Up (Deposit More)
 

@@ -70,8 +70,6 @@ export type {
   WithdrawalStatusResponse,
   FeeResponse,
   LimitResponse,
-  ClaimedReward,
-  ClaimedRewardsResponse,
   DepositListResponse,
   ExecutionWithTransactionsDTO,
   PaginatedExecutionDTO,

@@ -95,8 +95,6 @@ See the [plugin README](./plugins/giza-skills) for details and supported network
 | Lifecycle | `activate_agent`, `deactivate_agent`, `top_up` |
 | Portfolio | `get_portfolio`, `get_performance`, `get_apr`, `get_deposits` |
 | Financial | `withdraw`, `get_withdrawal_status`, `get_transactions`, `get_fees` |
-| Rewards | `claim_rewards` |
-
 ## Supported networks
 
 - **Base (8453)** — default, includes Giza Rewards program

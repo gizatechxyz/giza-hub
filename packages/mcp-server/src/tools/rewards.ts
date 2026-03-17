@@ -1,14 +1,10 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
-import { ensureAuth, ensureAuthWithToken } from '../auth/ensure-auth';
-import { chainSchema, paginationSchema, chainDisplayName } from '../schemas';
+import { ensureAuth } from '../auth/ensure-auth';
+import { chainSchema, paginationSchema } from '../schemas';
 import { handleToolCall, jsonResult } from '../services/error-handler';
-import {
-  createPendingOperation,
-  confirmationPayload,
-} from '../services/confirmation';
 import { getAgentForSession } from '../services/sdk-factory';
-import { ANNOTATIONS_DESTRUCTIVE, ANNOTATIONS_READONLY, getBaseUrl } from '../constants';
+import { ANNOTATIONS_READONLY, getBaseUrl } from '../constants';
 
 export function registerRewardTools(server: McpServer): void {
   server.registerTool(
@@ -52,33 +48,6 @@ export function registerRewardTools(server: McpServer): void {
           const ctx = await ensureAuth(extra, getBaseUrl());
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.rewardHistory({ sort }).page(page ?? 1, { limit });
-        },
-        jsonResult,
-      ),
-  );
-
-  server.registerTool(
-    'giza_claim_rewards',
-    {
-      title: 'Claim Rewards',
-      description:
-        'Claim your pending rewards and send them to your wallet. Requires user confirmation before proceeding.',
-      inputSchema: z.object({ chain: chainSchema }),
-      annotations: ANNOTATIONS_DESTRUCTIVE,
-    },
-    async ({ chain }, extra) =>
-      handleToolCall(
-        async () => {
-          const ctx = await ensureAuthWithToken(extra, getBaseUrl());
-          const agent = await getAgentForSession(chain, ctx.walletAddress, ctx.privyIdToken);
-          const description = `Claim all your pending rewards on ${chainDisplayName(chain)} and send them to your wallet`;
-          const token = createPendingOperation(
-            'claim_rewards',
-            description,
-            ctx.walletAddress,
-            () => agent.claimRewards(),
-          );
-          return confirmationPayload('claim_rewards', description, token);
         },
         jsonResult,
       ),

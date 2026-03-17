@@ -3,7 +3,7 @@ import { Giza, Agent } from '../../src';
 import { getState } from './helpers/state';
 import { ifState } from './helpers/skip';
 
-describe('08 — Fees, limits & claim rewards', () => {
+describe('08 — Fees & limits', () => {
   let giza: Giza;
   let agent: Agent;
 
@@ -36,17 +36,4 @@ describe('08 — Fees, limits & claim rewards', () => {
     expect(typeof res.limit).toBe('number');
   });
 
-  test('claimRewards() returns rewards array', async () => {
-    const res = await agent.claimRewards();
-
-    expect(Array.isArray(res.rewards)).toBe(true);
-    for (const reward of res.rewards) {
-      expect(typeof reward.token).toBe('string');
-      expect(typeof reward.amount).toBe('number');
-      expect(typeof reward.amount_float).toBe('number');
-      expect(typeof reward.current_price_in_underlying).toBe(
-        'number',
-      );
-    }
-  });
 });

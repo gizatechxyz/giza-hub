@@ -17,7 +17,7 @@ const OTHER_WALLET = '0xdef456';
  * we test the confirmation logic inline to avoid mock interference.
  */
 
-type CriticalOperationType = 'withdraw' | 'deactivate' | 'claim_rewards';
+type CriticalOperationType = 'withdraw' | 'deactivate';
 
 interface PendingOperation {
   type: CriticalOperationType;
@@ -187,8 +187,8 @@ describe('executePendingOperation', () => {
       });
 
     const token = createPendingOperation(
-      'claim_rewards',
-      'Claim rewards',
+      'withdraw',
+      'Withdraw funds',
       WALLET,
       slowExecute,
     );

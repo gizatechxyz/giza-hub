@@ -45,7 +45,6 @@ export function createMockAgent() {
     status: mock(() => Promise.resolve({ status: 'active' })),
     fees: mock(() => Promise.resolve({ fee: '0.1' })),
     limit: mock(() => Promise.resolve({ limit: '1000000' })),
-    claimRewards: mock(() => Promise.resolve({ claimed: true })),
     protocols: mock(() => Promise.resolve([{ name: 'aave' }])),
     updateProtocols: mock(() => Promise.resolve()),
     constraints: mock(() => Promise.resolve([{ kind: 'min_protocols' }])),

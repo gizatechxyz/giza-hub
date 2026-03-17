@@ -15,22 +15,6 @@ mock.module('../../../services/sdk-factory.js', () => ({
   getAgentForSession: () => Promise.resolve(mockAgent),
 }));
 
-mock.module('../../../services/confirmation.js', () => ({
-  createPendingOperation: mock(
-    () => 'mock-confirmation-token',
-  ),
-  confirmationPayload: mock(
-    (type: string, desc: string, token: string) => ({
-      status: 'confirmation_required',
-      operation: type,
-      confirmationToken: token,
-    }),
-  ),
-  executePendingOperation: mock(() =>
-    Promise.resolve({ type: 'claim_rewards', result: { claimed: true } }),
-  ),
-}));
-
 const { registerRewardTools } = await import(
   '../../../tools/rewards.js'
 );
@@ -97,34 +81,4 @@ describe('reward tools', () => {
     });
   });
 
-  describe('giza_claim_rewards', () => {
-    test('returns confirmation payload with auth', async () => {
-      const server = createTestServer();
-      registerRewardTools(server as any);
-
-      const result = await server.invokeTool(
-        'giza_claim_rewards',
-        { chain: 8453 },
-        buildExtra(),
-      );
-
-      expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0].text);
-      expect(parsed.status).toBe('confirmation_required');
-      expect(parsed.confirmationToken).toBeDefined();
-    });
-
-    test('returns isError without auth', async () => {
-      const server = createTestServer();
-      registerRewardTools(server as any);
-
-      const result = await server.invokeTool(
-        'giza_claim_rewards',
-        { chain: 8453 },
-        buildUnauthExtra(),
-      );
-
-      expect(result.isError).toBe(true);
-    });
-  });
 });

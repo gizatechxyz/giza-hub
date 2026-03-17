@@ -1,5 +1,5 @@
 export const SERVER_NAME = 'giza-mcp-server';
-export const SERVER_VERSION = '0.1.0';
+export const SERVER_VERSION = '0.1.2';
 export const DEFAULT_PORT = 3000;
 export const ENV_PORT = 'PORT';
 
@@ -58,7 +58,7 @@ TONE: Start with simple, non-technical language. If the user uses technical term
 
 RESPONSE STYLE: Be concise. Summarize data in 1-3 sentences with numbers, percentages, and key facts. Only show tables or full details when asked. Never dump raw JSON.
 
-CRITICAL OPERATIONS: Withdrawals, deactivation, and reward claims require explicit user confirmation. Clearly explain what will happen and get a "yes" before proceeding. Never auto-confirm.
+CRITICAL OPERATIONS: Withdrawals and deactivation require explicit user confirmation. Clearly explain what will happen and get a "yes" before proceeding. Never auto-confirm.
 
 AUTH: If any tool returns an auth error, initiate login. Show the login URL and ask the user to open it in their browser. Retry after they confirm.`;
 

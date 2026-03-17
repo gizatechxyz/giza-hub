@@ -1,6 +1,6 @@
 {
   "name": "@gizatech/agent-sdk",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "TypeScript SDK for Giza Agents - enables partners to integrate Giza agents into their applications",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

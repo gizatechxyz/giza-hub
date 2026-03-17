@@ -174,7 +174,6 @@ Add to `.claude/settings.json`:
 |---|---|
 | `giza_list_rewards` | List available rewards |
 | `giza_list_reward_history` | Get reward history |
-| `giza_claim_rewards` | Claim rewards (requires confirmation) |
 
 ### Auth & Confirmation
 
@@ -185,7 +184,7 @@ Add to `.claude/settings.json`:
 
 ## Critical operation protection
 
-Destructive operations (`withdraw`, `deactivate`, `claim_rewards`) use a two-step confirmation flow:
+Destructive operations (`withdraw`, `deactivate`) use a two-step confirmation flow:
 
 1. The tool returns a `confirmation_required` response with a single-use token
 2. The client must call `giza_confirm_operation` with that token to execute

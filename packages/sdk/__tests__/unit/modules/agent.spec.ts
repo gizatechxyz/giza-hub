@@ -408,28 +408,6 @@ describe('Agent', () => {
   });
 
   // ============================================================================
-  // Rewards Tests
-  // ============================================================================
-
-  describe('claimRewards', () => {
-    it('should claim rewards', async () => {
-      const mockRewards = {
-        rewards: [
-          { token: '0x1234', amount: 1000, amount_float: 0.001, current_price_in_underlying: 1.5 },
-        ],
-      };
-      mockHttpClient.post.mockResolvedValue(mockRewards);
-
-      const result = await agent.claimRewards();
-
-      expect(mockHttpClient.post).toHaveBeenCalledWith(
-        `/api/v1/${Chain.BASE}/wallets/${VALID_ADDRESSES.SMART_ACCOUNT_1}:claim-rewards`
-      );
-      expect(result.rewards).toHaveLength(1);
-    });
-  });
-
-  // ============================================================================
   // Protocol Tests (wallet-scoped)
   // ============================================================================
 

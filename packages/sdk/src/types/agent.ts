@@ -359,21 +359,6 @@ export interface LimitResponse {
 }
 
 // ============================================================================
-// Rewards Types
-// ============================================================================
-
-export interface ClaimedReward {
-  token: string;
-  amount: number;
-  amount_float: number;
-  current_price_in_underlying: number;
-}
-
-export interface ClaimedRewardsResponse {
-  rewards: ClaimedReward[];
-}
-
-// ============================================================================
 // Deposits Types
 // ============================================================================
 

@@ -4,8 +4,7 @@ import { BoundedMap } from '../utils/bounded-map';
 
 export type CriticalOperationType =
   | 'withdraw'
-  | 'deactivate'
-  | 'claim_rewards';
+  | 'deactivate';
 
 interface PendingOperation {
   type: CriticalOperationType;

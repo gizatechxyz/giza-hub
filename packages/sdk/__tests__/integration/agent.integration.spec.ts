@@ -300,27 +300,6 @@ describe('Agent Integration', () => {
   });
 
   // ============================================================================
-  // Rewards Operations
-  // ============================================================================
-
-  describe('claimRewards', () => {
-    it('should claim rewards', async () => {
-      const mockRewards = {
-        rewards: [
-          { token: '0x1234', amount: 1000, amount_float: 0.001, current_price_in_underlying: 1.5 },
-        ],
-      };
-      mockAxios
-        .onPost(new RegExp(`/api/v1/${Chain.BASE}/wallets/.*:claim-rewards`))
-        .reply(200, mockRewards);
-
-      const result = await agent.claimRewards();
-
-      expect(result.rewards).toHaveLength(1);
-    });
-  });
-
-  // ============================================================================
   // Error Handling
   // ============================================================================
 

@@ -16,7 +16,6 @@ import {
   AgentInfo,
   AgentStatus,
   AprByTokenResponse,
-  ClaimedRewardsResponse,
   ConstraintConfig,
   DeactivateOptions,
   DeactivateResponse,
@@ -389,16 +388,6 @@ export class Agent {
     const params = new URLSearchParams({ eoa });
     return this.httpClient.get<LimitResponse>(
       `/api/v1/${this.chain}/wallets/${this.wallet}/limit?${params}`,
-    );
-  }
-
-  // ================================================================
-  // Rewards
-  // ================================================================
-
-  async claimRewards(): Promise<ClaimedRewardsResponse> {
-    return this.httpClient.post<ClaimedRewardsResponse>(
-      `/api/v1/${this.chain}/wallets/${this.wallet}:claim-rewards`,
     );
   }
 
