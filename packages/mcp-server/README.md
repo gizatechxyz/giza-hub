@@ -176,12 +176,6 @@ Add to `.claude/settings.json`:
 | `giza_list_reward_history` | Get reward history |
 | `giza_claim_rewards` | Claim rewards (requires confirmation) |
 
-### Optimizer
-
-| Tool | Description |
-|---|---|
-| `giza_optimize` | Optimize capital allocation across protocols |
-
 ### Auth & Confirmation
 
 | Tool | Description |
@@ -251,7 +245,6 @@ src/
     transactions.ts     # Transactions, executions, logs
     rewards.ts          # Rewards listing and claiming
     protocols.ts        # Protocol and constraint management
-    optimizer.ts        # Capital optimization
     financial.ts        # Fees, limits, withdrawals
     protected.ts        # Auth-required tools (whoami)
     critical.ts         # Confirmation execution

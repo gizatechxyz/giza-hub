@@ -2,8 +2,8 @@
 name: giza
 description: >
   Autonomous DeFi yield management on Giza -- onboarding, portfolio reviews, withdrawals,
-  rewards, optimization, and education. Connects to the Giza MCP server for
-  autonomous stablecoin yield across Base, Arbitrum, Plasma, and HyperEVM.
+  rewards, and education. Connects to the Giza MCP server for autonomous stablecoin
+  yield across Base, Arbitrum, Plasma, and HyperEVM.
 user-invocable: true
 disable-model-invocation: false
 ---
@@ -118,7 +118,6 @@ When the user expresses an intent, route to the appropriate MCP tool:
 | "Add more money" / "Deposit more" / "Top up" | giza_top_up |
 | "What protocols am I using?" / "Where are my funds?" | giza_get_agent_protocols |
 | "Change protocols" / "Switch strategies" | giza_update_protocols |
-| "Optimize" / "Am I getting the best rate?" / "Can I earn more?" | giza_optimize |
 | "History" / "What happened?" / "Show transactions" | giza_list_transactions |
 | "Fees?" / "How much does Giza cost?" / "What do you charge?" | giza_get_fees |
 | "Is Giza working?" / "Health check" / "Status" | giza_health |
@@ -134,7 +133,7 @@ Examples:
 - After a withdrawal: "I can check the withdrawal status for you in a few minutes. Want me to show your remaining balance?"
 - After claiming rewards: "Your rewards are on the way. Want to see your updated portfolio?"
 - After onboarding: "Your account is set up and earning. Want me to walk you through how to check your earnings?"
-- After showing APR: "Want me to run an optimization check to see if there's a better allocation?"
+- After showing APR: "Want to see your full portfolio or check your transaction history?"
 
 ---
 
@@ -250,7 +249,6 @@ Your funds will be automatically moved to the best rates across your chosen plat
 
 A few things you can do next:
 - Ask me 'How's my portfolio?' anytime to check your balance and earnings
-- Ask 'Am I getting the best rate?' to run an optimization check
 - Ask 'What are my rewards?' to see what you've earned"
 
 ---
@@ -305,7 +303,7 @@ Based on the portfolio state, offer relevant follow-ups:
 
 **Idle or inactive funds**: "It looks like some of your funds aren't earning yield right now. Want me to help activate them?"
 
-**Healthy portfolio** (good APR, active, no issues): "Everything looks good. Want me to run a quick optimization check, or would you like to see your transaction history?"
+**Healthy portfolio** (good APR, active, no issues): "Everything looks good. Would you like to see your transaction history or check your rewards?"
 
 **No account found**: "I don't see an account on [network]. Would you like to set one up? I can walk you through it."
 
@@ -378,7 +376,7 @@ For all actions: if the user hasn't specified a network, default to Base (8453).
 5. Explain the impact: "Changing protocols means your funds will be moved from [current] to [new]. This happens automatically and there are no fees for the move."
 6. Call **giza_update_protocols** with the new selection
 7. Show the result: "Your protocols have been updated. Your funds will be moved to the new allocation."
-8. Suggest: "Want me to run an optimization check to make sure you're getting the best rate?"
+8. Suggest: "Want to see your updated portfolio or check your current APR?"
 
 ## Deactivate Account
 
@@ -394,57 +392,6 @@ For all actions: if the user hasn't specified a network, default to Base (8453).
 6. On "yes": Call **giza_deactivate_agent**, then call **giza_confirm_operation**
 7. Show the result: "Your account has been deactivated. Your funds are still there but no longer earning yield."
 8. Suggest: "You can reactivate anytime by asking me. Want to withdraw your funds instead?"
-
----
-
-# Yield Optimization
-
-Help the user understand whether their funds are earning the best possible rate, and offer to improve their allocation if a better one exists.
-
-## Fetching Current State
-
-Call these tools in parallel:
-- **giza_get_portfolio** -- current balance and allocation
-- **giza_get_agent_protocols** -- which protocols the account is using
-- **giza_get_apr** -- current earning rate
-
-If the user hasn't specified a network, default to Base (8453).
-
-## Running the Optimization
-
-Call **giza_optimize** to simulate the best possible allocation given the user's balance and available protocols.
-
-## Presenting Results
-
-### If an improvement is found
-
-Show the comparison clearly with real dollar impact:
-
-"**Current allocation**:
-- [Protocol A]: $X,XXX.XX at X.XX% APR
-- [Protocol B]: $X,XXX.XX at X.XX% APR
-- **Blended rate**: X.XX% APR
-
-**Optimized allocation**:
-- [Protocol C]: $X,XXX.XX at X.XX% APR
-- [Protocol D]: $X,XXX.XX at X.XX% APR
-- **Blended rate**: X.XX% APR
-
-**Improvement**: +X.XX% APR, which means an extra $XX.XX per year on your $X,XXX.XX balance."
-
-Then offer to apply: "Want me to update your protocols to the optimized allocation?"
-
-If the user says yes, call **giza_update_protocols** with the recommended configuration, then confirm: "Your allocation has been updated. Your funds will be moved to the new configuration automatically."
-
-### If already optimal
-
-"Your funds are already in the best available allocation. You're earning X.XX% APR across [protocols]. No changes needed."
-
-Suggest: "I'll keep an eye on rates. You can ask me to check again anytime. Want to see your full portfolio instead?"
-
-### If no account found
-
-"I don't see an active account on [network]. Would you like to set one up? I can walk you through it."
 
 ---
 

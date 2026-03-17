@@ -77,9 +77,6 @@ export function createMockGiza(mockAgent = createMockAgent()) {
     protocolSupply: mock(() =>
       Promise.resolve({ supply: [{ protocol: 'aave', amount: '500000' }] }),
     ),
-    optimize: mock(() =>
-      Promise.resolve({ allocations: [{ protocol: 'aave', amount: '100' }] }),
-    ),
     createAgent: mock(() => Promise.resolve(mockAgent)),
     getAgent: mock(() => Promise.resolve(mockAgent)),
     getSmartAccount: mock(() =>

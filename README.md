@@ -1,12 +1,12 @@
 # Giza Hub
 
-Monorepo for the Giza developer platform and AI Agents — SDK, MCP server, and plugin and Skills for autonomous DeFi yield optimization.
+Monorepo for the Giza developer platform and AI Agents — SDK, MCP server, and plugin and Skills for autonomous DeFi yield management.
 
 ## Packages
 
 | Package | Description |
 |---|---|
-| [`@gizatech/agent-sdk`](./packages/sdk) | TypeScript SDK for smart account creation, agent lifecycle, portfolio monitoring, and optimization |
+| [`@gizatech/agent-sdk`](./packages/sdk) | TypeScript SDK for smart account creation, agent lifecycle, and portfolio monitoring |
 | [`@gizatech/mcp-server`](./packages/mcp-server) | MCP server exposing Giza tools for AI assistants (OAuth, Redis-backed sessions, Vercel-ready) |
 | [`giza-skills`](./plugins/giza-skills) | Claude Code plugin with guided DeFi workflows — onboarding, portfolio, withdrawals, rewards |
 
@@ -96,7 +96,6 @@ See the [plugin README](./plugins/giza-skills) for details and supported network
 | Portfolio | `get_portfolio`, `get_performance`, `get_apr`, `get_deposits` |
 | Financial | `withdraw`, `get_withdrawal_status`, `get_transactions`, `get_fees` |
 | Rewards | `claim_rewards` |
-| Optimizer | `optimize` |
 
 ## Supported networks
 
@@ -109,7 +108,6 @@ See the [plugin README](./plugins/giza-skills) for details and supported network
 
 ```bash
 bun run --filter @gizatech/agent-sdk example:agent
-bun run --filter @gizatech/agent-sdk example:optimizer
 ```
 
 ## Development
