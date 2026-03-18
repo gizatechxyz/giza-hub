@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { PrivyProvider, usePrivy, getIdentityToken } from '@privy-io/react-auth';
+import { PrivyProvider, usePrivy, useIdentityToken } from '@privy-io/react-auth';
 import type { PrivyClientConfig } from '@privy-io/react-auth';
 
 function GizaAppLogo(): React.ReactElement {
@@ -55,44 +55,31 @@ function addHiddenInput(
 
 function LoginInner(): React.ReactElement {
   const { ready, authenticated, login } = usePrivy();
+  const { identityToken } = useIdentityToken();
   const [status, setStatus] = useState('Initializing...');
   const [error, setError] = useState<string | null>(null);
   const loginTriggered = useRef(false);
   const submitted = useRef(false);
 
   useEffect(() => {
-    let mounted = true;
-
     if (!ready) return;
 
     if (authenticated) {
+      if (!identityToken) {
+        setStatus('Retrieving tokens...');
+        return;
+      }
       if (submitted.current) return;
       submitted.current = true;
-      setStatus('Retrieving tokens...');
-      getIdentityToken()
-        .then((idToken) => {
-          if (!mounted) return;
-          if (!idToken) {
-            setError('Failed to retrieve identity token.');
-            return;
-          }
-          const { callbackUrl, state } = window.__GIZA_LOGIN_CONFIG__;
-          const form = document.createElement('form');
-          form.method = 'POST';
-          form.action = callbackUrl;
-          addHiddenInput(form, 'privy_id_token', idToken);
-          addHiddenInput(form, 'state', state);
-          document.body.appendChild(form);
-          setStatus('Redirecting...');
-          form.submit();
-        })
-        .catch((err: unknown) => {
-          if (!mounted) return;
-          const msg =
-            err instanceof Error ? err.message : 'Unknown error';
-          setError(`Token retrieval failed: ${msg}`);
-        });
-      return () => { mounted = false; };
+      const { callbackUrl, state } = window.__GIZA_LOGIN_CONFIG__;
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = callbackUrl;
+      addHiddenInput(form, 'privy_id_token', identityToken);
+      addHiddenInput(form, 'state', state);
+      document.body.appendChild(form);
+      form.submit();
+      return;
     }
 
     if (!loginTriggered.current) {
@@ -101,16 +88,13 @@ function LoginInner(): React.ReactElement {
       try {
         login();
       } catch (err: unknown) {
-        if (!mounted) return;
         loginTriggered.current = false;
         const msg =
           err instanceof Error ? err.message : 'Wallet login failed';
         setError(msg);
       }
     }
-
-    return () => { mounted = false; };
-  }, [ready, authenticated, login]);
+  }, [ready, authenticated, identityToken, login]);
 
   return (
     <div style={{
