@@ -1,8 +1,8 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
 import { handleToolCall, jsonResult } from '../services/error-handler';
-import { ensureAuth, checkAuth } from '../auth/ensure-auth';
-import { ANNOTATIONS_IDEMPOTENT_MUTATING, ANNOTATIONS_READONLY, getBaseUrl } from '../constants';
+import { ensureAuth } from '../auth/ensure-auth';
+import { ANNOTATIONS_IDEMPOTENT_MUTATING, ANNOTATIONS_READONLY } from '../constants';
 
 export function registerProtectedTools(server: McpServer): void {
   server.registerTool(
@@ -16,7 +16,7 @@ export function registerProtectedTools(server: McpServer): void {
     },
     async (_params, extra) =>
       handleToolCall(
-        () => ensureAuth(extra, getBaseUrl()),
+        () => ensureAuth(extra),
         (ctx) =>
           jsonResult({
             status: 'authenticated',
@@ -38,15 +38,7 @@ export function registerProtectedTools(server: McpServer): void {
     },
     async (_params, extra) =>
       handleToolCall(
-        async () => {
-          const ctx = await checkAuth(extra);
-          if (!ctx) {
-            throw new Error(
-              'You\'re not logged in yet. Please log in first.',
-            );
-          }
-          return ctx;
-        },
+        () => ensureAuth(extra),
         (ctx) =>
           jsonResult({
             walletAddress: ctx.walletAddress,

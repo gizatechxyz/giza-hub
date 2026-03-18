@@ -9,7 +9,7 @@ import {
   confirmationPayload,
 } from '../services/confirmation';
 import { getAgentForSession } from '../services/sdk-factory';
-import { ANNOTATIONS_DESTRUCTIVE, ANNOTATIONS_MUTATING, getBaseUrl } from '../constants';
+import { ANNOTATIONS_DESTRUCTIVE, ANNOTATIONS_MUTATING } from '../constants';
 
 export function registerLifecycleTools(server: McpServer): void {
   server.registerTool(
@@ -36,7 +36,7 @@ export function registerLifecycleTools(server: McpServer): void {
     async ({ chain, token, protocols, txHash, constraints }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = await ensureAuthWithToken(extra, getBaseUrl());
+          const ctx = ensureAuthWithToken(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress, ctx.privyIdToken);
           return agent.activate({
             owner: ctx.walletAddress,
@@ -70,7 +70,7 @@ export function registerLifecycleTools(server: McpServer): void {
     async ({ chain, transfer }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = await ensureAuthWithToken(extra, getBaseUrl());
+          const ctx = ensureAuthWithToken(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress, ctx.privyIdToken);
           const description = transfer !== false
             ? `Stop your Giza agent on ${chainDisplayName(chain)} and return all remaining funds to your wallet`
@@ -104,7 +104,7 @@ export function registerLifecycleTools(server: McpServer): void {
     async ({ chain, txHash }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = await ensureAuthWithToken(extra, getBaseUrl());
+          const ctx = ensureAuthWithToken(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress, ctx.privyIdToken);
           return agent.topUp(txHash);
         },

@@ -8,7 +8,7 @@ import {
   confirmationPayload,
 } from '../services/confirmation';
 import { getAgentForSession } from '../services/sdk-factory';
-import { ANNOTATIONS_DESTRUCTIVE, ANNOTATIONS_READONLY, getBaseUrl } from '../constants';
+import { ANNOTATIONS_DESTRUCTIVE, ANNOTATIONS_READONLY } from '../constants';
 
 export function registerFinancialTools(server: McpServer): void {
   server.registerTool(
@@ -31,7 +31,7 @@ export function registerFinancialTools(server: McpServer): void {
     async ({ chain, amount }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = await ensureAuthWithToken(extra, getBaseUrl());
+          const ctx = ensureAuthWithToken(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress, ctx.privyIdToken);
           const description = amount
             ? `Withdraw ${amount} from your Giza account on ${chainDisplayName(chain)} to your wallet`
@@ -60,7 +60,7 @@ export function registerFinancialTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = await ensureAuth(extra, getBaseUrl());
+          const ctx = ensureAuth(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.status();
         },
@@ -80,7 +80,7 @@ export function registerFinancialTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = await ensureAuth(extra, getBaseUrl());
+          const ctx = ensureAuth(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.fees();
         },
@@ -100,7 +100,7 @@ export function registerFinancialTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = await ensureAuth(extra, getBaseUrl());
+          const ctx = ensureAuth(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.limit(ctx.walletAddress);
         },

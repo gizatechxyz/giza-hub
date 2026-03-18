@@ -4,7 +4,7 @@ import { ensureAuth, ensureAuthWithToken } from '../auth/ensure-auth';
 import { chainSchema, constraintSchema } from '../schemas';
 import { handleToolCall, jsonResult } from '../services/error-handler';
 import { getAgentForSession } from '../services/sdk-factory';
-import { ANNOTATIONS_IDEMPOTENT_MUTATING, ANNOTATIONS_READONLY, getBaseUrl } from '../constants';
+import { ANNOTATIONS_IDEMPOTENT_MUTATING, ANNOTATIONS_READONLY } from '../constants';
 
 export function registerProtocolTools(server: McpServer): void {
   server.registerTool(
@@ -19,7 +19,7 @@ export function registerProtocolTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = await ensureAuth(extra, getBaseUrl());
+          const ctx = ensureAuth(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.protocols();
         },
@@ -45,7 +45,7 @@ export function registerProtocolTools(server: McpServer): void {
     async ({ chain, protocols }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = await ensureAuthWithToken(extra, getBaseUrl());
+          const ctx = ensureAuthWithToken(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress, ctx.privyIdToken);
           await agent.updateProtocols(protocols);
           return { updated: true, protocols };
@@ -66,8 +66,8 @@ export function registerProtocolTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = await ensureAuthWithToken(extra, getBaseUrl());
-          const agent = await getAgentForSession(chain, ctx.walletAddress, ctx.privyIdToken);
+          const ctx = ensureAuth(extra);
+          const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.constraints();
         },
         jsonResult,
@@ -92,7 +92,7 @@ export function registerProtocolTools(server: McpServer): void {
     async ({ chain, constraints }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = await ensureAuthWithToken(extra, getBaseUrl());
+          const ctx = ensureAuthWithToken(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress, ctx.privyIdToken);
           await agent.updateConstraints(constraints);
           return { updated: true, constraints };

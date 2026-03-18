@@ -45,7 +45,7 @@ async function verifyToken(
 }
 
 const wrappedHandler = withMcpAuth(handler, verifyToken, {
-  required: false,
+  required: true,
   resourceMetadataPath: '/.well-known/oauth-protected-resource',
   resourceUrl: getBaseUrl(),
 });

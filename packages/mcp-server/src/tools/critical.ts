@@ -3,7 +3,7 @@ import * as z from 'zod/v4';
 import { ensureAuthWithToken } from '../auth/ensure-auth';
 import { handleToolCall, jsonResult } from '../services/error-handler';
 import { executePendingOperation } from '../services/confirmation';
-import { ANNOTATIONS_DESTRUCTIVE, getBaseUrl } from '../constants';
+import { ANNOTATIONS_DESTRUCTIVE } from '../constants';
 
 export function registerCriticalTools(server: McpServer): void {
   server.registerTool(
@@ -23,7 +23,7 @@ export function registerCriticalTools(server: McpServer): void {
     async ({ confirmationToken }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = await ensureAuthWithToken(extra, getBaseUrl());
+          const ctx = ensureAuthWithToken(extra);
           const { type, result } = await executePendingOperation(
             confirmationToken,
             ctx.walletAddress,

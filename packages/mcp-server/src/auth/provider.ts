@@ -15,8 +15,6 @@ import { verifyPrivyToken } from './privy';
 import {
   buildLoginPageHtml,
   buildLoginCsp,
-  SUCCESS_PAGE_HTML,
-  SUCCESS_CSP,
 } from './authorize-page';
 import {
   ENV_PRIVY_APP_ID,
@@ -26,9 +24,7 @@ import {
   MAX_AUTH_CODES,
 } from '../constants';
 import { RedisAuthStore } from '../utils/redis-auth-store';
-import type { PendingAuthSession, PendingAuthCode, AuthContext } from './types';
-import { completeDeviceSession } from './session-auth-store';
-import { DEVICE_STATE_PREFIX } from '../constants';
+import type { PendingAuthSession, PendingAuthCode } from './types';
 import { securityLogger } from '../utils/security-logger';
 
 export interface AuthorizeResult {
@@ -244,37 +240,6 @@ export class GizaAuthProvider {
 
       const { privyUserId, walletAddress } =
         await verifyPrivyToken(privyIdToken);
-
-      if (stateParam.startsWith(DEVICE_STATE_PREFIX)) {
-        const mcpSessionId = stateParam.slice(DEVICE_STATE_PREFIX.length);
-        if (!mcpSessionId) {
-          return {
-            type: 'error',
-            status: 400,
-            body: { error: 'Invalid device state format' },
-          };
-        }
-        const ctx: AuthContext = {
-          walletAddress,
-          privyUserId,
-          scopes: [...SUPPORTED_SCOPES],
-          clientId: 'device',
-          privyIdToken,
-        };
-        await completeDeviceSession(mcpSessionId, ctx);
-        securityLogger.authSuccess({
-          flow: 'device',
-          sessionId: mcpSessionId,
-        });
-        return {
-          type: 'html',
-          html: SUCCESS_PAGE_HTML,
-          headers: {
-            'Content-Type': 'text/html',
-            'Content-Security-Policy': SUCCESS_CSP,
-          },
-        };
-      }
 
       const session = await this.pendingSessions.get(stateParam);
       if (!session) {

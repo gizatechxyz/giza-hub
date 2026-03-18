@@ -4,7 +4,7 @@ import { ensureAuth } from '../auth/ensure-auth';
 import { chainSchema, paginationSchema } from '../schemas';
 import { handleToolCall, jsonResult } from '../services/error-handler';
 import { getAgentForSession } from '../services/sdk-factory';
-import { ANNOTATIONS_READONLY, getBaseUrl } from '../constants';
+import { ANNOTATIONS_READONLY } from '../constants';
 
 export function registerRewardTools(server: McpServer): void {
   server.registerTool(
@@ -22,7 +22,7 @@ export function registerRewardTools(server: McpServer): void {
     async ({ chain, page, limit, sort }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = await ensureAuth(extra, getBaseUrl());
+          const ctx = ensureAuth(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.rewards({ sort }).page(page ?? 1, { limit });
         },
@@ -45,7 +45,7 @@ export function registerRewardTools(server: McpServer): void {
     async ({ chain, page, limit, sort }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = await ensureAuth(extra, getBaseUrl());
+          const ctx = ensureAuth(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.rewardHistory({ sort }).page(page ?? 1, { limit });
         },
