@@ -66,10 +66,12 @@ function LoginInner(): React.ReactElement {
     if (!ready) return;
 
     if (authenticated) {
+      if (submitted.current) return;
+      submitted.current = true;
       setStatus('Retrieving tokens...');
       Promise.all([getAccessToken(), getIdentityToken()])
         .then(([token, idToken]) => {
-          if (!mounted || submitted.current) return;
+          if (!mounted) return;
           if (!token) {
             setError('Failed to retrieve access token.');
             return;
@@ -78,7 +80,6 @@ function LoginInner(): React.ReactElement {
             setError('Failed to retrieve identity token.');
             return;
           }
-          submitted.current = true;
           const { callbackUrl, state } = window.__GIZA_LOGIN_CONFIG__;
           const form = document.createElement('form');
           form.method = 'POST';
@@ -114,7 +115,7 @@ function LoginInner(): React.ReactElement {
     }
 
     return () => { mounted = false; };
-  }, [ready, authenticated, login, getAccessToken]);
+  }, [ready, authenticated, login]);
 
   return (
     <div style={{
