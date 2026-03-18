@@ -15,6 +15,8 @@ import { verifyPrivyToken } from './privy';
 import {
   buildLoginPageHtml,
   buildLoginCsp,
+  buildSuccessPageHtml,
+  buildSuccessCsp,
 } from './authorize-page';
 import {
   ENV_PRIVY_APP_ID,
@@ -33,7 +35,6 @@ export interface AuthorizeResult {
 }
 
 export type CallbackResult =
-  | { type: 'redirect'; url: string }
   | { type: 'html'; html: string; headers: Record<string, string> }
   | { type: 'error'; status: number; body: { error: string } };
 
@@ -292,7 +293,14 @@ export class GizaAuthProvider {
         flow: 'oauth',
         clientId: session.clientId,
       });
-      return { type: 'redirect', url: redirectUrl.toString() };
+      return {
+        type: 'html',
+        html: buildSuccessPageHtml(redirectUrl.toString()),
+        headers: {
+          'Content-Type': 'text/html',
+          'Content-Security-Policy': buildSuccessCsp(redirectUrl.toString()),
+        },
+      };
     } catch (error) {
       securityLogger.authFailure({
         reason:

@@ -85,11 +85,14 @@ async function getAuthCode(
     state: sessionId,
   });
 
-  if (callbackResult.type !== 'redirect') {
-    throw new Error(`Expected redirect, got ${callbackResult.type}`);
+  if (callbackResult.type !== 'html') {
+    throw new Error(`Expected html, got ${callbackResult.type}`);
   }
 
-  const url = new URL(callbackResult.url);
+  const iframeSrcMatch = callbackResult.html.match(/iframe[^>]+src="([^"]+)"/);
+  if (!iframeSrcMatch) throw new Error('No iframe src found in success page');
+  const redirectUrl = iframeSrcMatch[1]!.replace(/&amp;/g, '&').replace(/&quot;/g, '"');
+  const url = new URL(redirectUrl);
   return url.searchParams.get('code')!;
 }
 

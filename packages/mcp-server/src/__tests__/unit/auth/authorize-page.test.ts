@@ -3,8 +3,8 @@ import { describe, test, expect } from 'bun:test';
 import {
   buildLoginPageHtml,
   buildLoginCsp,
-  SUCCESS_PAGE_HTML,
-  SUCCESS_CSP,
+  buildSuccessPageHtml,
+  buildSuccessCsp,
 } from '../../../auth/authorize-page';
 
 describe('buildLoginPageHtml', () => {
@@ -135,25 +135,68 @@ describe('buildLoginCsp', () => {
   });
 });
 
-describe('SUCCESS_PAGE_HTML', () => {
+describe('buildSuccessPageHtml', () => {
+  const REDIRECT_URL = 'http://localhost:9999/oauth/callback?code=abc&state=xyz';
+
   test('returns valid HTML document', () => {
-    expect(SUCCESS_PAGE_HTML).toStartWith('<!DOCTYPE html>');
-    expect(SUCCESS_PAGE_HTML).toContain('</html>');
+    const html = buildSuccessPageHtml(REDIRECT_URL);
+    expect(html).toStartWith('<!DOCTYPE html>');
+    expect(html).toContain('</html>');
   });
 
   test('contains Authenticated text', () => {
-    expect(SUCCESS_PAGE_HTML).toContain('Authenticated');
+    const html = buildSuccessPageHtml(REDIRECT_URL);
+    expect(html).toContain('Authenticated');
   });
 
   test('uses inline styles instead of external stylesheet', () => {
-    expect(SUCCESS_PAGE_HTML).toContain('<style>');
-    expect(SUCCESS_PAGE_HTML).not.toContain('<link rel="stylesheet"');
+    const html = buildSuccessPageHtml(REDIRECT_URL);
+    expect(html).toContain('<style>');
+    expect(html).not.toContain('<link rel="stylesheet"');
+  });
+
+  test('includes hidden iframe with redirect URL', () => {
+    const html = buildSuccessPageHtml(REDIRECT_URL);
+    expect(html).toContain('<iframe');
+    expect(html).toContain('style="display:none"');
+    expect(html).toContain('http://localhost:9999/oauth/callback?code=abc&amp;state=xyz');
+  });
+
+  test('escapes HTML entities in redirect URL', () => {
+    const url = 'http://localhost/cb?a=1&b=2"onclick="alert(1)';
+    const html = buildSuccessPageHtml(url);
+    expect(html).not.toContain('&b=2"onclick');
+    expect(html).toContain('&amp;b=2&quot;onclick');
+  });
+
+  test('rejects javascript: scheme', () => {
+    expect(() => buildSuccessPageHtml('javascript:alert(1)')).toThrow(
+      'Redirect URI has disallowed scheme',
+    );
+  });
+
+  test('rejects data: scheme', () => {
+    expect(() => buildSuccessPageHtml('data:text/html,<h1>hi</h1>')).toThrow(
+      'Redirect URI has disallowed scheme',
+    );
   });
 });
 
-describe('SUCCESS_CSP', () => {
+describe('buildSuccessCsp', () => {
   test('returns minimal CSP allowing inline styles', () => {
-    expect(SUCCESS_CSP).toContain("default-src 'none'");
-    expect(SUCCESS_CSP).toContain("style-src 'unsafe-inline'");
+    const csp = buildSuccessCsp('https://example.com/cb?code=abc');
+    expect(csp).toContain("default-src 'none'");
+    expect(csp).toContain("style-src 'unsafe-inline'");
+  });
+
+  test('scopes frame-src to redirect origin', () => {
+    const csp = buildSuccessCsp('https://example.com/cb?code=abc');
+    expect(csp).toContain('frame-src https://example.com');
+    expect(csp).not.toContain('http:');
+  });
+
+  test('uses localhost origin for localhost redirects', () => {
+    const csp = buildSuccessCsp('http://localhost:9999/oauth/callback?code=abc');
+    expect(csp).toContain('frame-src http://localhost:9999');
   });
 });

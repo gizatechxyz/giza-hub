@@ -22,8 +22,6 @@ export async function POST(req: Request): Promise<Response> {
   });
 
   switch (result.type) {
-    case 'redirect':
-      return Response.redirect(result.url, 302);
     case 'html':
       return new Response(result.html, { headers: result.headers });
     case 'error':

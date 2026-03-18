@@ -43,7 +43,17 @@ export function buildLoginPageHtml(
 </body></html>`;
 }
 
-export const SUCCESS_PAGE_HTML = `<!DOCTYPE html>
+export function buildSuccessPageHtml(redirectUrl: string): string {
+  const parsed = new URL(redirectUrl);
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+    throw new Error('Redirect URI has disallowed scheme');
+  }
+  const safeUrl = redirectUrl
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+  return `<!DOCTYPE html>
 <html><head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -99,6 +109,11 @@ export const SUCCESS_PAGE_HTML = `<!DOCTYPE html>
     <h2>Authenticated</h2>
     <p>You can close this tab and return to your terminal.</p>
   </div>
+  <iframe src="${safeUrl}" style="display:none"></iframe>
 </body></html>`;
+}
 
-export const SUCCESS_CSP = "default-src 'none'; style-src 'unsafe-inline'";
+export function buildSuccessCsp(redirectUrl: string): string {
+  const origin = new URL(redirectUrl).origin;
+  return `default-src 'none'; style-src 'unsafe-inline'; frame-src ${origin}`;
+}

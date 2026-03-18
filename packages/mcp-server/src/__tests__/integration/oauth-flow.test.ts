@@ -104,10 +104,13 @@ describe('Full OAuth PKCE flow', () => {
       state: sessionId,
     });
 
-    expect(callbackResult.type).toBe('redirect');
-    if (callbackResult.type !== 'redirect') throw new Error('Expected redirect');
+    expect(callbackResult.type).toBe('html');
+    if (callbackResult.type !== 'html') throw new Error('Expected html');
 
-    const redirectUrl = new URL(callbackResult.url);
+    const iframeSrcMatch = callbackResult.html.match(/iframe[^>]+src="([^"]+)"/);
+    expect(iframeSrcMatch).toBeTruthy();
+    const iframeSrc = iframeSrcMatch![1]!.replace(/&amp;/g, '&').replace(/&quot;/g, '"');
+    const redirectUrl = new URL(iframeSrc);
     const authCode = redirectUrl.searchParams.get('code')!;
     expect(authCode).toBeTypeOf('string');
     expect(redirectUrl.searchParams.get('state')).toBe(
