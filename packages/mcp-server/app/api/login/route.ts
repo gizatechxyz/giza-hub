@@ -7,6 +7,11 @@ import {
 } from '../../../src/constants';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const COOP_HEADER = { 'Cross-Origin-Opener-Policy': 'same-origin-allow-popups' } as const;
+
+export function HEAD(): Response {
+  return new Response(null, { status: 200, headers: COOP_HEADER });
+}
 
 export async function GET(req: Request): Promise<Response> {
   const url = new URL(req.url);
@@ -47,6 +52,7 @@ export async function GET(req: Request): Promise<Response> {
     headers: {
       'Content-Type': 'text/html',
       'Content-Security-Policy': buildLoginCsp(nonce),
+      ...COOP_HEADER,
     },
   });
 }
