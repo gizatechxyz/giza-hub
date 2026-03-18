@@ -195,7 +195,6 @@ export class GizaAuthProvider {
   }
 
   async handlePrivyCallback(input: {
-    privyToken?: string;
     privyIdToken?: string;
     state?: string;
   }): Promise<CallbackResult> {

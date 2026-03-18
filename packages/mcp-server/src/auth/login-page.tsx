@@ -54,7 +54,7 @@ function addHiddenInput(
 }
 
 function LoginInner(): React.ReactElement {
-  const { ready, authenticated, login, getAccessToken } = usePrivy();
+  const { ready, authenticated, login } = usePrivy();
   const [status, setStatus] = useState('Initializing...');
   const [error, setError] = useState<string | null>(null);
   const loginTriggered = useRef(false);
@@ -69,13 +69,9 @@ function LoginInner(): React.ReactElement {
       if (submitted.current) return;
       submitted.current = true;
       setStatus('Retrieving tokens...');
-      Promise.all([getAccessToken(), getIdentityToken()])
-        .then(([token, idToken]) => {
+      getIdentityToken()
+        .then((idToken) => {
           if (!mounted) return;
-          if (!token) {
-            setError('Failed to retrieve access token.');
-            return;
-          }
           if (!idToken) {
             setError('Failed to retrieve identity token.');
             return;
@@ -84,7 +80,6 @@ function LoginInner(): React.ReactElement {
           const form = document.createElement('form');
           form.method = 'POST';
           form.action = callbackUrl;
-          addHiddenInput(form, 'privy_token', token);
           addHiddenInput(form, 'privy_id_token', idToken);
           addHiddenInput(form, 'state', state);
           document.body.appendChild(form);
