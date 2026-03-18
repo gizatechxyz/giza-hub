@@ -59,8 +59,8 @@ Connect any MCP-compatible client (Claude Desktop, Claude Code, Cursor) to the h
 {
   "mcpServers": {
     "giza": {
-      "type": "http",
-      "url": "https://mcp.gizatech.xyz/api/mcp"
+      "type": "sse",
+      "url": "https://mcp.gizatech.xyz/api/sse"
     }
   }
 }

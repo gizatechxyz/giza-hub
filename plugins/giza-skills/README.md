@@ -32,7 +32,7 @@ claude --plugin-dir ./plugins/giza-skills
 
 ## What's Included
 
-This plugin bundles both the Giza MCP server and a single comprehensive skill. When installed, the MCP server at `https://mcp.gizatech.xyz/api/mcp` is automatically registered.
+This plugin bundles both the Giza MCP server and a single comprehensive skill. When installed, the MCP server at `https://mcp.gizatech.xyz/api/sse` is automatically registered.
 
 The `giza` skill covers:
 - **Onboarding** -- guided account setup: login, create account, deposit, activate
