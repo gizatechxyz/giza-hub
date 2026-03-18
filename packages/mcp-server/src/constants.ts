@@ -23,6 +23,8 @@ export const MAX_AUTH_CODES = 5_000;
 export const MAX_SESSION_AUTH_ENTRIES = 10_000;
 export const MAX_PENDING_OPERATIONS = 5_000;
 export const MAX_PENDING_DEVICES = 10_000;
+export const CLIENT_REGISTRATION_TTL_SEC = 604_800;
+export const MAX_REGISTERED_CLIENTS = 10_000;
 
 export const ANNOTATIONS_READONLY = {
   readOnlyHint: true,

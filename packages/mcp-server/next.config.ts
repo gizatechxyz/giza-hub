@@ -48,6 +48,9 @@ const nextConfig: NextConfig = {
       },
       { source: '/api/:path*', headers: corsHeaders },
       { source: '/.well-known/:path*', headers: corsHeaders },
+      { source: '/authorize', headers: corsHeaders },
+      { source: '/token', headers: corsHeaders },
+      { source: '/register', headers: corsHeaders },
     ];
   },
 };

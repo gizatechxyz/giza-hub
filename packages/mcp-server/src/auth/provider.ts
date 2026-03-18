@@ -1,10 +1,11 @@
+import { createHash, timingSafeEqual } from 'node:crypto';
 import type { OAuthRegisteredClientsStore } from '@modelcontextprotocol/sdk/server/auth/clients.js';
 import type {
   OAuthClientInformationFull,
   OAuthTokens,
 } from '@modelcontextprotocol/sdk/shared/auth.js';
 import type { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js';
-import { InMemoryClientsStore } from './clients-store';
+import { RedisClientsStore } from './redis-clients-store';
 import {
   createTokenPair,
   verifyAccessToken,
@@ -62,7 +63,7 @@ export interface AuthorizationParams {
 
 export class GizaAuthProvider {
   readonly clientsStore: OAuthRegisteredClientsStore =
-    new InMemoryClientsStore();
+    new RedisClientsStore();
 
   private pendingSessions = new RedisAuthStore<PendingAuthSession>(
     'giza:pending:',
@@ -144,8 +145,40 @@ export class GizaAuthProvider {
   async exchangeAuthorizationCode(
     client: OAuthClientInformationFull,
     authorizationCode: string,
+    redirectUri?: string,
   ): Promise<OAuthTokens> {
     const pending = await this.getValidCode(client, authorizationCode);
+    return this.exchangeValidCode(pending, authorizationCode, redirectUri);
+  }
+
+  async verifyPkceAndExchange(
+    client: OAuthClientInformationFull,
+    authorizationCode: string,
+    codeVerifier: string,
+    redirectUri?: string,
+  ): Promise<OAuthTokens> {
+    const pending = await this.getValidCode(client, authorizationCode);
+
+    const expected = createHash('sha256')
+      .update(codeVerifier)
+      .digest('base64url');
+    const a = Buffer.from(expected);
+    const b = Buffer.from(pending.codeChallenge);
+    if (a.length !== b.length || !timingSafeEqual(a, b)) {
+      throw new Error('PKCE verification failed');
+    }
+
+    return this.exchangeValidCode(pending, authorizationCode, redirectUri);
+  }
+
+  private async exchangeValidCode(
+    pending: PendingAuthCode,
+    authorizationCode: string,
+    redirectUri?: string,
+  ): Promise<OAuthTokens> {
+    if (redirectUri && redirectUri !== pending.redirectUri) {
+      throw new Error('Redirect URI mismatch');
+    }
 
     if (Date.now() - pending.createdAt > AUTH_CODE_TTL_MS) {
       await this.codes.delete(authorizationCode);

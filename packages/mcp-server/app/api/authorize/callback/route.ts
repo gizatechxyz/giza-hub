@@ -1,7 +1,4 @@
-import { GizaAuthProvider } from '../../../../src/auth/provider';
-import { getBaseUrl } from '../../../../src/constants';
-
-const provider = new GizaAuthProvider(getBaseUrl());
+import { provider } from '../../../../src/auth/provider-singleton';
 
 export async function POST(req: Request): Promise<Response> {
   const contentType = req.headers.get('content-type') ?? '';

@@ -225,6 +225,34 @@ describe('GizaAuthProvider', () => {
         provider.exchangeAuthorizationCode(otherClient, code),
       ).rejects.toThrow('Authorization code was not issued to this client');
     });
+
+    test('accepts matching redirectUri', async () => {
+      const { code } = await runAuthFlow(provider, {
+        redirectUri: 'http://localhost/callback',
+      });
+
+      const tokens = await provider.exchangeAuthorizationCode(
+        mockClient,
+        code,
+        'http://localhost/callback',
+      );
+
+      expect(tokens.access_token).toBeTypeOf('string');
+    });
+
+    test('rejects mismatched redirectUri', async () => {
+      const { code } = await runAuthFlow(provider, {
+        redirectUri: 'http://localhost/callback',
+      });
+
+      await expect(
+        provider.exchangeAuthorizationCode(
+          mockClient,
+          code,
+          'http://evil.example.com/steal',
+        ),
+      ).rejects.toThrow('Redirect URI mismatch');
+    });
   });
 
   describe('exchangeRefreshToken', () => {
