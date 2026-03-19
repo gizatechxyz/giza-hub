@@ -122,7 +122,7 @@ describe('monitoring tools', () => {
 
       const result = await server.invokeTool(
         'giza_get_apr_by_tokens',
-        { chain: 8453 },
+        { chain: 8453, tokenPrice: 1 },
         buildExtra(),
       );
 
@@ -137,7 +137,7 @@ describe('monitoring tools', () => {
 
       const result = await server.invokeTool(
         'giza_get_apr_by_tokens',
-        { chain: 8453 },
+        { chain: 8453, tokenPrice: 1 },
         buildUnauthExtra(),
       );
 

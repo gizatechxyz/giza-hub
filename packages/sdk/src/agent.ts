@@ -169,14 +169,21 @@ export class Agent {
     return this.httpClient.get<WalletAprResponse>(url);
   }
 
-  async aprByTokens(period?: Period): Promise<AprByTokenResponse> {
+  async aprByTokens(
+    tokenPrice: number,
+    period?: Period,
+  ): Promise<AprByTokenResponse> {
+    if (!Number.isFinite(tokenPrice) || tokenPrice <= 0) {
+      throw new ValidationError(
+        'tokenPrice must be a positive finite number',
+      );
+    }
     const params = new URLSearchParams();
+    params.append('token_price', String(tokenPrice));
     if (period) params.append('period', period);
 
-    const qs = params.toString();
     const url =
-      `/api/v1/${this.chain}/wallets/${this.wallet}/apr/tokens` +
-      (qs ? `?${qs}` : '');
+      `/api/v1/${this.chain}/wallets/${this.wallet}/apr/tokens?${params}`;
 
     return this.httpClient.get<AprByTokenResponse>(url);
   }

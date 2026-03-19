@@ -96,6 +96,11 @@ export function registerMonitoringTools(server: McpServer): void {
         'Get your return rate broken down by token.',
       inputSchema: z.object({
         chain: chainSchema,
+        tokenPrice: z
+          .number()
+          .positive()
+          .finite()
+          .describe('Current token price in USD (e.g. 1 for stablecoins)'),
         period: z
           .nativeEnum(Period)
           .optional()
@@ -103,12 +108,12 @@ export function registerMonitoringTools(server: McpServer): void {
       }),
       annotations: ANNOTATIONS_READONLY,
     },
-    async ({ chain, period }, extra) =>
+    async ({ chain, tokenPrice, period }, extra) =>
       handleToolCall(
         async () => {
           const ctx = ensureAuth(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
-          return agent.aprByTokens(period);
+          return agent.aprByTokens(tokenPrice, period);
         },
         jsonResult,
       ),
