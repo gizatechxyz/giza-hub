@@ -1,6 +1,8 @@
 import { describe, test, expect, mock } from 'bun:test';
+import { Chain } from '@gizatech/agent-sdk';
 import { createTestServer } from '../../helpers/mock-server';
 import { createMockGiza } from '../../helpers/mock-sdk';
+import { SUPPORTED_CHAINS } from '../../../constants';
 
 const mockGiza = createMockGiza();
 
@@ -27,6 +29,22 @@ describe('discovery tools', () => {
       expect(result.isError).toBeUndefined();
       const parsed = JSON.parse(result.content[0].text);
       expect(parsed).toBeDefined();
+    });
+
+    test('filters to supported chains only', async () => {
+      const server = createTestServer();
+      registerDiscoveryTools(server as any);
+
+      const result = await server.invokeTool('giza_list_chains', {}, {});
+      const parsed = JSON.parse(result.content[0].text);
+
+      expect(parsed).toHaveLength(SUPPORTED_CHAINS.size);
+      const chainIds = parsed.map((c: any) => c.chainId);
+      expect(chainIds).toContain(Chain.BASE);
+      expect(chainIds).toContain(Chain.ARBITRUM);
+      expect(chainIds).toContain(Chain.PLASMA);
+      expect(chainIds).not.toContain(Chain.ETHEREUM);
+      expect(chainIds).not.toContain(Chain.POLYGON);
     });
   });
 

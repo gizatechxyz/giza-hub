@@ -6,7 +6,7 @@ import {
   getDefaultGizaClient,
   getGizaClient,
 } from '../services/sdk-factory';
-import { ANNOTATIONS_READONLY } from '../constants';
+import { ANNOTATIONS_READONLY, SUPPORTED_CHAINS } from '../constants';
 import { handleToolCall, jsonResult } from '../services/error-handler';
 
 export function registerDiscoveryTools(server: McpServer): void {
@@ -23,7 +23,10 @@ export function registerDiscoveryTools(server: McpServer): void {
       return handleToolCall(
         () => getDefaultGizaClient().chains(),
         (result) => {
-          const enriched = result.chain_ids.map((chainId: number) => ({
+          const filtered = result.chain_ids.filter((id: number) =>
+            SUPPORTED_CHAINS.has(id),
+          );
+          const enriched = filtered.map((chainId: number) => ({
             chainId,
             name: chainDisplayName(chainId),
           }));

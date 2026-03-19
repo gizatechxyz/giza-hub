@@ -1,3 +1,5 @@
+import { Chain } from '@gizatech/agent-sdk';
+
 export const SERVER_NAME = 'giza-mcp-server';
 export const SERVER_VERSION = '0.1.2';
 export const DEFAULT_PORT = 3000;
@@ -20,6 +22,12 @@ export const MAX_AUTH_CODES = 5_000;
 export const MAX_PENDING_OPERATIONS = 5_000;
 export const CLIENT_REGISTRATION_TTL_SEC = 604_800;
 export const MAX_REGISTERED_CLIENTS = 10_000;
+
+export const SUPPORTED_CHAINS: ReadonlySet<number> = new Set([
+  Chain.BASE,
+  Chain.ARBITRUM,
+  Chain.PLASMA,
+]);
 
 export const ANNOTATIONS_READONLY = {
   readOnlyHint: true,
@@ -48,7 +56,6 @@ SUPPORTED NETWORKS & TOKENS:
 - Base (default): USDC — includes Giza Rewards with a 15% minimum APR target
 - Arbitrum: USDC
 - Plasma: USDT0
-- HyperEVM: USDT0
 Default to Base if the user doesn't specify a network.
 
 TONE: Start with simple, non-technical language. If the user uses technical terms (chain IDs, smart contracts, APR vs APY), match their level. Say "account" not "smart account", "network" not "chain", unless the user prefers technical terms.
