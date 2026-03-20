@@ -19,7 +19,7 @@ export function registerProtocolTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = ensureAuth(extra);
+          const ctx = await ensureAuth(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.protocols();
         },
@@ -45,7 +45,7 @@ export function registerProtocolTools(server: McpServer): void {
     async ({ chain, protocols }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = ensureAuthWithToken(extra);
+          const ctx = await ensureAuthWithToken(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress, ctx.privyIdToken);
           await agent.updateProtocols(protocols);
           return { updated: true, protocols };
@@ -66,7 +66,7 @@ export function registerProtocolTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = ensureAuth(extra);
+          const ctx = await ensureAuth(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.constraints();
         },
@@ -92,7 +92,7 @@ export function registerProtocolTools(server: McpServer): void {
     async ({ chain, constraints }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = ensureAuthWithToken(extra);
+          const ctx = await ensureAuthWithToken(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress, ctx.privyIdToken);
           await agent.updateConstraints(constraints);
           return { updated: true, constraints };

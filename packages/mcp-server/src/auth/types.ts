@@ -28,6 +28,7 @@ export interface GizaTokenClaims {
   scopes: string[];
   privyIdToken?: string;
   type?: 'refresh';
+  iat?: number;
 }
 
 export interface AuthContext {
@@ -36,6 +37,7 @@ export interface AuthContext {
   scopes: string[];
   clientId: string;
   privyIdToken?: string;
+  tokenIssuedAt?: number;
 }
 
 const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
@@ -52,7 +54,7 @@ export function extractAuthContext(
 ): AuthContext | undefined {
   if (!authInfo?.extra) return undefined;
 
-  const { wallet, privyUserId, privyIdToken } = authInfo.extra as Record<
+  const { wallet, privyUserId, privyIdToken, tokenIssuedAt } = authInfo.extra as Record<
     string,
     unknown
   >;
@@ -67,5 +69,6 @@ export function extractAuthContext(
     clientId: authInfo.clientId,
     privyIdToken:
       typeof privyIdToken === 'string' ? privyIdToken : undefined,
+    tokenIssuedAt: typeof tokenIssuedAt === 'number' ? tokenIssuedAt : undefined,
   };
 }

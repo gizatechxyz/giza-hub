@@ -19,7 +19,7 @@ export function registerAgentManagementTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = ensureAuth(extra);
+          const ctx = await ensureAuth(extra);
           const giza = getGizaClient(chain);
           return giza.createAgent(ctx.walletAddress);
         },
@@ -39,7 +39,7 @@ export function registerAgentManagementTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = ensureAuth(extra);
+          const ctx = await ensureAuth(extra);
           const giza = getGizaClient(chain);
           return giza.getAgent(ctx.walletAddress);
         },
@@ -59,7 +59,7 @@ export function registerAgentManagementTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = ensureAuth(extra);
+          const ctx = await ensureAuth(extra);
           const giza = getGizaClient(chain);
           return giza.getSmartAccount(ctx.walletAddress);
         },

@@ -122,6 +122,16 @@ export async function revokeUserSessions(userId: string): Promise<void> {
   await revokedSessions.set(userId, now);
 }
 
+export async function checkRevocation(
+  userId: string,
+  issuedAt: number | undefined,
+): Promise<void> {
+  const revokedAt = await revokedSessions.get(userId);
+  if (revokedAt !== undefined && (issuedAt === undefined || issuedAt <= revokedAt)) {
+    throw new Error('Session revoked. Please log in again.');
+  }
+}
+
 async function decodeToken(
   token: string,
 ): Promise<GizaTokenClaims & jose.JWTPayload> {
@@ -134,10 +144,6 @@ async function decodeToken(
   const claims = payload as unknown as GizaTokenClaims & jose.JWTPayload;
   if (!claims.sub) {
     throw new Error('JWT missing subject claim');
-  }
-  const revokedAt = await revokedSessions.get(claims.sub);
-  if (revokedAt !== undefined && (claims.iat === undefined || claims.iat <= revokedAt)) {
-    throw new Error('Session revoked. Please log in again.');
   }
   return claims;
 }
@@ -157,6 +163,7 @@ export async function verifyAccessToken(token: string): Promise<AuthInfo> {
       wallet: claims.wallet,
       privyUserId: claims.sub,
       privyIdToken: claims.privyIdToken,
+      tokenIssuedAt: claims.iat,
     },
   };
 }
@@ -175,6 +182,7 @@ export async function verifyRefreshToken(
     clientId: claims.clientId,
     scopes: claims.scopes,
     privyIdToken: claims.privyIdToken,
+    iat: claims.iat,
     type: 'refresh',
   };
 }

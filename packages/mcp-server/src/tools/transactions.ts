@@ -22,7 +22,7 @@ export function registerTransactionTools(server: McpServer): void {
     async ({ chain, page, limit, sort }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = ensureAuth(extra);
+          const ctx = await ensureAuth(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.transactions({ sort }).page(page ?? 1, { limit });
         },
@@ -45,7 +45,7 @@ export function registerTransactionTools(server: McpServer): void {
     async ({ chain, page, limit, sort }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = ensureAuth(extra);
+          const ctx = await ensureAuth(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.executions({ sort }).page(page ?? 1, { limit });
         },
@@ -69,7 +69,7 @@ export function registerTransactionTools(server: McpServer): void {
     async ({ chain, executionId, page, limit, sort }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = ensureAuth(extra);
+          const ctx = await ensureAuth(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent
             .executionLogs(executionId, { sort })
@@ -94,7 +94,7 @@ export function registerTransactionTools(server: McpServer): void {
     async ({ chain, page, limit, sort }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = ensureAuth(extra);
+          const ctx = await ensureAuth(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.logs({ sort }).page(page ?? 1, { limit });
         },

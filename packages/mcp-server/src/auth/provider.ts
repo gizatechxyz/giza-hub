@@ -10,6 +10,7 @@ import {
   createTokenPair,
   verifyAccessToken,
   verifyRefreshToken,
+  checkRevocation,
 } from './session';
 import { verifyPrivyToken } from './privy';
 import {
@@ -201,6 +202,7 @@ export class GizaAuthProvider {
     scopes?: string[],
   ): Promise<OAuthTokens> {
     const claims = await verifyRefreshToken(refreshToken);
+    await checkRevocation(claims.sub, claims.iat);
     if (scopes) {
       const allowed = new Set(claims.scopes);
       const invalid = scopes.filter((s) => !allowed.has(s));

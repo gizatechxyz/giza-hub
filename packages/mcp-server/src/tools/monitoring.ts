@@ -20,7 +20,7 @@ export function registerMonitoringTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = ensureAuth(extra);
+          const ctx = await ensureAuth(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.portfolio();
         },
@@ -46,7 +46,7 @@ export function registerMonitoringTools(server: McpServer): void {
     async ({ chain, from }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = ensureAuth(extra);
+          const ctx = await ensureAuth(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.performance({ from });
         },
@@ -80,7 +80,7 @@ export function registerMonitoringTools(server: McpServer): void {
     async ({ chain, startDate, endDate, useExactEndDate }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = ensureAuth(extra);
+          const ctx = await ensureAuth(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.apr({ startDate, endDate, useExactEndDate });
         },
@@ -111,7 +111,7 @@ export function registerMonitoringTools(server: McpServer): void {
     async ({ chain, tokenPrice, period }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = ensureAuth(extra);
+          const ctx = await ensureAuth(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.aprByTokens(tokenPrice, period);
         },
@@ -131,7 +131,7 @@ export function registerMonitoringTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = ensureAuth(extra);
+          const ctx = await ensureAuth(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.deposits();
         },

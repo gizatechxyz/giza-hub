@@ -22,7 +22,7 @@ export function registerRewardTools(server: McpServer): void {
     async ({ chain, page, limit, sort }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = ensureAuth(extra);
+          const ctx = await ensureAuth(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.rewards({ sort }).page(page ?? 1, { limit });
         },
@@ -45,7 +45,7 @@ export function registerRewardTools(server: McpServer): void {
     async ({ chain, page, limit, sort }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = ensureAuth(extra);
+          const ctx = await ensureAuth(extra);
           const agent = await getAgentForSession(chain, ctx.walletAddress);
           return agent.rewardHistory({ sort }).page(page ?? 1, { limit });
         },

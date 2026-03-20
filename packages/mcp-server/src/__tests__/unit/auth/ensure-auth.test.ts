@@ -25,7 +25,7 @@ function validAuthInfo(overrides?: { privyIdToken?: string }) {
   return {
     extra: {
       wallet: WALLET,
-      privyUserId: 'privy:123',
+      privyUserId: 'privy:ensure-auth-test',
       privyIdToken: overrides?.privyIdToken,
     },
     scopes: ['mcp:tools'],
@@ -38,13 +38,14 @@ describe('checkAuth', () => {
     const result = checkAuth(
       makeExtra(validAuthInfo({ privyIdToken: 'token-abc' })),
     );
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       walletAddress: WALLET,
-      privyUserId: 'privy:123',
+      privyUserId: 'privy:ensure-auth-test',
       scopes: ['mcp:tools'],
       clientId: 'client-1',
       privyIdToken: 'token-abc',
     });
+    expect(result!.tokenIssuedAt).toBeUndefined();
   });
 
   it('returns null when no authInfo', () => {
@@ -54,27 +55,27 @@ describe('checkAuth', () => {
 });
 
 describe('ensureAuth', () => {
-  it('returns AuthContext when authenticated', () => {
-    const result = ensureAuth(makeExtra(validAuthInfo()));
+  it('returns AuthContext when authenticated', async () => {
+    const result = await ensureAuth(makeExtra(validAuthInfo()));
     expect(result.walletAddress).toBe(WALLET);
   });
 
-  it('throws when unauthenticated', () => {
-    expect(() => ensureAuth(makeExtra())).toThrow('Not authenticated');
+  it('throws when unauthenticated', async () => {
+    await expect(ensureAuth(makeExtra())).rejects.toThrow('Not authenticated');
   });
 });
 
 describe('ensureAuthWithToken', () => {
-  it('returns AuthContext when privyIdToken is present', () => {
-    const result = ensureAuthWithToken(
+  it('returns AuthContext when privyIdToken is present', async () => {
+    const result = await ensureAuthWithToken(
       makeExtra(validAuthInfo({ privyIdToken: 'token-abc' })),
     );
     expect(result.privyIdToken).toBe('token-abc');
   });
 
-  it('throws when privyIdToken is absent', () => {
-    expect(() =>
+  it('throws when privyIdToken is absent', async () => {
+    await expect(
       ensureAuthWithToken(makeExtra(validAuthInfo())),
-    ).toThrow('Session does not include an identity token');
+    ).rejects.toThrow('Session does not include an identity token');
   });
 });

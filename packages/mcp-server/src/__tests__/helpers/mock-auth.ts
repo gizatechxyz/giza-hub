@@ -30,6 +30,7 @@ export function buildAuthInfo(
       wallet: TEST_WALLET,
       privyUserId: TEST_PRIVY_USER,
       privyIdToken: TEST_PRIVY_ID_TOKEN,
+      tokenIssuedAt: Math.floor(Date.now() / 1000),
     },
     ...overrides,
   };

@@ -23,7 +23,7 @@ export function registerCriticalTools(server: McpServer): void {
     async ({ confirmationToken }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = ensureAuthWithToken(extra);
+          const ctx = await ensureAuthWithToken(extra);
           const { type, result } = await executePendingOperation(
             confirmationToken,
             ctx.walletAddress,
