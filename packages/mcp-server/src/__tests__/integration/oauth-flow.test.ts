@@ -1,5 +1,6 @@
 import { describe, test, expect, mock } from 'bun:test';
 import { createHash } from 'node:crypto';
+import { ACCESS_TOKEN_TTL_SEC } from '../../constants';
 
 process.env.PRIVY_APP_ID = 'test-privy-app-id';
 process.env.JWT_SECRET = 'test-secret-that-is-at-least-32-chars-long!!';
@@ -139,7 +140,7 @@ describe('Full OAuth PKCE flow', () => {
     expect(tokens.access_token).toBeTypeOf('string');
     expect(tokens.refresh_token).toBeTypeOf('string');
     expect(tokens.token_type).toBe('Bearer');
-    expect(tokens.expires_in).toBe(3600);
+    expect(tokens.expires_in).toBeLessThanOrEqual(ACCESS_TOKEN_TTL_SEC);
 
     // Step 5: Verify the access token works
     const authInfo = await verifyAccessToken(tokens.access_token);

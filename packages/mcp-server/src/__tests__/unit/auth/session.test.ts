@@ -9,6 +9,7 @@ import {
   verifyAccessToken,
   verifyRefreshToken,
 } from '../../../auth/session';
+import { ACCESS_TOKEN_TTL_SEC } from '../../../constants';
 import {
   TEST_WALLET,
   TEST_PRIVY_USER,
@@ -29,7 +30,7 @@ describe('createTokenPair', () => {
 
     expect(result).toHaveProperty('accessToken');
     expect(result).toHaveProperty('refreshToken');
-    expect(result.expiresIn).toBe(3600);
+    expect(result.expiresIn).toBe(ACCESS_TOKEN_TTL_SEC);
     expect(typeof result.accessToken).toBe('string');
     expect(typeof result.refreshToken).toBe('string');
     expect(result.accessToken.length).toBeGreaterThan(0);
@@ -112,6 +113,16 @@ describe('verifyRefreshToken', () => {
     expect(claims.scopes).toEqual(TEST_SCOPES);
   });
 
+  test('preserves privyIdToken through refresh', async () => {
+    const privyIdToken = 'test-privy-id-token';
+    const { refreshToken } = await createTokenPair({
+      ...TOKEN_INPUT,
+      privyIdToken,
+    });
+    const claims = await verifyRefreshToken(refreshToken);
+    expect(claims.privyIdToken).toBe(privyIdToken);
+  });
+
   test('rejects an access token', async () => {
     const { accessToken } = await createTokenPair(TOKEN_INPUT);
 
@@ -124,5 +135,54 @@ describe('verifyRefreshToken', () => {
     await expect(
       verifyRefreshToken('not-a-real-token'),
     ).rejects.toThrow();
+  });
+});
+
+function buildMinimalJwt(payload: Record<string, unknown>): string {
+  const header = Buffer.from(
+    JSON.stringify({ alg: 'none' }),
+  ).toString('base64url');
+  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  return `${header}.${body}.sig`;
+}
+
+describe('dynamic TTL (getPrivyTokenExp via createTokenPair)', () => {
+  test('caps TTL when Privy token expires before default', async () => {
+    const now = Math.floor(Date.now() / 1000);
+    const privyIdToken = buildMinimalJwt({ exp: now + 1200 }); // 20 min
+    const result = await createTokenPair({
+      ...TOKEN_INPUT,
+      privyIdToken,
+    });
+    // 20min - 5min buffer = 900s max
+    expect(result.expiresIn).toBeLessThanOrEqual(900);
+    expect(result.expiresIn).toBeGreaterThan(0);
+  });
+
+  test('uses default TTL when Privy token has no exp', async () => {
+    const privyIdToken = buildMinimalJwt({ sub: 'user' }); // no exp
+    const result = await createTokenPair({
+      ...TOKEN_INPUT,
+      privyIdToken,
+    });
+    expect(result.expiresIn).toBe(ACCESS_TOKEN_TTL_SEC);
+  });
+
+  test('uses default TTL when privyIdToken is not a valid JWT', async () => {
+    const result = await createTokenPair({
+      ...TOKEN_INPUT,
+      privyIdToken: 'not-a-jwt',
+    });
+    expect(result.expiresIn).toBe(ACCESS_TOKEN_TTL_SEC);
+  });
+
+  test('uses default TTL when Privy token exp is far in the future', async () => {
+    const now = Math.floor(Date.now() / 1000);
+    const privyIdToken = buildMinimalJwt({ exp: now + 7200 }); // 2 hours
+    const result = await createTokenPair({
+      ...TOKEN_INPUT,
+      privyIdToken,
+    });
+    expect(result.expiresIn).toBe(ACCESS_TOKEN_TTL_SEC);
   });
 });

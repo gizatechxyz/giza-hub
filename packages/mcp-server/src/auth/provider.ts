@@ -215,6 +215,7 @@ export class GizaAuthProvider {
       walletAddress: claims.wallet,
       clientId: claims.clientId,
       scopes: effectiveScopes,
+      privyIdToken: claims.privyIdToken,
     });
 
     return toOAuthTokens(pair, effectiveScopes);

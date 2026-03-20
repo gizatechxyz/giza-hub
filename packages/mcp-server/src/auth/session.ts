@@ -5,6 +5,7 @@ import {
   ENV_JWT_SECRET,
   ACCESS_TOKEN_TTL_SEC,
   REFRESH_TOKEN_TTL_SEC,
+  PRIVY_TOKEN_EXP_BUFFER_SEC,
   JWT_ISSUER,
   JWT_AUDIENCE,
 } from '../constants';
@@ -48,8 +49,8 @@ function buildJwt(
   sub: string,
   ttl: number,
   secret: Uint8Array,
+  now: number,
 ): Promise<string> {
-  const now = Math.floor(Date.now() / 1000);
   return new jose.SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(sub)
@@ -61,10 +62,32 @@ function buildJwt(
     .sign(secret);
 }
 
+function getPrivyTokenExp(token: string): number | undefined {
+  try {
+    const { exp } = jose.decodeJwt(token);
+    return typeof exp === 'number' ? exp : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function createTokenPair(
   input: TokenInput,
 ): Promise<TokenPair> {
   const secret = getSecret();
+  const now = Math.floor(Date.now() / 1000);
+
+  let ttl = ACCESS_TOKEN_TTL_SEC;
+  if (input.privyIdToken) {
+    const exp = getPrivyTokenExp(input.privyIdToken);
+    if (exp) {
+      const remaining = exp - now - PRIVY_TOKEN_EXP_BUFFER_SEC;
+      if (remaining > 0) {
+        ttl = Math.min(ttl, remaining);
+      }
+    }
+  }
+
   const basePayload = {
     wallet: input.walletAddress,
     clientId: input.clientId,
@@ -73,16 +96,17 @@ export async function createTokenPair(
   };
 
   const [accessToken, refreshToken] = await Promise.all([
-    buildJwt(basePayload, input.privyUserId, ACCESS_TOKEN_TTL_SEC, secret),
+    buildJwt(basePayload, input.privyUserId, ttl, secret, now),
     buildJwt(
       { ...basePayload, type: 'refresh' },
       input.privyUserId,
       REFRESH_TOKEN_TTL_SEC,
       secret,
+      now,
     ),
   ]);
 
-  return { accessToken, refreshToken, expiresIn: ACCESS_TOKEN_TTL_SEC };
+  return { accessToken, refreshToken, expiresIn: ttl };
 }
 
 async function decodeToken(
@@ -133,6 +157,7 @@ export async function verifyRefreshToken(
     wallet: claims.wallet,
     clientId: claims.clientId,
     scopes: claims.scopes,
+    privyIdToken: claims.privyIdToken,
     type: 'refresh',
   };
 }

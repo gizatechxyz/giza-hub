@@ -1,5 +1,6 @@
 import { describe, test, expect, mock, beforeEach } from 'bun:test';
 import { createHash } from 'node:crypto';
+import { ACCESS_TOKEN_TTL_SEC } from '../../../constants';
 
 process.env.PRIVY_APP_ID = 'test-privy-app-id';
 process.env.JWT_SECRET = 'test-secret-that-is-at-least-32-chars-long!!';
@@ -188,7 +189,7 @@ describe('POST /token', () => {
       expect(body.access_token).toBeTypeOf('string');
       expect(body.refresh_token).toBeTypeOf('string');
       expect(body.token_type).toBe('Bearer');
-      expect(body.expires_in).toBe(3600);
+      expect(body.expires_in).toBeLessThanOrEqual(ACCESS_TOKEN_TTL_SEC);
     });
 
     test('PKCE failure returns 400', async () => {

@@ -1,4 +1,5 @@
 import { describe, test, expect, mock, beforeEach } from 'bun:test';
+import { ACCESS_TOKEN_TTL_SEC } from '../../../constants';
 
 // Set required env vars before importing modules that read them
 process.env.PRIVY_APP_ID = 'test-privy-app-id';
@@ -197,7 +198,7 @@ describe('GizaAuthProvider', () => {
       expect(tokens.access_token.length).toBeGreaterThan(0);
       expect(tokens.refresh_token).toBeTypeOf('string');
       expect(tokens.refresh_token.length).toBeGreaterThan(0);
-      expect(tokens.expires_in).toBe(3600);
+      expect(tokens.expires_in).toBeLessThanOrEqual(ACCESS_TOKEN_TTL_SEC);
       expect(tokens.token_type).toBe('Bearer');
       expect(tokens.scope).toBe('mcp:tools');
     });
@@ -277,7 +278,7 @@ describe('GizaAuthProvider', () => {
       expect(tokens.access_token.length).toBeGreaterThan(0);
       expect(tokens.refresh_token).toBeTypeOf('string');
       expect(tokens.token_type).toBe('Bearer');
-      expect(tokens.expires_in).toBe(3600);
+      expect(tokens.expires_in).toBeLessThanOrEqual(ACCESS_TOKEN_TTL_SEC);
     });
 
     test('rejects scopes exceeding original grant', async () => {
@@ -306,6 +307,49 @@ describe('GizaAuthProvider', () => {
       );
 
       expect(tokens.access_token).toBeTypeOf('string');
+    });
+
+    test('preserves privyIdToken through refresh token exchange', async () => {
+      const privyIdToken = 'test-privy-identity-token';
+      const { code } = await runAuthFlow(provider, { privyIdToken });
+      const initial = await provider.exchangeAuthorizationCode(
+        mockClient,
+        code,
+      );
+
+      const refreshed = await provider.exchangeRefreshToken(
+        mockClient,
+        initial.refresh_token!,
+        TEST_SCOPES,
+      );
+
+      const authInfo = await provider.verifyAccessToken(
+        refreshed.access_token,
+      );
+      expect(
+        (authInfo.extra as Record<string, unknown>).privyIdToken,
+      ).toBe(privyIdToken);
+    });
+
+    test('refreshed access token contains correct wallet and privyUserId', async () => {
+      const { code } = await runAuthFlow(provider);
+      const initial = await provider.exchangeAuthorizationCode(
+        mockClient,
+        code,
+      );
+
+      const refreshed = await provider.exchangeRefreshToken(
+        mockClient,
+        initial.refresh_token!,
+        TEST_SCOPES,
+      );
+
+      const authInfo = await provider.verifyAccessToken(
+        refreshed.access_token,
+      );
+      const extra = authInfo.extra as Record<string, unknown>;
+      expect(extra.wallet).toBe(TEST_WALLET);
+      expect(extra.privyUserId).toBe(TEST_PRIVY_USER);
     });
   });
 
