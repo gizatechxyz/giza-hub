@@ -1,7 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
 import { handleToolCall, jsonResult } from '../services/error-handler';
-import { checkAuth, ensureAuth } from '../auth/ensure-auth';
+import { ensureAuth } from '../auth/ensure-auth';
 import { revokeUserSessions } from '../auth/session';
 import { securityLogger } from '../utils/security-logger';
 import { ANNOTATIONS_IDEMPOTENT_MUTATING, ANNOTATIONS_MUTATING, ANNOTATIONS_READONLY } from '../constants';
@@ -18,11 +18,8 @@ export function registerProtectedTools(server: McpServer): void {
     },
     async (_params, extra) =>
       handleToolCall(
-        () => {
-          const ctx = checkAuth(extra);
-          if (!ctx) {
-            throw new Error('Not authenticated. Please log in and try again.');
-          }
+        async () => {
+          const ctx = await ensureAuth(extra);
           return ctx;
         },
         (ctx) =>

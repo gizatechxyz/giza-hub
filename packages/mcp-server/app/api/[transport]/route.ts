@@ -9,7 +9,8 @@ import {
   getBaseUrl,
 } from '../../../src/constants';
 import { registerAllTools } from '../../../src/server';
-import { verifyAccessToken } from '../../../src/auth/session';
+import { verifyAccessToken, checkRevocation } from '../../../src/auth/session';
+import { extractAuthContext } from '../../../src/auth/types';
 import { securityLogger } from '../../../src/utils/security-logger';
 
 const handler = createMcpHandler(
@@ -35,7 +36,12 @@ async function verifyToken(
 ): Promise<AuthInfo | undefined> {
   if (!bearerToken) return undefined;
   try {
-    return await verifyAccessToken(bearerToken);
+    const authInfo = await verifyAccessToken(bearerToken);
+    const ctx = extractAuthContext(authInfo);
+    if (ctx) {
+      await checkRevocation(ctx.privyUserId, ctx.tokenIssuedAt);
+    }
+    return authInfo;
   } catch (error) {
     securityLogger.authFailure({
       reason: error instanceof Error ? error.message : 'Unknown error',
