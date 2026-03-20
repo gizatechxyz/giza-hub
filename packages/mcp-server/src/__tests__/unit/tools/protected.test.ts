@@ -56,7 +56,6 @@ describe('protected tools', () => {
         extra: {
           wallet: '0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
           privyUserId: 'privy-logout-test-user',
-          privyIdToken: undefined,
         },
       });
 

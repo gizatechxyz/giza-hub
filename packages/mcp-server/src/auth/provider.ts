@@ -11,7 +11,7 @@ import {
   verifyAccessToken,
   verifyRefreshToken,
   checkRevocation,
-  isPrivyTokenExpired,
+  storePrivyToken,
 } from './session';
 import { verifyPrivyToken } from './privy';
 import {
@@ -191,7 +191,6 @@ export class GizaAuthProvider {
       walletAddress: pending.walletAddress,
       clientId: pending.clientId,
       scopes: pending.scopes,
-      privyIdToken: pending.privyIdToken,
     });
 
     return toOAuthTokens(pair, pending.scopes);
@@ -213,17 +212,11 @@ export class GizaAuthProvider {
     }
     const effectiveScopes = scopes ?? claims.scopes;
 
-    const privyIdToken =
-      claims.privyIdToken && !isPrivyTokenExpired(claims.privyIdToken)
-        ? claims.privyIdToken
-        : undefined;
-
     const pair = await createTokenPair({
       privyUserId: claims.sub,
       walletAddress: claims.wallet,
       clientId: claims.clientId,
       scopes: effectiveScopes,
-      privyIdToken,
     });
 
     return toOAuthTokens(pair, effectiveScopes);
@@ -278,7 +271,10 @@ export class GizaAuthProvider {
         };
       }
 
-      await this.pendingSessions.delete(stateParam);
+      await Promise.all([
+        this.pendingSessions.delete(stateParam),
+        storePrivyToken(privyUserId, privyIdToken),
+      ]);
 
       const code = crypto.randomUUID();
       await this.codes.set(code, {
@@ -288,7 +284,6 @@ export class GizaAuthProvider {
         scopes: session.scopes,
         privyUserId,
         walletAddress,
-        privyIdToken,
         createdAt: Date.now(),
       });
 

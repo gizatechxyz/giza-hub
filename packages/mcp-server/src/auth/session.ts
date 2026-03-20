@@ -9,6 +9,8 @@ import {
   JWT_ISSUER,
   JWT_AUDIENCE,
   MAX_REVOKED_SESSIONS,
+  PRIVY_TOKEN_STORE_TTL_SEC,
+  MAX_STORED_PRIVY_TOKENS,
 } from '../constants';
 import { RedisAuthStore } from '../utils/redis-auth-store';
 import type { GizaTokenClaims } from './types';
@@ -38,12 +40,32 @@ const revokedSessions = new RedisAuthStore<number>(
   MAX_REVOKED_SESSIONS,
 );
 
+const privyTokenStore = new RedisAuthStore<string>(
+  'giza:privy-token:',
+  PRIVY_TOKEN_STORE_TTL_SEC,
+  MAX_STORED_PRIVY_TOKENS,
+);
+
+export async function storePrivyToken(
+  userId: string,
+  token: string,
+): Promise<void> {
+  await privyTokenStore.set(userId, token);
+}
+
+export async function getStoredPrivyToken(
+  userId: string,
+): Promise<string | undefined> {
+  const token = await privyTokenStore.get(userId);
+  if (!token || isPrivyTokenExpired(token)) return undefined;
+  return token;
+}
+
 interface TokenInput {
   privyUserId: string;
   walletAddress: Address;
   clientId: string;
   scopes: string[];
-  privyIdToken?: string;
 }
 
 interface TokenPair {
@@ -92,31 +114,14 @@ export async function createTokenPair(
   const secret = getSecret();
   const now = Math.floor(Date.now() / 1000);
 
-  let ttl = ACCESS_TOKEN_TTL_SEC;
-  let effectivePrivyIdToken = input.privyIdToken;
-  if (effectivePrivyIdToken) {
-    const exp = getPrivyTokenExp(effectivePrivyIdToken);
-    if (!exp) {
-      effectivePrivyIdToken = undefined;
-    } else {
-      const remaining = exp - now - PRIVY_TOKEN_EXP_BUFFER_SEC;
-      if (remaining > 0) {
-        ttl = Math.min(ttl, remaining);
-      } else {
-        effectivePrivyIdToken = undefined;
-      }
-    }
-  }
-
   const basePayload = {
     wallet: input.walletAddress,
     clientId: input.clientId,
     scopes: input.scopes,
-    privyIdToken: effectivePrivyIdToken,
   };
 
   const [accessToken, refreshToken] = await Promise.all([
-    buildJwt(basePayload, input.privyUserId, ttl, secret, now),
+    buildJwt(basePayload, input.privyUserId, ACCESS_TOKEN_TTL_SEC, secret, now),
     buildJwt(
       { ...basePayload, type: 'refresh' },
       input.privyUserId,
@@ -126,7 +131,7 @@ export async function createTokenPair(
     ),
   ]);
 
-  return { accessToken, refreshToken, expiresIn: ttl };
+  return { accessToken, refreshToken, expiresIn: ACCESS_TOKEN_TTL_SEC };
 }
 
 export async function revokeUserSessions(userId: string): Promise<void> {
@@ -180,7 +185,6 @@ export async function verifyAccessToken(token: string): Promise<AuthInfo> {
     extra: {
       wallet: claims.wallet,
       privyUserId: claims.sub,
-      privyIdToken: claims.privyIdToken,
       tokenIssuedAt: claims.iat,
     },
   };
@@ -199,7 +203,6 @@ export async function verifyRefreshToken(
     wallet: claims.wallet,
     clientId: claims.clientId,
     scopes: claims.scopes,
-    privyIdToken: claims.privyIdToken,
     iat: claims.iat,
     type: 'refresh',
   };

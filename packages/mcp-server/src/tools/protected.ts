@@ -12,7 +12,7 @@ export function registerProtectedTools(server: McpServer): void {
     {
       title: 'Login',
       description:
-        'Authenticate the user. Returns a login URL if not yet logged in — show it to the user. Call again after they log in. Try this first when any tool fails with an auth error.',
+        'Check authentication status. If not authenticated, the user will be prompted to re-login automatically. Try this first when any tool fails with an auth error.',
       inputSchema: z.object({}),
       annotations: ANNOTATIONS_IDEMPOTENT_MUTATING,
     },

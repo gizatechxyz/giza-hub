@@ -1,4 +1,5 @@
 import type { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js';
+import { storePrivyToken } from '../../auth/session';
 
 export const TEST_WALLET =
   '0x1234567890abcdef1234567890abcdef12345678' as const;
@@ -12,16 +13,14 @@ export function buildTestJwt(payload: Record<string, unknown>): string {
   return `${header}.${body}.sig`;
 }
 
-function makeFakePrivyIdToken(): string {
-  return buildTestJwt({
-    sub: TEST_PRIVY_USER,
-    iss: 'privy.io',
-    exp: Math.floor(Date.now() / 1000) + 3600,
-    iat: Math.floor(Date.now() / 1000),
-  });
-}
+const TEST_PRIVY_ID_TOKEN = buildTestJwt({
+  sub: TEST_PRIVY_USER,
+  iss: 'privy.io',
+  exp: Math.floor(Date.now() / 1000) + 36000,
+  iat: Math.floor(Date.now() / 1000),
+});
 
-export const TEST_PRIVY_ID_TOKEN = makeFakePrivyIdToken();
+await storePrivyToken(TEST_PRIVY_USER, TEST_PRIVY_ID_TOKEN);
 
 export function buildAuthInfo(
   overrides?: Partial<AuthInfo>,
@@ -33,7 +32,6 @@ export function buildAuthInfo(
     extra: {
       wallet: TEST_WALLET,
       privyUserId: TEST_PRIVY_USER,
-      privyIdToken: TEST_PRIVY_ID_TOKEN,
       tokenIssuedAt: Math.floor(Date.now() / 1000),
     },
     ...overrides,

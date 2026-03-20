@@ -1,11 +1,12 @@
 import { describe, test, expect, mock, beforeEach } from 'bun:test';
-import { ACCESS_TOKEN_TTL_SEC, PRIVY_TOKEN_EXP_BUFFER_SEC } from '../../../constants';
+import { ACCESS_TOKEN_TTL_SEC } from '../../../constants';
 
 // Set required env vars before importing modules that read them
 process.env.PRIVY_APP_ID = 'test-privy-app-id';
 process.env.JWT_SECRET = 'test-secret-that-is-at-least-32-chars-long!!';
 
 import { buildTestJwt } from '../../helpers/mock-auth';
+import { getStoredPrivyToken } from '../../../auth/session';
 
 const TEST_WALLET = '0x1234567890abcdef1234567890abcdef12345678';
 const TEST_PRIVY_USER = 'privy-user-123';
@@ -134,6 +135,15 @@ describe('GizaAuthProvider', () => {
       expect(redirectUrl).toContain('state=oauth-state-456');
     });
 
+    test('stores Privy token in Redis during callback', async () => {
+      const now = Math.floor(Date.now() / 1000);
+      const privyToken = buildTestJwt({ exp: now + 3600 });
+      await runAuthFlow(provider, { privyIdToken: privyToken });
+
+      const stored = await getStoredPrivyToken(TEST_PRIVY_USER);
+      expect(stored).toBe(privyToken);
+    });
+
     test('returns error on missing identity token', async () => {
       const result = await provider.handlePrivyCallback({
         state: 'some-state',
@@ -200,7 +210,7 @@ describe('GizaAuthProvider', () => {
       expect(tokens.access_token.length).toBeGreaterThan(0);
       expect(tokens.refresh_token).toBeTypeOf('string');
       expect(tokens.refresh_token.length).toBeGreaterThan(0);
-      expect(tokens.expires_in).toBeLessThanOrEqual(ACCESS_TOKEN_TTL_SEC);
+      expect(tokens.expires_in).toBe(ACCESS_TOKEN_TTL_SEC);
       expect(tokens.token_type).toBe('Bearer');
       expect(tokens.scope).toBe('mcp:tools');
     });
@@ -280,7 +290,7 @@ describe('GizaAuthProvider', () => {
       expect(tokens.access_token.length).toBeGreaterThan(0);
       expect(tokens.refresh_token).toBeTypeOf('string');
       expect(tokens.token_type).toBe('Bearer');
-      expect(tokens.expires_in).toBeLessThanOrEqual(ACCESS_TOKEN_TTL_SEC);
+      expect(tokens.expires_in).toBe(ACCESS_TOKEN_TTL_SEC);
     });
 
     test('rejects scopes exceeding original grant', async () => {
@@ -311,10 +321,8 @@ describe('GizaAuthProvider', () => {
       expect(tokens.access_token).toBeTypeOf('string');
     });
 
-    test('preserves privyIdToken through refresh token exchange', async () => {
-      const now = Math.floor(Date.now() / 1000);
-      const privyIdToken = buildTestJwt({ exp: now + 3600 });
-      const { code } = await runAuthFlow(provider, { privyIdToken });
+    test('refreshed access token does not contain privyIdToken', async () => {
+      const { code } = await runAuthFlow(provider);
       const initial = await provider.exchangeAuthorizationCode(
         mockClient,
         code,
@@ -331,42 +339,7 @@ describe('GizaAuthProvider', () => {
       );
       expect(
         (authInfo.extra as Record<string, unknown>).privyIdToken,
-      ).toBe(privyIdToken);
-    });
-
-    test('strips expired privyIdToken during refresh', async () => {
-      const now = Math.floor(Date.now() / 1000);
-      const privyIdToken = buildTestJwt({
-        exp: now + PRIVY_TOKEN_EXP_BUFFER_SEC + 60,
-      });
-
-      const { code } = await runAuthFlow(provider, { privyIdToken });
-      const initial = await provider.exchangeAuthorizationCode(
-        mockClient,
-        code,
-      );
-
-      // Advance time past the Privy token's expiry
-      const originalDateNow = Date.now;
-      const advancedMs = (PRIVY_TOKEN_EXP_BUFFER_SEC + 120) * 1000;
-      Date.now = () => originalDateNow() + advancedMs;
-
-      try {
-        const refreshed = await provider.exchangeRefreshToken(
-          mockClient,
-          initial.refresh_token!,
-          TEST_SCOPES,
-        );
-
-        const authInfo = await provider.verifyAccessToken(
-          refreshed.access_token,
-        );
-        expect(
-          (authInfo.extra as Record<string, unknown>).privyIdToken,
-        ).toBeUndefined();
-      } finally {
-        Date.now = originalDateNow;
-      }
+      ).toBeUndefined();
     });
 
     test('refreshed access token contains correct wallet and privyUserId', async () => {
