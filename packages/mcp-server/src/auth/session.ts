@@ -125,9 +125,15 @@ export async function revokeUserSessions(userId: string): Promise<void> {
 export async function checkRevocation(
   userId: string,
   issuedAt: number | undefined,
+  gracePeriodSec = 0,
 ): Promise<void> {
   const revokedAt = await revokedSessions.get(userId);
-  if (revokedAt !== undefined && (issuedAt === undefined || issuedAt <= revokedAt)) {
+  if (revokedAt === undefined) return;
+  if (gracePeriodSec > 0) {
+    const now = Math.floor(Date.now() / 1000);
+    if (now < revokedAt + gracePeriodSec) return;
+  }
+  if (issuedAt === undefined || issuedAt <= revokedAt) {
     throw new Error('Session revoked. Please log in again.');
   }
 }

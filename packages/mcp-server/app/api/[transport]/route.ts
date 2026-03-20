@@ -6,6 +6,7 @@ import {
   SERVER_VERSION,
   GIZA_INSTRUCTIONS,
   ENV_REDIS_URL,
+  TRANSPORT_REVOCATION_GRACE_SEC,
   getBaseUrl,
 } from '../../../src/constants';
 import { registerAllTools } from '../../../src/server';
@@ -39,7 +40,11 @@ async function verifyToken(
     const authInfo = await verifyAccessToken(bearerToken);
     const ctx = extractAuthContext(authInfo);
     if (ctx) {
-      await checkRevocation(ctx.privyUserId, ctx.tokenIssuedAt);
+      await checkRevocation(
+        ctx.privyUserId,
+        ctx.tokenIssuedAt,
+        TRANSPORT_REVOCATION_GRACE_SEC,
+      );
     }
     return authInfo;
   } catch (error) {
