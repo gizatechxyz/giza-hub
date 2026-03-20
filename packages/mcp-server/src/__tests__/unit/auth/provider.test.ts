@@ -1,9 +1,11 @@
 import { describe, test, expect, mock, beforeEach } from 'bun:test';
-import { ACCESS_TOKEN_TTL_SEC } from '../../../constants';
+import { ACCESS_TOKEN_TTL_SEC, PRIVY_TOKEN_EXP_BUFFER_SEC } from '../../../constants';
 
 // Set required env vars before importing modules that read them
 process.env.PRIVY_APP_ID = 'test-privy-app-id';
 process.env.JWT_SECRET = 'test-secret-that-is-at-least-32-chars-long!!';
+
+import { buildTestJwt } from '../../helpers/mock-auth';
 
 const TEST_WALLET = '0x1234567890abcdef1234567890abcdef12345678';
 const TEST_PRIVY_USER = 'privy-user-123';
@@ -310,7 +312,8 @@ describe('GizaAuthProvider', () => {
     });
 
     test('preserves privyIdToken through refresh token exchange', async () => {
-      const privyIdToken = 'test-privy-identity-token';
+      const now = Math.floor(Date.now() / 1000);
+      const privyIdToken = buildTestJwt({ exp: now + 3600 });
       const { code } = await runAuthFlow(provider, { privyIdToken });
       const initial = await provider.exchangeAuthorizationCode(
         mockClient,
@@ -329,6 +332,41 @@ describe('GizaAuthProvider', () => {
       expect(
         (authInfo.extra as Record<string, unknown>).privyIdToken,
       ).toBe(privyIdToken);
+    });
+
+    test('strips expired privyIdToken during refresh', async () => {
+      const now = Math.floor(Date.now() / 1000);
+      const privyIdToken = buildTestJwt({
+        exp: now + PRIVY_TOKEN_EXP_BUFFER_SEC + 60,
+      });
+
+      const { code } = await runAuthFlow(provider, { privyIdToken });
+      const initial = await provider.exchangeAuthorizationCode(
+        mockClient,
+        code,
+      );
+
+      // Advance time past the Privy token's expiry
+      const originalDateNow = Date.now;
+      const advancedMs = (PRIVY_TOKEN_EXP_BUFFER_SEC + 120) * 1000;
+      Date.now = () => originalDateNow() + advancedMs;
+
+      try {
+        const refreshed = await provider.exchangeRefreshToken(
+          mockClient,
+          initial.refresh_token!,
+          TEST_SCOPES,
+        );
+
+        const authInfo = await provider.verifyAccessToken(
+          refreshed.access_token,
+        );
+        expect(
+          (authInfo.extra as Record<string, unknown>).privyIdToken,
+        ).toBeUndefined();
+      } finally {
+        Date.now = originalDateNow;
+      }
     });
 
     test('refreshed access token contains correct wallet and privyUserId', async () => {

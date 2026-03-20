@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'bun:test';
 import { checkAuth, ensureAuth, ensureAuthWithToken } from '../../../auth/ensure-auth';
+import { buildTestJwt } from '../../helpers/mock-auth';
 import type { RequestHandlerExtra } from '@modelcontextprotocol/sdk/shared/protocol.js';
 import type {
   ServerRequest,
@@ -66,16 +67,26 @@ describe('ensureAuth', () => {
 });
 
 describe('ensureAuthWithToken', () => {
-  it('returns AuthContext when privyIdToken is present', async () => {
+  it('returns AuthContext when privyIdToken is present and valid', async () => {
+    const now = Math.floor(Date.now() / 1000);
+    const token = buildTestJwt({ exp: now + 3600 });
     const result = await ensureAuthWithToken(
-      makeExtra(validAuthInfo({ privyIdToken: 'token-abc' })),
+      makeExtra(validAuthInfo({ privyIdToken: token })),
     );
-    expect(result.privyIdToken).toBe('token-abc');
+    expect(result.privyIdToken).toBe(token);
   });
 
   it('throws when privyIdToken is absent', async () => {
     await expect(
       ensureAuthWithToken(makeExtra(validAuthInfo())),
-    ).rejects.toThrow('Session does not include an identity token');
+    ).rejects.toThrow('Identity token is missing or expired');
+  });
+
+  it('throws when privyIdToken is expired', async () => {
+    const now = Math.floor(Date.now() / 1000);
+    const token = buildTestJwt({ exp: now - 100 });
+    await expect(
+      ensureAuthWithToken(makeExtra(validAuthInfo({ privyIdToken: token }))),
+    ).rejects.toThrow('Identity token is missing or expired');
   });
 });

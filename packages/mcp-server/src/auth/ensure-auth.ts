@@ -5,7 +5,7 @@ import type {
 } from '@modelcontextprotocol/sdk/types.js';
 import type { AuthContext } from './types';
 import { extractAuthContext } from './types';
-import { checkRevocation } from './session';
+import { checkRevocation, isPrivyTokenExpired } from './session';
 
 type ToolExtra = RequestHandlerExtra<ServerRequest, ServerNotification>;
 
@@ -24,8 +24,8 @@ export async function ensureAuth(extra: ToolExtra): Promise<AuthContext> {
 
 export async function ensureAuthWithToken(extra: ToolExtra): Promise<AuthContext> {
   const ctx = await ensureAuth(extra);
-  if (!ctx.privyIdToken) {
-    throw new Error('Session does not include an identity token. Please log in again.');
+  if (!ctx.privyIdToken || isPrivyTokenExpired(ctx.privyIdToken)) {
+    throw new Error('Identity token is missing or expired. Please log in again.');
   }
   return ctx;
 }

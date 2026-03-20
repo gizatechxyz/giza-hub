@@ -11,6 +11,7 @@ import {
   verifyAccessToken,
   verifyRefreshToken,
   checkRevocation,
+  isPrivyTokenExpired,
 } from './session';
 import { verifyPrivyToken } from './privy';
 import {
@@ -212,12 +213,17 @@ export class GizaAuthProvider {
     }
     const effectiveScopes = scopes ?? claims.scopes;
 
+    const privyIdToken =
+      claims.privyIdToken && !isPrivyTokenExpired(claims.privyIdToken)
+        ? claims.privyIdToken
+        : undefined;
+
     const pair = await createTokenPair({
       privyUserId: claims.sub,
       walletAddress: claims.wallet,
       clientId: claims.clientId,
       scopes: effectiveScopes,
-      privyIdToken: claims.privyIdToken,
+      privyIdToken,
     });
 
     return toOAuthTokens(pair, effectiveScopes);

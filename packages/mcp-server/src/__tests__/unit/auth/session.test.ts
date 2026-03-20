@@ -10,13 +10,15 @@ import {
   verifyRefreshToken,
   revokeUserSessions,
   checkRevocation,
+  isPrivyTokenExpired,
 } from '../../../auth/session';
-import { ACCESS_TOKEN_TTL_SEC } from '../../../constants';
+import { ACCESS_TOKEN_TTL_SEC, PRIVY_TOKEN_EXP_BUFFER_SEC } from '../../../constants';
 import {
   TEST_WALLET,
   TEST_PRIVY_USER,
   TEST_CLIENT_ID,
   TEST_SCOPES,
+  buildTestJwt,
 } from '../../helpers/mock-auth';
 
 const TOKEN_INPUT = {
@@ -116,7 +118,8 @@ describe('verifyRefreshToken', () => {
   });
 
   test('preserves privyIdToken through refresh', async () => {
-    const privyIdToken = 'test-privy-id-token';
+    const now = Math.floor(Date.now() / 1000);
+    const privyIdToken = buildTestJwt({ exp: now + 3600 });
     const { refreshToken } = await createTokenPair({
       ...TOKEN_INPUT,
       privyIdToken,
@@ -140,18 +143,11 @@ describe('verifyRefreshToken', () => {
   });
 });
 
-function buildMinimalJwt(payload: Record<string, unknown>): string {
-  const header = Buffer.from(
-    JSON.stringify({ alg: 'none' }),
-  ).toString('base64url');
-  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  return `${header}.${body}.sig`;
-}
 
 describe('dynamic TTL (getPrivyTokenExp via createTokenPair)', () => {
   test('caps TTL when Privy token expires before default', async () => {
     const now = Math.floor(Date.now() / 1000);
-    const privyIdToken = buildMinimalJwt({ exp: now + 1200 }); // 20 min
+    const privyIdToken = buildTestJwt({ exp: now + 1200 }); // 20 min
     const result = await createTokenPair({
       ...TOKEN_INPUT,
       privyIdToken,
@@ -162,7 +158,7 @@ describe('dynamic TTL (getPrivyTokenExp via createTokenPair)', () => {
   });
 
   test('uses default TTL when Privy token has no exp', async () => {
-    const privyIdToken = buildMinimalJwt({ sub: 'user' }); // no exp
+    const privyIdToken = buildTestJwt({ sub: 'user' }); // no exp
     const result = await createTokenPair({
       ...TOKEN_INPUT,
       privyIdToken,
@@ -180,12 +176,62 @@ describe('dynamic TTL (getPrivyTokenExp via createTokenPair)', () => {
 
   test('uses default TTL when Privy token exp is far in the future', async () => {
     const now = Math.floor(Date.now() / 1000);
-    const privyIdToken = buildMinimalJwt({ exp: now + 7200 }); // 2 hours
+    const privyIdToken = buildTestJwt({ exp: now + 7200 }); // 2 hours
     const result = await createTokenPair({
       ...TOKEN_INPUT,
       privyIdToken,
     });
     expect(result.expiresIn).toBe(ACCESS_TOKEN_TTL_SEC);
+  });
+
+  test('strips expired Privy token from access token payload', async () => {
+    const now = Math.floor(Date.now() / 1000);
+    const privyIdToken = buildTestJwt({ exp: now - 100 });
+    const { accessToken } = await createTokenPair({
+      ...TOKEN_INPUT,
+      privyIdToken,
+    });
+    const authInfo = await verifyAccessToken(accessToken);
+    expect((authInfo.extra as Record<string, unknown>).privyIdToken).toBeUndefined();
+    expect(authInfo.clientId).toBe(TEST_CLIENT_ID);
+  });
+
+  test('strips unparseable Privy token from access token payload', async () => {
+    const { accessToken } = await createTokenPair({
+      ...TOKEN_INPUT,
+      privyIdToken: 'not-a-jwt',
+    });
+    const authInfo = await verifyAccessToken(accessToken);
+    expect((authInfo.extra as Record<string, unknown>).privyIdToken).toBeUndefined();
+  });
+});
+
+describe('isPrivyTokenExpired', () => {
+  test('returns false for token with future exp', () => {
+    const now = Math.floor(Date.now() / 1000);
+    const token = buildTestJwt({ exp: now + 3600 });
+    expect(isPrivyTokenExpired(token)).toBe(false);
+  });
+
+  test('returns true for token within buffer of expiry', () => {
+    const now = Math.floor(Date.now() / 1000);
+    const token = buildTestJwt({ exp: now + PRIVY_TOKEN_EXP_BUFFER_SEC - 10 });
+    expect(isPrivyTokenExpired(token)).toBe(true);
+  });
+
+  test('returns true for token with past exp', () => {
+    const now = Math.floor(Date.now() / 1000);
+    const token = buildTestJwt({ exp: now - 100 });
+    expect(isPrivyTokenExpired(token)).toBe(true);
+  });
+
+  test('returns true for token with no exp', () => {
+    const token = buildTestJwt({ sub: 'user' });
+    expect(isPrivyTokenExpired(token)).toBe(true);
+  });
+
+  test('returns true for unparseable token', () => {
+    expect(isPrivyTokenExpired('not-a-jwt')).toBe(true);
   });
 });
 

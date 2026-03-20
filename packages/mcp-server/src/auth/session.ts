@@ -79,6 +79,13 @@ function getPrivyTokenExp(token: string): number | undefined {
   }
 }
 
+export function isPrivyTokenExpired(token: string): boolean {
+  const exp = getPrivyTokenExp(token);
+  if (!exp) return true;
+  const now = Math.floor(Date.now() / 1000);
+  return now >= exp - PRIVY_TOKEN_EXP_BUFFER_SEC;
+}
+
 export async function createTokenPair(
   input: TokenInput,
 ): Promise<TokenPair> {
@@ -86,12 +93,17 @@ export async function createTokenPair(
   const now = Math.floor(Date.now() / 1000);
 
   let ttl = ACCESS_TOKEN_TTL_SEC;
-  if (input.privyIdToken) {
-    const exp = getPrivyTokenExp(input.privyIdToken);
-    if (exp) {
+  let effectivePrivyIdToken = input.privyIdToken;
+  if (effectivePrivyIdToken) {
+    const exp = getPrivyTokenExp(effectivePrivyIdToken);
+    if (!exp) {
+      effectivePrivyIdToken = undefined;
+    } else {
       const remaining = exp - now - PRIVY_TOKEN_EXP_BUFFER_SEC;
       if (remaining > 0) {
         ttl = Math.min(ttl, remaining);
+      } else {
+        effectivePrivyIdToken = undefined;
       }
     }
   }
@@ -100,7 +112,7 @@ export async function createTokenPair(
     wallet: input.walletAddress,
     clientId: input.clientId,
     scopes: input.scopes,
-    privyIdToken: input.privyIdToken,
+    privyIdToken: effectivePrivyIdToken,
   };
 
   const [accessToken, refreshToken] = await Promise.all([
