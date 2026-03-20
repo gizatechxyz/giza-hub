@@ -46,4 +46,42 @@ describe('protected tools', () => {
       expect(result.isError).toBe(true);
     });
   });
+
+  describe('giza_logout', () => {
+    test('revokes sessions and returns logged_out status', async () => {
+      const server = createTestServer();
+      registerProtectedTools(server as any);
+
+      const logoutExtra = buildExtra({
+        extra: {
+          wallet: '0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
+          privyUserId: 'privy-logout-test-user',
+          privyIdToken: undefined,
+        },
+      });
+
+      const result = await server.invokeTool(
+        'giza_logout',
+        {},
+        logoutExtra,
+      );
+
+      expect(result.isError).toBeUndefined();
+      const parsed = JSON.parse(result.content[0].text);
+      expect(parsed.status).toBe('logged_out');
+    });
+
+    test('returns isError without auth', async () => {
+      const server = createTestServer();
+      registerProtectedTools(server as any);
+
+      const result = await server.invokeTool(
+        'giza_logout',
+        {},
+        buildUnauthExtra(),
+      );
+
+      expect(result.isError).toBe(true);
+    });
+  });
 });

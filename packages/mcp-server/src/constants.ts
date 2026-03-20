@@ -21,6 +21,7 @@ export const SUPPORTED_SCOPES = ['mcp:tools'] as const;
 export const MAX_PENDING_SESSIONS = 10_000;
 export const MAX_AUTH_CODES = 5_000;
 export const MAX_PENDING_OPERATIONS = 5_000;
+export const MAX_REVOKED_SESSIONS = 10_000;
 export const CLIENT_REGISTRATION_TTL_SEC = 604_800;
 export const MAX_REGISTERED_CLIENTS = 10_000;
 

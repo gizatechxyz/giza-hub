@@ -8,6 +8,7 @@ import {
   createTokenPair,
   verifyAccessToken,
   verifyRefreshToken,
+  revokeUserSessions,
 } from '../../../auth/session';
 import { ACCESS_TOKEN_TTL_SEC } from '../../../constants';
 import {
@@ -184,5 +185,55 @@ describe('dynamic TTL (getPrivyTokenExp via createTokenPair)', () => {
       privyIdToken,
     });
     expect(result.expiresIn).toBe(ACCESS_TOKEN_TTL_SEC);
+  });
+});
+
+describe('revokeUserSessions', () => {
+  test('revoked access token is rejected', async () => {
+    const { accessToken } = await createTokenPair(TOKEN_INPUT);
+    await revokeUserSessions(TEST_PRIVY_USER);
+    await expect(verifyAccessToken(accessToken)).rejects.toThrow('Session revoked');
+  });
+
+  test('revoked refresh token is rejected', async () => {
+    const { refreshToken } = await createTokenPair(TOKEN_INPUT);
+    await revokeUserSessions(TEST_PRIVY_USER);
+    await expect(verifyRefreshToken(refreshToken)).rejects.toThrow('Session revoked');
+  });
+
+  test('tokens created after revocation are accepted', async () => {
+    await revokeUserSessions(TEST_PRIVY_USER);
+    const futureIat = Math.floor(Date.now() / 1000) + 2;
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+    const futureToken = await new jose.SignJWT({
+      wallet: TEST_WALLET,
+      clientId: TEST_CLIENT_ID,
+      scopes: TEST_SCOPES,
+    })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setSubject(TEST_PRIVY_USER)
+      .setIssuer('giza-mcp-server')
+      .setAudience('giza-mcp')
+      .setIssuedAt(futureIat)
+      .setExpirationTime(futureIat + 3600)
+      .sign(secret);
+    const authInfo = await verifyAccessToken(futureToken);
+    expect(authInfo.clientId).toBe(TEST_CLIENT_ID);
+  });
+
+  test('revocation for one user does not affect another', async () => {
+    const otherUser = 'privy-user-other';
+    const otherInput = { ...TOKEN_INPUT, privyUserId: otherUser };
+    const { accessToken } = await createTokenPair(otherInput);
+    await revokeUserSessions(TEST_PRIVY_USER);
+    const authInfo = await verifyAccessToken(accessToken);
+    expect((authInfo.extra as Record<string, unknown>).privyUserId).toBe(otherUser);
+  });
+
+  test('double logout is idempotent', async () => {
+    const { accessToken } = await createTokenPair(TOKEN_INPUT);
+    await revokeUserSessions(TEST_PRIVY_USER);
+    await revokeUserSessions(TEST_PRIVY_USER);
+    await expect(verifyAccessToken(accessToken)).rejects.toThrow('Session revoked');
   });
 });

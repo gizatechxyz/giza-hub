@@ -8,7 +8,9 @@ import {
   PRIVY_TOKEN_EXP_BUFFER_SEC,
   JWT_ISSUER,
   JWT_AUDIENCE,
+  MAX_REVOKED_SESSIONS,
 } from '../constants';
+import { RedisAuthStore } from '../utils/redis-auth-store';
 import type { GizaTokenClaims } from './types';
 
 function initSecret(): Uint8Array {
@@ -29,6 +31,12 @@ function getSecret(): Uint8Array {
   }
   return cachedSecret;
 }
+
+const revokedSessions = new RedisAuthStore<number>(
+  'giza:revoked:',
+  REFRESH_TOKEN_TTL_SEC,
+  MAX_REVOKED_SESSIONS,
+);
 
 interface TokenInput {
   privyUserId: string;
@@ -109,6 +117,11 @@ export async function createTokenPair(
   return { accessToken, refreshToken, expiresIn: ttl };
 }
 
+export async function revokeUserSessions(userId: string): Promise<void> {
+  const now = Math.floor(Date.now() / 1000);
+  await revokedSessions.set(userId, now);
+}
+
 async function decodeToken(
   token: string,
 ): Promise<GizaTokenClaims & jose.JWTPayload> {
@@ -121,6 +134,10 @@ async function decodeToken(
   const claims = payload as unknown as GizaTokenClaims & jose.JWTPayload;
   if (!claims.sub) {
     throw new Error('JWT missing subject claim');
+  }
+  const revokedAt = await revokedSessions.get(claims.sub);
+  if (revokedAt !== undefined && (claims.iat === undefined || claims.iat <= revokedAt)) {
+    throw new Error('Session revoked. Please log in again.');
   }
   return claims;
 }

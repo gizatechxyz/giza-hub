@@ -5,7 +5,8 @@ type SecurityEvent =
   | 'confirmation_executed'
   | 'token_exchange'
   | 'token_refresh'
-  | 'rate_limited';
+  | 'rate_limited'
+  | 'session_revoked';
 
 interface SecurityLogEntry {
   timestamp: string;
@@ -44,6 +45,10 @@ class SecurityLogger {
 
   rateLimited(details: Record<string, unknown>): void {
     this.log({ timestamp: new Date().toISOString(), event: 'rate_limited', ...details });
+  }
+
+  sessionRevoked(details: Record<string, unknown>): void {
+    this.log({ timestamp: new Date().toISOString(), event: 'session_revoked', ...details });
   }
 }
 
