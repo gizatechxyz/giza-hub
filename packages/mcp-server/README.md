@@ -104,7 +104,7 @@ Add to `.claude/settings.json`:
 | `giza_health` | Check API health |
 | `giza_get_config` | Get API configuration |
 | `giza_get_stats` | Get chain statistics |
-| `giza_get_tvl` | Get total value locked |
+
 
 ### Discovery
 
@@ -236,7 +236,7 @@ src/
     confirmation.ts     # Critical operation confirmation flow
     error-handler.ts    # Unified error handling
   tools/
-    system.ts           # Health, config, stats, TVL
+    system.ts           # Health, config, stats
     discovery.ts        # Chains, tokens, protocols
     agent-management.ts # Create/get agents
     lifecycle.ts        # Activate, deactivate, run, top-up

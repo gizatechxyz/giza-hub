@@ -20,7 +20,6 @@ import {
   SmartAccountInfo,
   Statistics,
   TokensResponse,
-  TVLResponse,
   ZerodevSmartWalletResponse,
 } from './types/agent';
 import {
@@ -195,12 +194,6 @@ export class Giza {
   async stats(): Promise<Statistics> {
     return this.httpClient.get<Statistics>(
       `/api/v1/${this.config.chain}/stats`,
-    );
-  }
-
-  async tvl(): Promise<TVLResponse> {
-    return this.httpClient.get<TVLResponse>(
-      `/api/v1/${this.config.chain}/tvl`,
     );
   }
 

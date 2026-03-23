@@ -60,20 +60,4 @@ export function registerSystemTools(server: McpServer): void {
     },
   );
 
-  server.registerTool(
-    'giza_get_tvl',
-    {
-      title: 'Giza TVL',
-      description:
-        'Get total value deposited on a network.',
-      inputSchema: z.object({ chain: chainSchema }),
-      annotations: ANNOTATIONS_READONLY,
-    },
-    async ({ chain }) => {
-      return handleToolCall(
-        () => getGizaClient(chain).tvl(),
-        (result) => jsonResult(result),
-      );
-    },
-  );
 }

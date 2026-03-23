@@ -60,21 +60,4 @@ describe('system tools', () => {
     });
   });
 
-  describe('giza_get_tvl', () => {
-    test('calls correct SDK method and returns JSON', async () => {
-      const server = createTestServer();
-      registerSystemTools(server as any);
-
-      const result = await server.invokeTool(
-        'giza_get_tvl',
-        { chain: 8453 },
-        {},
-      );
-
-      expect(mockGiza.tvl).toHaveBeenCalled();
-      expect(result.isError).toBeUndefined();
-      const parsed = JSON.parse(result.content[0].text);
-      expect(parsed).toBeDefined();
-    });
-  });
 });

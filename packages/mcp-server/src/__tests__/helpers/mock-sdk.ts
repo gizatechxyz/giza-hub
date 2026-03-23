@@ -65,7 +65,6 @@ export function createMockGiza(mockAgent = createMockAgent()) {
     stats: mock(() =>
       Promise.resolve({ tvl: '1000000', activeAgents: 42 }),
     ),
-    tvl: mock(() => Promise.resolve({ tvl: '1000000' })),
     chains: mock(() => Promise.resolve({ chain_ids: [1, 137, 8453, 42161, 9745] })),
     tokens: mock(() =>
       Promise.resolve({ tokens: [{ symbol: 'USDC' }] }),

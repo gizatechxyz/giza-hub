@@ -79,7 +79,6 @@ export type {
   ProtocolDistribution,
   LiquidityDistribution,
   Statistics,
-  TVLResponse,
   TokenInfo,
   TokensResponse,
   RewardDTO,

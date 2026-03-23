@@ -56,20 +56,6 @@ describe('02 — Chain-level queries', () => {
     expect(Array.isArray(ld.protocols)).toBe(true);
   });
 
-  it('tvl() returns non-negative number or is not implemented', async () => {
-    try {
-      const res = await giza.tvl();
-      expect(typeof res.tvl).toBe('number');
-      expect(res.tvl).toBeGreaterThanOrEqual(0);
-    } catch (err: unknown) {
-      // Backend returns 501 — endpoint not yet implemented
-      expect(err).toHaveProperty('statusCode');
-      expect((err as { statusCode: number }).statusCode).toBe(
-        501,
-      );
-    }
-  });
-
   it('protocols(token) returns string array with >= 1 entry', async () => {
     const res = await giza.protocols(token);
 
