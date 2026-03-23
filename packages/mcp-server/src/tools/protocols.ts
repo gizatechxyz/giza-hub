@@ -1,6 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
-import { ensureAuth, ensureAuthWithToken } from '../auth/ensure-auth';
+import { ensureAuthWithToken } from '../auth/ensure-auth';
 import { chainSchema, constraintSchema } from '../schemas';
 import { handleToolCall, jsonResult } from '../services/error-handler';
 import { getAgentForSession } from '../services/sdk-factory';
@@ -19,8 +19,8 @@ export function registerProtocolTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = await ensureAuth(extra);
-          const agent = await getAgentForSession(chain, ctx.walletAddress);
+          const ctx = await ensureAuthWithToken(extra);
+          const agent = await getAgentForSession(chain, ctx.walletAddress, ctx.privyIdToken);
           return agent.protocols();
         },
         jsonResult,
@@ -66,8 +66,8 @@ export function registerProtocolTools(server: McpServer): void {
     async ({ chain }, extra) =>
       handleToolCall(
         async () => {
-          const ctx = await ensureAuth(extra);
-          const agent = await getAgentForSession(chain, ctx.walletAddress);
+          const ctx = await ensureAuthWithToken(extra);
+          const agent = await getAgentForSession(chain, ctx.walletAddress, ctx.privyIdToken);
           return agent.constraints();
         },
         jsonResult,
