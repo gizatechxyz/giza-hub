@@ -13,10 +13,6 @@ export type PageFetcher<T> = (
 
 /**
  * Async-iterable paginator that auto-pages through API results.
- *
- * Normalizes two API response shapes:
- * - `{ transactions, pagination }` (transaction endpoints)
- * - `{ items, total }` (executions, logs, rewards endpoints)
  */
 export class Paginator<T> implements AsyncIterable<T> {
   constructor(

@@ -380,8 +380,8 @@ export interface ExecutionWithTransactionsDTO {
 }
 
 export interface PaginatedExecutionDTO {
-  items: ExecutionWithTransactionsDTO[];
-  total: number;
+  executions: ExecutionWithTransactionsDTO[];
+  pagination: PaginationInfo;
 }
 
 // ============================================================================
@@ -394,8 +394,8 @@ export interface LogDTO {
 }
 
 export interface PaginatedLogDTO {
-  items: LogDTO[];
-  total: number;
+  logs: LogDTO[];
+  pagination: PaginationInfo;
 }
 
 // ============================================================================
@@ -465,8 +465,8 @@ export interface RewardDTO {
 }
 
 export interface PaginatedRewardDTO {
-  items: RewardDTO[];
-  total: number;
+  rewards: RewardDTO[];
+  pagination: PaginationInfo;
 }
 
 // ============================================================================

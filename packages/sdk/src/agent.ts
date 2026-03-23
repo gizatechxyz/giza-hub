@@ -27,6 +27,7 @@ import {
   PaginatedExecutionDTO,
   PaginatedLogDTO,
   PaginatedRewardDTO,
+  PaginationInfo,
   PaginationOptions,
   PerformanceChartResponse,
   PerformanceOptions,
@@ -211,13 +212,7 @@ export class Agent {
       const res =
         await this.httpClient.get<TransactionHistoryResponse>(url);
 
-      return {
-        items: res.transactions,
-        total: res.pagination.total_items,
-        page: res.pagination.page,
-        limit: res.pagination.items_per_page,
-        hasMore: page < res.pagination.total_pages,
-      };
+      return this.mapPagination(res.transactions, res.pagination);
     }, options?.limit ?? 20);
   }
 
@@ -236,7 +231,7 @@ export class Agent {
       const res =
         await this.httpClient.get<PaginatedExecutionDTO>(url);
 
-      return this.normalizePaginated(res, page, limit);
+      return this.mapPagination(res.executions, res.pagination);
     }, options?.limit ?? 20);
   }
 
@@ -256,7 +251,7 @@ export class Agent {
       const res =
         await this.httpClient.get<PaginatedLogDTO>(url);
 
-      return this.normalizePaginated(res, page, limit);
+      return this.mapPagination(res.logs, res.pagination);
     }, options?.limit ?? 20);
   }
 
@@ -272,7 +267,7 @@ export class Agent {
       const res =
         await this.httpClient.get<PaginatedLogDTO>(url);
 
-      return this.normalizePaginated(res, page, limit);
+      return this.mapPagination(res.logs, res.pagination);
     }, options?.limit ?? 20);
   }
 
@@ -288,7 +283,7 @@ export class Agent {
       const res =
         await this.httpClient.get<PaginatedRewardDTO>(url);
 
-      return this.normalizePaginated(res, page, limit);
+      return this.mapPagination(res.rewards, res.pagination);
     }, options?.limit ?? 20);
   }
 
@@ -305,7 +300,7 @@ export class Agent {
       const res =
         await this.httpClient.get<PaginatedRewardDTO>(url);
 
-      return this.normalizePaginated(res, page, limit);
+      return this.mapPagination(res.rewards, res.pagination);
     }, options?.limit ?? 20);
   }
 
@@ -449,21 +444,16 @@ export class Agent {
     );
   }
 
-  // ================================================================
-  // Private Helpers
-  // ================================================================
-
-  private normalizePaginated<T>(
-    res: { items: T[]; total: number },
-    page: number,
-    limit: number,
+  private mapPagination<T>(
+    items: T[],
+    pagination: PaginationInfo,
   ): PaginatedResponse<T> {
     return {
-      items: res.items,
-      total: res.total,
-      page,
-      limit,
-      hasMore: page * limit < res.total,
+      items,
+      total: pagination.total_items,
+      page: pagination.page,
+      limit: pagination.items_per_page,
+      hasMore: pagination.page < pagination.total_pages,
     };
   }
 }
